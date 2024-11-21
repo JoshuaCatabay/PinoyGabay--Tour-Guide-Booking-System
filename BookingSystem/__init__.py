@@ -21,7 +21,7 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = '2770d4fd598f5a792ebce414a891f412'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:12345@localhost:5433/postgres'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:jerwin@localhost:5432/postgres'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -58,11 +58,13 @@ def create_app():
     from BookingSystem.Admin_Page import admin
     from BookingSystem.TourOperator_Page import touroperator
     from BookingSystem.TourGuide_Page import tourguide
+    from BookingSystem.Bookings import booking
 
     app.register_blueprint(main)
     app.register_blueprint(admin, url_prefix='/admin')
     app.register_blueprint(touroperator, url_prefix='/touroperator')
     app.register_blueprint(tourguide, url_prefix='/tourguide')
+    app.register_blueprint(booking, url_prefix='/booking')
 
     with app.app_context():
         db.create_all()

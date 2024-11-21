@@ -84,91 +84,87 @@
         </div>
     </section>
 
-    <!-- Tour Packages Section -->
     <section id="tour-packages">
         <h2>Available Tour <span style="color: #ff9f1c">Packages/Itineraries</span></h2>
         <div class="package-container">
+            {% for package in packages %}
             <div class="card">
                 <div class="card-content">
-                    <img src="Image/D2.jfif" alt="Image" class="card-image">
+                    <img src="{{ url_for('static', filename=package.package_img) if package.package_img else url_for('static', filename='default.jpg') }}" alt="Tour Image" class="card-image">
                     <div class="gradient-overlay"></div>
                     <div class="card-details">
                         <div class="title-rating">
-                            <h3>Patar Beach</h3>
+                            <h3>{{ package.name }}</h3>
                             <div class="rating">
-                                <span style="padding-right: 20px;">4.7</span>
+                                <span style="padding-right: 20px;">{{ package.average_rating or 'N/A' }}</span>
                             </div>
                         </div>
-                        <p>Relax on the beautiful shores of Patar Beach.</p>
+                        <p>{{ package.description }}</p>
                     </div>
-                    <span class="heart">❤️</span>
                 </div>
                 <div class="card-overlay">
-                    <button class="view-package" id="view-package-btn">View Package</button>
+                    <button class="view-package" data-package-id="{{ package.id }}">View Package</button>
                 </div>
-            </div>  
-    
-            <div class="card">
-                <div class="card-content">
-                    <img src="Image/D2.jfif" alt="Image" class="card-image">
-                    <div class="gradient-overlay"></div>
-                    <div class="card-details">
-                        <div class="title-rating">
-                            <h3>Patar Beach</h3>
-                            <div class="rating">
-                                <span style="padding-right: 20px;">4.7</span>
-                            </div>
-                        </div>
-                        <p>Relax on the beautiful shores of Patar Beach.</p>
-                    </div>
-                    <span class="heart">❤️</span>
-                </div>
-                <div class="card-overlay">
-                    <button class="view-package" id="view-package-btn">View Package</button>
-                </div>
-            </div>  
-    
-            <div class="card">
-                <div class="card-content">
-                    <img src="Image/D2.jfif" alt="Image" class="card-image">
-                    <div class="gradient-overlay"></div>
-                    <div class="card-details">
-                        <div class="title-rating">
-                            <h3>Patar Beach</h3>
-                            <div class="rating">
-                                <span style="padding-right: 20px;">4.7</span>
-                            </div>
-                        </div>
-                        <p>Relax on the beautiful shores of Patar Beach.</p>
-                    </div>
-                    <span class="heart">❤️</span>
-                </div>
-                <div class="card-overlay">
-                    <button class="view-package" id="view-package-btn">View Package</button>
-                </div>
-            </div>  
-    
-            <div class="card">
-                <div class="card-content">
-                    <img src="Image/D2.jfif" alt="Image" class="card-image">
-                    <div class="gradient-overlay"></div>
-                    <div class="card-details">
-                        <div class="title-rating">
-                            <h3>Patar Beach</h3>
-                            <div class="rating">
-                                <span style="padding-right: 20px;">4.7</span>
-                            </div>
-                        </div>
-                        <p>Relax on the beautiful shores of Patar Beach.</p>
-                    </div>
-                    <span class="heart">❤️</span>
-                </div>
-                <div class="card-overlay">
-                    <button class="view-package" id="view-package-btn">View Package</button>
-                </div>
-            </div>  
-    
+            </div>
+            {% endfor %}
         </div>
+
+        <!-- <div class="card">
+            <div class="card-content">
+                <img src="Image/D2.jfif" alt="Image" class="card-image">
+                <div class="gradient-overlay"></div>
+                <div class="card-details">
+                    <div class="title-rating">
+                        <h3>Patar Beach</h3>
+                        <div class="rating">
+                            <span style="padding-right: 20px;">4.7</span>
+                        </div>
+                    </div>
+                    <p>Relax on the beautiful shores of Patar Beach.</p>
+                </div>
+                <span class="heart">❤️</span>
+            </div>
+            <div class="card-overlay">
+                <button class="view-package" id="view-package-btn">View Package</button>
+            </div>
+        </div>   -->
+
+<!-- View Package Modal -->
+<div id="tour-details-modal" class="modal hidden">
+    <div class="modal-content">
+  <!-- Modal Header -->
+  <div class="modal-header">
+    <img src="" alt="Tour Package Image" class="modal-header-image">
+    <h2 class="modal-title"></h2>
+    <span id="close-modal" class="close-btn">&times;</span>
+  </div>
+  
+      <div class="modal-body">
+        <p class="description"></p>
+        <div>
+          <h4>Estimated Prices</h4>
+          <ul class="price-list"></ul>
+        </div>
+        <div>
+          <h4>Inclusions</h4>
+          <ul class="inclusions-list"></ul>
+        </div>
+        <div>
+          <h4>Exclusions</h4>
+          <ul class="exclusions-list"></ul>
+        </div>
+        <div>
+          <h4>Itinerary</h4>
+          <ul class="itinerary-list"></ul>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  
+
+                    <!-- Modal Overlay -->
+<div id="modal-overlay" class="modal-overlay hidden"></div>
     </section>
 
     <!-- Popular Places Section -->
@@ -365,6 +361,87 @@
       addNotification("New booking confirmed!");
       addNotification("Your tour guide has arrived.");
     });
+
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+    // Open "View Package" Modal
+    document.querySelectorAll('.view-package').forEach(button => {
+        button.addEventListener('click', async function () {
+            const packageId = this.getAttribute('data-package-id'); // Get the package ID
+
+            try {
+                // Fetch the package details from the server
+                const response = await fetch(`/view_package/${packageId}`);
+                
+                if (!response.ok) {
+                    throw new Error("Failed to fetch package details.");
+                }
+
+                const data = await response.json();
+
+                // Populate Modal Content
+                const modal = document.getElementById('tour-details-modal');
+                modal.querySelector('.modal-header-image').src = data.package_img
+                    ? `/static/${data.package_img}`
+                    : '/static/default.jpg';
+                modal.querySelector('.modal-title').textContent = data.name || 'Unnamed Package';
+                modal.querySelector('.description').textContent = data.description || 'No description provided';
+
+                // Populate other fields
+                const priceList = modal.querySelector('.price-list');
+                priceList.innerHTML = '';
+                data.estimated_prices.forEach(price => {
+                    const priceItem = document.createElement('li');
+                    priceItem.textContent = `${price.description}: ₱${price.estimated_price}`;
+                    priceList.appendChild(priceItem);
+                });
+
+                const inclusionsList = modal.querySelector('.inclusions-list');
+                inclusionsList.innerHTML = '';
+                data.inclusions.forEach(inclusion => {
+                    const inclusionItem = document.createElement('li');
+                    inclusionItem.textContent = inclusion.inclusion;
+                    inclusionsList.appendChild(inclusionItem);
+                });
+
+                const exclusionsList = modal.querySelector('.exclusions-list');
+                exclusionsList.innerHTML = '';
+                data.exclusions.forEach(exclusion => {
+                    const exclusionItem = document.createElement('li');
+                    exclusionItem.textContent = exclusion.exclusion;
+                    exclusionsList.appendChild(exclusionItem);
+                });
+
+                const itineraryList = modal.querySelector('.itinerary-list');
+                itineraryList.innerHTML = '';
+                data.itineraries.forEach(item => {
+                    const itineraryItem = document.createElement('li');
+                    itineraryItem.innerHTML = `<strong>${item.title}:</strong> ${item.subtitle}`;
+                    itineraryList.appendChild(itineraryItem);
+                });
+
+                // Show Modal
+                modal.classList.add('show');
+                document.getElementById('modal-overlay').classList.add('show');
+            } catch (error) {
+                console.error("Failed to load package details:", error);
+                alert('Could not load package details. Please try again.');
+            }
+        });
+    });
+
+    // Close Modal
+    const closeModal = () => {
+        document.getElementById('tour-details-modal').classList.remove('show');
+        document.getElementById('modal-overlay').classList.remove('show');
+    };
+    document.getElementById('close-modal').addEventListener('click', closeModal);
+    document.getElementById('modal-overlay').addEventListener('click', closeModal);
+});
+
+
+
     </script>
 
     

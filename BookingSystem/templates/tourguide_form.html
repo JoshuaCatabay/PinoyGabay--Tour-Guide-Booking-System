@@ -8,9 +8,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tour Guide Profile - PinoyGabay</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='Traveler.css') }}"defer>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <!-- Flatpickr JS -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
+  <!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   
 
 </head>
@@ -48,13 +52,7 @@
                 <!-- Profile Icon -->
                 <div class="profile-container-nav">
                   <a href="{{ url_for('main.account') }}">
-                    {% if current_user.is_authenticated %}
-                    <img class="profile-icon" id="profile-pic" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
-                    {% else %}
-                    <!-- Display a default image or message when user is not logged in -->
-                    <img class="profile-icon" id="profile-pic" src="{{ url_for('static', filename='profile_pics/default.jpg') }}" alt="Default Profile Picture">
-                    {% endif %}
-                
+                      <img class= "profile-icon" id="profile-pic" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
                     </a>
                 </div>
     
@@ -71,14 +69,27 @@
       <!-- Left Section: Tour Guide Details -->
         <div class="left-column">
           
-          <!-- Tour Guide Details -->
           <div class="profile-overview">
             <img src="{{ profile.profile_picture }}" alt="Tour Guide Picture" class="profile-pic" />
             <div class="profile-details">
-              <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ profile.name }}</span>, Your Friendly Tour Guide</h2>
-              <p class="ratings">★★★★☆ (21 Reviews)</p>
+                <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ profile.name }}</span>, Your Friendly Tour Guide</h2>
+                <p class="ratings">
+                    <span class="average-rating">{{ profile.average_rating }}</span>
+                    {% for i in range(profile.average_rating|int) %}
+                        &#9733; <!-- Full star -->
+                    {% endfor %}
+                    {% if profile.average_rating % 1 >= 0.5 %}
+                        &#9733; <!-- Half star -->
+                    {% endif %}
+                    {% for i in range(5 - profile.average_rating|int - (1 if profile.average_rating % 1 >= 0.5 else 0)) %}
+                        &#9734; <!-- Empty star -->
+                    {% endfor %}
+                    ({{ profile.review_count or 0 }} Reviews | {{ total_tours or 0 }} Total Tours)
+                </p>
             </div>
-          </div>
+        </div>
+        
+          
 
           <!-- About Me -->
           <div class="about-me">
@@ -108,89 +119,100 @@
             </div>
           </section>
 
-        <!-- Reviews Section -->
-        <div class="container">
-          <h2>Traveler Reviews</h2>
-          <div class="traveler-reviews">
-
-            <!-- Review Card -->
-            <div class="review-card">
-
-              <!-- Tour Picture at the Top -->
-              <img src="{{ url_for('static', filename='bolinao.jpg') }}" alt="Tour Picture" class="tour-image" />
-        
-              <!-- Bottom Section: Traveler Info and Review -->
-              <div class="review-content">
-                <div class="traveler-info">
-                  <img src="{{ url_for('static', filename='vincenzo.jpg') }}" alt="Traveler Picture" class="traveler-pic" />
-                  <div class="traveler-details">
-                    <h3>Hyunwoo</h3>
-                    <p class="tour-name">Island Tour</p>
-                    <div class="ratings">4.2 ★★★★☆</div>
+                    
+          <div class="container">
+            <h2>
+              Traveler Reviews 
+              <span class="total-reviews">({{ profile.review_count }})</span>
+            </h2>
+          
+            <div class="traveler-reviews">
+              {% if profile.review_count > 0 %}
+                {% for review in profile.reviews %}
+                <div class="review-card">
+                  <img src="{{ review.tour_image }}" alt="Review Image" class="tour-image" />
+                  <div class="review-content">
+                    <div class="traveler-info">
+                      <img src="{{ review.traveler_profile }}" alt="Traveler Picture" class="traveler-pic" />
+                      <div class="traveler-details">
+                        <h3>{{ review.traveler_name }}</h3>
+                        <p class="tour-name">Tour Package</p>
+                        <div class="ratings"><p>{{ review.rating }} ★</p></div>
+                      </div>
+                    </div>
+                    <p class="review-text">{{ review.comment }}</p>
+                    <div class="review-footer">
+                      <p class="review-date">{{ review.review_date }}</p>
+                      <p class="toured-by">Toured by: <span class="tour-guide-name">{{ review.tour_guide_name }}</span></p>
+                    </div>
                   </div>
                 </div>
-                <p class="review-text">
-                  Had an amazing experience! The guide was knowledgeable and friendly.
-                </p>
-
-                <div class="review-footer">
-                  <p class="review-date">Oct. 10, 2024</p>
-                  <p class="toured-by">Toured by: <span class="tour-guide-name">Tour Guide 1</span></p>
-                </div>
-              </div>
+                
+                {% endfor %}
+              {% else %}
+                <p>No reviews yet.</p>
+              {% endif %}
             </div>
+          
+<!-- Pagination Controls -->
+<!-- Pagination Controls -->
+{% if profile.pagination.total_pages > 1 %}
+<div class="pagination-container">
+  <!-- First Page -->
+  <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
 
-            <div class="review-card">
-              <!-- Tour Picture at the Top -->
-              <img src="{{ url_for('static', filename='italia.jpg') }}" alt="Tour Picture" class="tour-image" />
-        
-              <div class="review-content">
-                <div class="traveler-info">
-                  <img src="{{ url_for('static', filename='doonaaaaa.jpg') }}" alt="Traveler Picture" class="traveler-pic" />
-                  <div class="traveler-details">
-                    <h3>Hyunwoo</h3>
-                    <p class="tour-name">Island Tour</p>
-                    <div class="ratings">4.2 ★★★★☆</div>
-                  </div>
-                </div>
+  <!-- Previous Page -->
+  <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
 
-                <p class="review-text">
-                  Had an amazing experience! The guide was knowledgeable and friendly.
-                </p>
+  <!-- Page Numbers -->
+  {% for page in range(1, profile.pagination.total_pages + 1) %}
+  {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
+    <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
+  {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
+    <span class="pagination-ellipsis">...</span>
+  {% endif %}
+  {% endfor %}
 
-                <div class="review-footer">
-                  <p class="review-date">Oct. 10, 2024</p>
-                  <p class="toured-by">Toured by: <span class="tour-guide-name">Tour Guide 1</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <button class="see-more-btn">See More Reviews</button>
+  <!-- Next Page -->
+  <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
+
+  <!-- Last Page -->
+  <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
+</div>
+{% endif %}
+          
+          
         </div>
-      </div>
+        </div>
+        
+
 
       <!-- Right Section: Sticky Booking Form -->
       <div class="right-column">
         <div class="booking-form">
-          <h2 class="guide-name">
-            Have a Wonderful Travel with 
-            <span id="modal-guide-name" data-tour-guide-id=41 data-guide-name="{{ profile.name }}">
-                {{ profile.name }}
-            </span>
-          </h2>
-        
+          <h2 class="guide-name">Have a Wonderful Travel with <span id="full-name">{{ profile.name }}</span></h2>
           <form>
-            <label for="date">Select Date</label>
-            <input type="text" id="date" placeholder="Select a date" readonly>
+            <div class="form-section">
+              <label for="date-picker"><strong>Select Date or Date Range:</strong></label>
+              <input
+                  type="text"
+                  id="date-picker"
+                  name="date"
+                  placeholder="Select a date or range"
+                  data-tour-guide-id="{{ tour_guide.id }}"
+                  readonly
+              />
+          </div>
+          
 
-            <!--<input type="text" id="date" data-tour-guide-id="{{ tour_guide_id }}" placeholder="Select a date" readonly> -->
+
 
             <label for="tour-type">Tour Type</label>
-            <select id="tour-type" required>
-              <option value="">Choose Package</option>
-              <option value="island" data-package-id="1">Island Tour</option>
-              <option value="hiking" data-package-id="2">Hiking Guide</option>
-              <option value="personalized" data-package-id="3">Personalized</option>
+            <select id="tour-package-select" name="tour_package_id" required>
+              <option value="" disabled selected>Select Tour Package</option>
+              {% for package in profile.tour_packages %}
+                <option value="{{ package.id }}">{{ package.name }}</option>
+              {% endfor %}
             </select>
 
             <!-- Traveler Quantity -->
@@ -204,51 +226,107 @@
 
             <!-- Price and Button Row -->
             <div class="price-button-row">
-              <span class="price-label" id="modal-price" data-price="{{ profile.price }}">₱{{ profile.price }}</span>
+              <span class="price-label">₱{{ profile.price }}</span>
+              <button type="button" class="confirm-btn" id="confirm-booking-btn">Book Now</button>
 
-              <button id="final-confirm-btn" type="button" class="confirm-btn" onclick="openModal()">Confirm Booking</button>
             </div>
           </form>
         </div>
       </div>
-    </div>
-
+   
     <!-- Sticky Footer Booking Button -->
     <div class="footer-booking-bar" id="footer-booking-bar">
-      <span class="footer-guide-name">Book with <strong>Vincenzo Cassano</strong></span> <br>
-      <span class="footer-price">₱1,200</span>
+      <span class="footer-guide-name">Book with <span id="full-name">{{ profile.name }}</span><br>
+      <span class="footer-price">₱{{ profile.price }}</span>
       <button id="footer-book-btn" class="footer-btn">Book Now</button>
     </div>
 
-    <!-- Booking Confirmation Modal -->
-    <div id="booking-modal" class="modal">
-      <div class="modal-content">
+<!-- Booking Confirmation Modal -->
+<div id="booking-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="traveler-info"></div>
+      <h4 class="container-header">Traveler Information</h4>
+      <br>
+      <div class="info-item">
+        <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+      </div>
+      
+      <div class="info-item">
+        <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
+      </div>
 
-        <h2>Confirm Your Booking</h2>
-        <div>
-          <!-- Close Button in the Top-Right Corner -->
-          <button onClick="history_back()" class="close-btn" id="close-modal">&times;</button>
-        </div>
+      <!-- Special Notes Section -->
+      <div class="notes-box">
+        <h5>Special Notes</h5>
+        <p id="modal-special-notes">Loading...</p>
+      </div>
 
-        <div class="booking-details">
-          <p><strong>Tour Guide:</strong> <span id="modal-tour-guide">{{ profile.name }}</span></p>
-          <p><strong>Tour Date:</strong> <span id="modal-tour-date">Selected Date</span></p>
-          <p><strong>Tour Type:</strong> <span id="modal-tour-type">Selected Tour Type</span></p>
-          <p><strong>Number of Travelers:</strong> <span id="modal-traveler-quantity">Quantity</span></p>
-          <p><strong>Personalized Tour:</strong> <span id="modal-personalized-notes">Personalized Notes</span></p>
-          <p><strong>Price:</strong> ₱<span id="modal-price">{{ profile.price }}</span></p>
 
-          <!-- Special Note Section -->
-          <div class="note-section">
-            <p><strong>Note:</strong> Please ensure to bring comfortable shoes and water for the hiking tour. This is a full-day activity, so prepare accordingly!</p>
-          </div>
-        </div>
 
-        <div class="button-container" style="display: flex; justify-content: right;">
-          <button type="button" class="confirm-btn" onclick="showThankYouMessage()">Confirm Booking</button>
+    <div class="tour-package-details"></div>
+      <h4 class="container-header">Tour Package Details</h4>
+      <br>
+
+      <div class="modal-header">
+        <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+        <div class="header-text-overlay">
+          <h3 class="package-title" id="modal-package-title">Loading...</h3>
+          <p class="location" id="modal-package-location">
+            <span class="location-icon">&#x1F4CD;</span> Loading...
+          </p>
         </div>
       </div>
+
+      <p id="modal-package-description" class="description">Loading...</p>
+
+      <!-- Estimated Price Section -->
+      <div class="modal-section">
+        <h4>Estimated Price</h4>
+        <ul id="modal-price-list" class="price-list">Loading...</ul>
+      </div>
+
+      <!-- Inclusions Section -->
+      <div class="modal-section">
+        <h4>Inclusions</h4>
+        <ul id="modal-inclusions-list" class="inclusions-list">Loading...</ul>
+      </div>
+
+      <!-- Exclusions Section -->
+      <div class="modal-section">
+        <h4>Exclusions</h4>
+        <ul id="modal-exclusions-list" class="exclusions-list">Loading...</ul>
+      </div>
+
+      <!-- Itinerary Section -->
+      <div class="modal-section itinerary-section">
+        <h4>Itinerary</h4>
+        <ul id="modal-itinerary-list" class="itinerary-list">Loading...</ul>
+      </div>
+      <button id="close-booking-modal" class="close-btn">Close</button>
+      <!-- Buttons for Confirm and Cancel -->
+  <div class="modal-footer">
+    <button id="confirm-booking-modal" class="primary-btn">Confirm Booking</button>
+    <button id="cancel-booking-modal" class="secondary-btn">Cancel</button>
+  </div>
+
     </div>
+  </div>
+
+
+</div>
+
 
     <!-- Thank You Popup -->
     <div id="thank-you-popup" class="modal" style="display: none;">
@@ -260,70 +338,71 @@
 
     <script>
 
+      // Scroll to Booking Form from Footer Button
+      const footerBookBtn = document.getElementById('footer-book-btn');
+      const bookingForm = document.querySelector('.booking-form');
 
-        // Scroll to Booking Form from Footer Button
-        const footerBookBtn = document.getElementById('footer-book-btn');
-        const bookingForm = document.querySelector('.booking-form');
+      footerBookBtn.addEventListener('click', () => {
+        bookingForm.scrollIntoView({ behavior: 'smooth' });
+      });
 
-        footerBookBtn.addEventListener('click', () => {
-          bookingForm.scrollIntoView({ behavior: 'smooth' });
-        });
-
-        // Function to handle footer visibility
-        const footerBookingBar = document.getElementById('footer-booking-bar');
-        function handleFooterVisibility() {
-          if (window.innerWidth > 768) {
-            footerBookingBar.style.display = 'none'; // Hide on large screens
-          } else {
-            footerBookingBar.style.display = 'flex'; // Show on small screens
-          }
+      // Function to handle footer visibility
+      const footerBookingBar = document.getElementById('footer-booking-bar');
+      function handleFooterVisibility() {
+        if (window.innerWidth > 768) {
+          footerBookingBar.style.display = 'none'; // Hide on large screens
+        } else {
+          footerBookingBar.style.display = 'flex'; // Show on small screens
         }
+      }
+
+      // Run on load and on window resize
+      window.addEventListener('resize', handleFooterVisibility);
+      window.addEventListener('DOMContentLoaded', handleFooterVisibility);
+
+      
+      // // Get modal and popup elements
+      // const bookingModal = document.getElementById("booking-modal");
+      // const thankYouPopup = document.getElementById("thank-you-popup");
+      // const closeModalButton = document.getElementById("close-modal");
+    
+      // // Open Modal Function
+      // function openModal() {
+      //   bookingModal.style.display = "flex"; // Show the modal
+      //   document.body.style.overflow = "hidden"; // Disable background scrolling
+      // }
+    
+      // // Close Modal Function
+      // function closeModal() {
+      //   bookingModal.style.display = "none"; // Hide the modal
+      //   document.body.style.overflow = "auto"; // Enable background scrolling
+      // }
+    
+      // // Attach event listener to close button
+      // closeModalButton.addEventListener('click', closeModal);
+    
+      // // Show Thank You Popup After Confirming Booking
+      // function showThankYouMessage() {
+      //   closeModal(); // Close the booking modal
+      //   thankYouPopup.style.display = "flex"; // Show thank you popup
+    
+      //   // Hide the popup automatically after 3 seconds
+      //   setTimeout(() => {
+      //     thankYouPopup.style.display = "none";
+      //   }, 3000);
+      // }
+    
+      // // Optional: Close Modal by Clicking Outside of It
+      // window.onclick = function (event) {
+      //   if (event.target === bookingModal) {
+      //     closeModal();
+      //   }
+      // };
+
+      </script>
 
 
-        // Run on load and on window resize
-        window.addEventListener('resize', handleFooterVisibility);
-        window.addEventListener('DOMContentLoaded', handleFooterVisibility);
 
-        
-        // Get modal and popup elements
-        const bookingModal = document.getElementById("booking-modal");
-        const thankYouPopup = document.getElementById("thank-you-popup");
-        const closeModalButton = document.getElementById("close-modal");
-      
-        // Open Modal Function
-        function openModal() {
-          bookingModal.style.display = "flex"; // Show the modal
-          document.body.style.overflow = "hidden"; // Disable background scrolling
-        }
-      
-        // Close Modal Function
-        function closeModal() {
-          bookingModal.style.display = "none"; // Hide the modal
-          document.body.style.overflow = "auto"; // Enable background scrolling
-        }
-      
-        // Attach event listener to close button
-        closeModalButton.addEventListener('click', closeModal);
-      
-        // Show Thank You Popup After Confirming Booking
-        function showThankYouMessage() {
-          closeModal(); // Close the booking modal
-          thankYouPopup.style.display = "flex"; // Show thank you popup
-      
-          // Hide the popup automatically after 3 seconds
-          setTimeout(() => {
-            thankYouPopup.style.display = "none";
-          }, 3000);
-        }
-      
-        // Optional: Close Modal by Clicking Outside of It
-        window.onclick = function (event) {
-          if (event.target === bookingModal) {
-            closeModal();
-          }
-        };
-
-    </script>
 
 
               <!--COPY ALL FOR NOTIFICATION BELL AND DARKMODE-->
@@ -477,3 +556,4 @@ document.addEventListener("DOMContentLoaded", function () {
 </html>
 
 {% endblock content %}
+

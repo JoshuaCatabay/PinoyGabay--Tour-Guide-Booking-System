@@ -384,6 +384,11 @@ class Booking(db.Model):
     time = db.Column(db.Time, nullable=False)
     duration = db.Column(db.Interval)
     price = db.Column(db.Numeric(10, 2))
+
+       # Relationships
+    traveler = db.relationship('User', backref='traveler_bookings', lazy=True)
+    assigned_guide = db.relationship('TourGuide', backref='assigned_bookings', lazy=True)
+    selected_package = db.relationship('TourPackage', backref='bookings', lazy=True)
     
 class Notification(db.Model):
     __tablename__ = 'Notification'

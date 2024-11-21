@@ -1,11 +1,27 @@
-from flask import abort, render_template, redirect, url_for, flash, request, session, jsonify, current_app
+# from flask import abort, render_template, redirect, url_for, flash, request, session, jsonify, current_app
+# from flask_login import login_required, current_user, logout_user, login_user
+# from BookingSystem.TourOperator_Page import touroperator
+# from . import tourguide  
+# from BookingSystem.TourOperator_Page.form import UserTourGuideForm
+# from BookingSystem import bcrypt, db
+# from werkzeug.security import check_password_hash, generate_password_hash
+# from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, Booking, Notification
+# from .form import PasswordConfirmationForm
+# from datetime import datetime
+# from decimal import Decimal
+# from werkzeug.utils import secure_filename
+# import os
+# import re
+# from werkzeug.security import check_password_hash, generate_password_hash
+
+from flask import render_template, redirect, url_for, flash, request, session, jsonify, current_app
 from flask_login import login_required, current_user, logout_user, login_user
 from BookingSystem.TourOperator_Page import touroperator
 from . import tourguide  
 from BookingSystem.TourOperator_Page.form import UserTourGuideForm
 from BookingSystem import bcrypt, db
 from werkzeug.security import check_password_hash, generate_password_hash
-from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, Booking, Notification
+from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, TourPackage, Booking
 from .form import PasswordConfirmationForm
 from datetime import datetime
 from decimal import Decimal
@@ -13,8 +29,8 @@ from werkzeug.utils import secure_filename
 import os
 import re
 from werkzeug.security import check_password_hash, generate_password_hash
-
-
+from sqlalchemy import func  #!!!!!
+from BookingSystem.models import ReviewsRating, ReviewImages   #!!!!!
 
 
 @tourguide.route('/upload_profile_picture', methods=['POST'])
@@ -139,25 +155,81 @@ def save_profile():
         return jsonify({'success': False, 'error': str(e)}), 500
     
 
-# Tour guide dashboard route
 @tourguide.route('/tourguide_dashboard')
 @login_required
 def tourguide_dashboard():
-    # Get the tour guide's ID
-    tour_guide_id = current_user.id  # Assuming current_user.id is the tour guide's ID
     print(f"Current user in dashboard: {current_user.email}, Role: {current_user.role}")
-    
-    # Fetch bookings for this tour guide
-    bookings = Booking.query.filter_by(tour_guide_id=tour_guide_id).all()
-    
-    # Format booking data for the template
-    for booking in bookings:
-        booking.formatted_date = booking.date_start.strftime("%b %d, %Y")
-        booking.traveler_name = booking.user.first_name + " " + booking.user.last_name  # Assuming user model has first_name and last_name fields
-        booking.tour_package = booking.tour_package  # Adjust this based on your data model if needed
-    
-    # Pass bookings to the template
-    return render_template('tourguide_dashboard.html', tour_guide_id=tour_guide_id, bookings=bookings)
+
+    # Get the tour guide profile for the logged-in user
+    tour_guide = current_user.tour_guide
+    if not tour_guide:
+        flash("Tour guide profile not found.", "error")
+        return redirect(url_for('main.home'))  # Redirect if no profile exists
+
+    # Calculate the total number of reviews for this tour guide
+    total_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide.id).count()
+
+    # Fetch the total tours handled by this guide
+    total_tours = Booking.query.filter_by(tour_guide_id=tour_guide.id).count()
+
+    # Fetch the average rating and review count
+    average_rating, review_count = db.session.query(
+        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
+        func.count(ReviewsRating.id).label('review_count')
+    ).filter(ReviewsRating.tour_guide_id == tour_guide.id).first()
+
+    # Paginate the reviews
+    page = request.args.get('page', 1, type=int)
+    per_page = 2  # Number of reviews per page
+
+    paginated_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide.id) \
+                                           .order_by(ReviewsRating.datetime.desc()) \
+                                           .paginate(page=page, per_page=per_page, error_out=False)
+
+    # Prepare reviews for rendering
+    reviews_data = []
+    for review in paginated_reviews.items:
+        review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+        tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
+        reviews_data.append({
+            "traveler_name": f"{review.user.first_name} {review.user.last_name}",
+            "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
+            "rating": review.rating,
+            "comment": review.comment,
+            "review_date": review.datetime.strftime('%b. %d, %Y'),
+            "tour_guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}",
+            "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
+        })
+
+    # Prepare pagination data
+    pagination_data = {
+        "current_page": paginated_reviews.page,
+        "total_pages": paginated_reviews.pages,
+        "has_next": paginated_reviews.has_next,
+        "has_prev": paginated_reviews.has_prev,
+        "next_page": paginated_reviews.next_num,
+        "prev_page": paginated_reviews.prev_num
+    }
+
+    # Fetch additional profile details for the dashboard
+    characteristics = [c.characteristic for c in tour_guide.characteristics]
+    skills = [s.skill for s in tour_guide.skills]
+
+    return render_template(
+        'tourguide_dashboard.html',
+        profile={
+            "pagination": pagination_data  # Add pagination to the profile dictionary
+        },
+        bio=tour_guide.bio,
+        characteristics=characteristics,
+        skills=skills,
+        reviews=reviews_data,
+        total_reviews=total_reviews,  # Total number of reviews
+        average_rating=round(average_rating, 1),  # Average rating rounded to 1 decimal
+        review_count=review_count or 0,  # Total number of reviews
+        total_tours=total_tours  # Include total tours
+    )
+
 
 
 
@@ -220,7 +292,18 @@ def verify_password():
             "message": "Incorrect password. Please try again."
         }), 401
 
-
+@tourguide.route('/get_contact/<int:tour_guide_id>', methods=['GET'])
+def get_contact(tour_guide_id):
+    try:
+        tour_guide = TourGuide.query.get_or_404(tour_guide_id)
+        contact_info = {
+            "name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}",
+            "contact_number": tour_guide.contact_num,
+            "price": float(tour_guide.price)  # Convert to float for JSON serialization
+        }
+        return jsonify(contact_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @tourguide.route('/update_contact_number', methods=['POST'])
 @login_required
@@ -401,146 +484,207 @@ def get_profile_status():
 
 
 
+
+
 @tourguide.route('/profile/<int:tour_guide_id>')
 def profile(tour_guide_id):
+    page = request.args.get('page', 1, type=int)
+    per_page = 2  # Number of reviews per page
+
+    # Fetch the tour guide's profile
     tour_guide = TourGuide.query.get_or_404(tour_guide_id)
     
-    # Prepare the profile data for rendering
+    # Fetch the average rating and review count
+    average_rating, review_count = db.session.query(
+        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
+        func.count(ReviewsRating.id).label('review_count')
+    ).filter(ReviewsRating.tour_guide_id == tour_guide_id).first()
+
+    # Paginate reviews
+    paginated_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide_id) \
+                                           .order_by(ReviewsRating.datetime.desc()) \
+                                           .paginate(page=page, per_page=per_page, error_out=False)
+
+    # Prepare reviews for rendering
+    reviews_data = []
+    for review in paginated_reviews.items:
+        review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+        tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
+        reviews_data.append({
+            "traveler_name": f"{review.user.first_name} {review.user.last_name}",
+            "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
+            "rating": review.rating,
+            "comment": review.comment,
+            "review_date": review.datetime.strftime('%b. %d, %Y'),
+            "tour_guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}",
+            "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
+        })
+
+    # Prepare pagination data
+    pagination_data = {
+        "current_page": paginated_reviews.page,
+        "total_pages": paginated_reviews.pages,
+        "has_next": paginated_reviews.has_next,
+        "has_prev": paginated_reviews.has_prev,
+        "next_page": paginated_reviews.next_num,
+        "prev_page": paginated_reviews.prev_num
+    }
+
+    # Fetch tour packages from the tour operator associated with this guide
+    tour_packages = TourPackage.query.filter_by(toperator_id=tour_guide.toperator_id).all()
+
+    # Prepare profile data
     profile_data = {
         "name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}",
-        "profile_picture": url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}"),
+        "profile_picture": url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}", _external=True),
         "bio": tour_guide.bio,
         "price": tour_guide.price,
         "characteristics": [char.characteristic for char in tour_guide.characteristics],
         "skills": [skill.skill for skill in tour_guide.skills],
+        "average_rating": round(average_rating, 1),
+        "review_count": review_count or 0,
+        "reviews": reviews_data,
+        "pagination": pagination_data,
+        "tour_packages": [
+            {
+                "id": package.id,
+                "name": package.name
+            }
+            for package in tour_packages
+        ]  # Include tour packages for the dropdown
     }
-    
-    # Render the booking page template
-    return render_template('tourguide_form.html', profile=profile_data)
+
+    return render_template('tourguide_form.html', profile=profile_data, tour_guide=tour_guide)
 
 
 
 @tourguide.route('/active_tourguides', methods=['GET'])
 def get_active_tourguides():
-    # Query the database for active tour guides
-    active_tourguides = TourGuide.query.filter_by(active=True).all()
-    
-    # Create a list to store tour guide data
+    # Query for active tour guides with ratings and total tours
+    active_tourguides = db.session.query(
+        TourGuide,
+        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
+        func.count(ReviewsRating.id).label('review_count'),
+        func.coalesce(func.count(Booking.id), 0).label('total_tours')  # Total tours from Bookings
+    ).outerjoin(ReviewsRating, ReviewsRating.tour_guide_id == TourGuide.id) \
+    .outerjoin(Booking, Booking.tour_guide_id == TourGuide.id) \
+    .filter(TourGuide.active == True) \
+    .group_by(TourGuide.id) \
+    .all()
+
     guides_data = []
-    
-    for guide in active_tourguides:
+
+    for guide, average_rating, review_count, total_tours in active_tourguides:
         # Ensure the tour guide has an associated user and fetch necessary details
         if guide.user:
             guide_data = {
                 "id": guide.id,
                 "name": f"{guide.user.first_name} {guide.user.last_name}",
                 "profile_picture": url_for('static', filename=f"profile_pics/{guide.user.profile_img}", _external=True),
-                "price": guide.price
+                "price": guide.price,
+                "average_rating": round(average_rating, 1),  # Round to 1 decimal place
+                "review_count": review_count,
+                "total_tours": total_tours  # Add total tours dynamically
             }
             guides_data.append(guide_data)
-    
+
     # Return the list as JSON
     return jsonify(guides_data)
 
 
-@tourguide.route('/get_availability/<int:tour_guide_id>', methods=['GET'])
-def get_availability(tour_guide_id):
+
+@tourguide.route('/get_availability', methods=['GET'])
+@login_required
+def get_current_user_availability():
+    """
+    Fetch availability for the current logged-in tour guide.
+    """
     try:
-        # Fetch all availability records for the specified tour guide
-        availabilities = Availability.query.filter_by(tguide_id=tour_guide_id).all()
+        # Fetch the current user's tour guide profile
+        tour_guide = TourGuide.query.filter_by(user_id=current_user.id).first()
+        if not tour_guide:
+            return jsonify([])  # Return an empty list if no tour guide profile exists
         
-        # Format data to include all statuses (both "available" and "unavailable")
-        data = [
+        # Fetch all availability records for the current user's tour guide profile
+        availabilities = Availability.query.filter_by(tguide_id=tour_guide.id).all()
+        return jsonify([
+            {"date": a.availability_date.strftime('%Y-%m-%d'), "status": a.status}
+            for a in availabilities
+        ])
+    except Exception as e:
+        print(f"Error fetching availability for current user: {e}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+@tourguide.route('/get_availability/<int:tour_guide_id>', methods=['GET'])
+def get_availability_for_tour_guide(tour_guide_id):
+    """
+    Fetch availability for a specific tour guide by their ID.
+    """
+    try:
+        # Fetch availability for the specified tour guide
+        availabilities = Availability.query.filter_by(tguide_id=tour_guide_id).all()
+        return jsonify([
             {
                 "date": a.availability_date.strftime('%Y-%m-%d'),
                 "status": a.status
-            } for a in availabilities
-        ]
-        
-        print("Data being sent to frontend:", data)  # Debugging output
-        return jsonify(data)
+            }
+            for a in availabilities
+        ])
     except Exception as e:
-        print("Error fetching availability data:", e)
-        return jsonify({"error": "An error occurred"}), 500
+        print(f"Error fetching availability for Tour Guide ID {tour_guide_id}: {e}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@tourguide.route('/reset_availability', methods=['DELETE'])
+@login_required
+def reset_availability():
+    try:
+        tour_guide = TourGuide.query.filter_by(user_id=current_user.id).first()
+        if not tour_guide:
+            return jsonify({"error": "Tour guide profile not found"}), 404
+        
+        # Delete all availability records for the tour guide
+        Availability.query.filter_by(tguide_id=tour_guide.id).delete()
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "Availability reset successfully."}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+
 
 
 @tourguide.route('/set_availability', methods=['POST'])
 @login_required
 def set_availability():
-    data = request.get_json()
-    print("Received availability data:", data)
-
-    # Ensure the tour guide entry exists for the current user
-    tour_guide = TourGuide.query.filter_by(user_id=current_user.id).first()
-    
-    if not tour_guide:
-        # Create a default tour guide entry if it doesn't exist
-        try:
-            tour_guide = TourGuide(
-                user_id=current_user.id,
-                bio="Default Bio",
-                price=1200,
-                active=False
-            )
-            db.session.add(tour_guide)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error creating new tour guide profile: {e}")
-            return jsonify({"success": False, "message": f"Failed to create tour guide: {str(e)}"}), 500
-
-    # Process each availability entry
     try:
+        data = request.get_json()
+        tour_guide = TourGuide.query.filter_by(user_id=current_user.id).first()
+        if not tour_guide:
+            return jsonify({"error": "Tour guide profile not found"}), 404
+
         for entry in data:
-            date = entry.get('start')
-            status = entry.get('status')
-
-            # Debugging output for each entry
-            print(f"Processing entry - Date: {date}, Status: {status}")
-
-            if not date or not status:
-                print(f"Skipping entry with missing date or status: {entry}")
-                continue
-
-            # Find existing availability or create a new one
             availability = Availability.query.filter_by(
-                tguide_id=tour_guide.id,
-                availability_date=date
+                tguide_id=tour_guide.id, availability_date=entry['date']
             ).first()
-
             if availability:
-                print(f"Updating existing availability for date: {date} with status: {status}")
-                availability.status = status
+                availability.status = entry['status']
             else:
-                print(f"Creating new availability for date: {date} with status: {status}")
-                availability = Availability(
+                new_availability = Availability(
                     tguide_id=tour_guide.id,
-                    availability_date=date,
-                    status=status
+                    availability_date=entry['date'],
+                    status=entry['status'],
                 )
-                db.session.add(availability)
+                db.session.add(new_availability)
 
-        # Commit all changes once after processing the entire batch
         db.session.commit()
         return jsonify({"success": True, "message": "Availability saved successfully."}), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Error saving availability data: {e}")
-        return jsonify({"success": False, "message": f"Error saving availability: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
-
-@tourguide.route('/clear_availability/<int:tour_guide_id>', methods=['POST'])
-@login_required
-def clear_availability(tour_guide_id):
-    try:
-        # Delete all availability records for the specified tour guide
-        Availability.query.filter_by(tguide_id=tour_guide_id).delete()
-        db.session.commit()
-        return jsonify({"success": True, "message": "All availability cleared successfully."}), 200
-    except Exception as e:
-        db.session.rollback()
-        print("Error clearing availability:", e)
-        return jsonify({"success": False, "message": "Error clearing availability"}), 500
 
 
 
@@ -629,29 +773,15 @@ def update_password():
 
 #     return jsonify({'status': 'success', 'message': 'Booking confirmed!'})
 
-@tourguide.route('/get_notifications/<int:tour_guide_id>', methods=['GET'])
-def get_notifications(tour_guide_id):
-    notifications = Notification.query.filter_by(tguide_id=tour_guide_id).all()
-    return jsonify([{
-        'id': n.id,
-        'message': n.message,
-        'booking_id': n.booking_id,
-        'is_read': n.is_read
-    } for n in notifications])
+# @tourguide.route('/get_notifications/<int:tour_guide_id>', methods=['GET'])
+# def get_notifications(tour_guide_id):
+#     notifications = Notification.query.filter_by(tguide_id=tour_guide_id).all()
+#     return jsonify([{
+#         'id': n.id,
+#         'message': n.message,
+#         'booking_id': n.booking_id,
+#         'is_read': n.is_read
+#     } for n in notifications])
 
 
 
-@tourguide.route('/get_booking_details/<int:booking_id>', methods=['GET'])
-def get_booking_details(booking_id):
-    booking = Booking.query.get(booking_id)
-    if not booking:
-        return abort(404)  # Return 404 if booking is not found
-
-    # Structure the response with booking details
-    booking_data = {
-        "date": booking.date.strftime("%Y-%m-%d"),
-        "tour_type": booking.tour_type,  # Adjust based on actual model fields
-        "traveler_name": booking.traveler_name,  # Adjust based on actual model fields
-        "special_notes": booking.special_notes or "N/A"
-    }
-    return jsonify(booking_data)

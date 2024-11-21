@@ -14,10 +14,6 @@ body {
     background-color: #f7fff7;
   }
   
-.contact-touroperator-info {
-  margin-left: -95px;
-  font-size:20px;
-}
   
 /* Sidebar */
 .side-nav {
@@ -210,10 +206,7 @@ body {
 
 
 
-.boxx {
-  /* background-color: red; */
-  text-align: center;
-}
+
 
 /* Centering Account Header */
 .account-header {
@@ -348,7 +341,9 @@ body {
   font-size: 18px;
 }
 
-
+.hidden {
+  display: none;
+}
 
 /* Delete Button */
 .delete-btn {
@@ -387,14 +382,32 @@ body {
   overflow: hidden;
 }
 
-/* Cropper-specific modal container */
-#cropper-container {
-  width: 100%;
-  height: 300px;
+/* Modal Content */
+#cropper-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%; /* Ensure it fits inside the modal */
+  height: 100%; /* Prevent overflow */
   overflow: hidden;
-  margin-bottom: 10px;
 }
 
+#cropper-container {
+  width: 100%; /* Ensure the cropper takes full width */
+  max-height: 300px; /* Constrain height */
+  overflow: hidden;
+}
+
+/* Show Modal */
+#cropper-modal.show {
+  display: block;
+}
+
+#cropper-modal.hidden {
+  display: none;
+}
 
 /* General Modal Styling */
 .modal {
@@ -442,24 +455,6 @@ body {
   font-size: 16px;
   color: #4ecdc4;
   margin-bottom: 30px;
-}
-
-
-/* Input Fields */
-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-}
-
-input:focus {
-  border-color: #4ecdc4; /* Bright Turquoise */
-  outline: none;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); /* Subtle focus shadow */
 }
 
 /* Input Container */
@@ -728,7 +723,9 @@ textarea:focus {
   border-bottom: 2px solid #4ecdc4;
   padding-bottom: 10px;
 }
-
+.modal-header-image {
+  display:block;
+}
 /* Status Box */
 .status-box {
   position: absolute;
@@ -868,19 +865,15 @@ textarea:focus {
 
 /* Tour Guide List Container */
 .tour-guide-list {
-  /* display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); */
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 15px;
   margin-top: 20px;
-  align-items: center;
-  /* background: red; */
 }
 
 /* Tour Guide Card Styling */
 .tour-guide-card {
-  background-color: #fff;
+  background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -889,8 +882,6 @@ textarea:focus {
   align-items: center;
   padding: 15px;
   transition: transform 0.2s ease;
-  max-width: 200px;
-  /* justify-content: center; */
 }
 
 .tour-guide-card:hover {
@@ -969,23 +960,164 @@ textarea:focus {
 
 
 
-.modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 400px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  z-index: 1001;
-  display: none;
+
+/* PACKAGES */
+#tour-packages {
+  padding: 4rem 2rem;
+  text-align: center;
+  background: none;
 }
 
-.modal.show {
-  display: block;
+#tour-packages h2 {
+  font-size: 2.5rem;
+  color: white;
+  margin-bottom: 2rem;
+}
+
+/* Package cards container */
+.package-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* =======================
+ Card Details Styles
+======================= */
+.card-details {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  z-index: 1; /* Ensure text is above the gradient */
+}
+
+.title-rating {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rating {
+  margin-left: 10px; /* Space between title and rating */
+}
+
+.heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px; /* Adjust size as needed */
+  color: white; /* Heart color */
+}
+
+
+
+.card-details {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  z-index: 1; /* Ensure text is above the gradient */
+}
+
+.title-rating {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rating {
+  margin-left: 10px; /* Space between title and rating */
+}
+
+.heart {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px; /* Adjust size as needed */
+  color: white; /* Heart color */
+}
+
+.card {
+  position: relative;
+  width: 300px; /* Adjust as needed */
+  height: 372px; /* Adjust as needed */
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #06294e;
+  box-shadow: 0 0 20px rgb(255, 174, 6);
+}
+
+
+.card-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Gradient overlay */
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.87), rgba(0, 0, 0, 0));
+  z-index: 1; /* Ensure it's above the image but below the text */
+}
+
+/* Overlay for the button */
+.card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(26, 83, 92, 0.9); /* Semi-transparent overlay color */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0; /* Start hidden */
+  transition: opacity 0.5s ease; /* Smooth transition */
+  z-index: 2; /* Ensure it's above everything else */
+}
+
+/* Show overlay on hover */
+.card:hover .card-overlay {
+  opacity: 1; /* Show overlay on hover */
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+/* View Package button */
+.view-package {
+  background: #ff9f1c; /* Button color */
+  color: #101720;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s; /* Change background on hover */
+}
+
+
+/* Optional: Add hover effect to button */
+.card-overlay:hover .view-package {
+  background-color: #ff7f00; /* Darker shade on hover */
+}
+
+.hidden {
+  display: none;
 }
 
 .modal-overlay {
@@ -994,61 +1126,251 @@ textarea:focus {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.tour-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 600px;
+  background: #fff;
+  z-index: 20;
   display: none;
 }
 
-.modal-overlay.show {
+.tour-modal.show {
   display: block;
 }
 
-/* Modal Content Alignment */
-.modal-content {
+
+
+/* Modal Content */
+.tour-modal-content {
+  padding: 20px;
+  background-color: #f9f9f9; /* Light background for content area */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for content */
+  max-height: 70vh; /* Limit the max height to 70% of the viewport height */
+  overflow-y: auto; /* Enable vertical scrolling if content exceeds max-height */
+}
+
+
+
+
+.traveler-reviews-container {
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.traveler-reviews-container h2 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.review-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.tour-image {
+  width: 100%;
+  height: 150px;
+  border-radius: 5px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
 
-/* Button Container */
-.modal-button-container {
+.review-content {
   display: flex;
-  justify-content: flex-end; /* Align buttons to the right */
-  gap: 20px; /* Space between buttons */
-  margin-top: 15px; /* Space from other elements */
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Modal Cancel Button: Text-like Style */
-.cancel-btn {
-  background: none;
+.traveler-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.traveler-pic {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.traveler-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.traveler-details h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.tour-name {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.ratings p {
+  margin: 0;
+  color: #ff9800;
+}
+
+.review-text {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.review-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination-btn {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-decoration: none;
+  color: #333;
+  background-color: #f9f9f9;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination-btn:hover {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.pagination-btn.active {
+  background-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+.pagination-btn.disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+
+@media (max-width: 768px) {
+  .reviews-grid {
+    grid-template-columns: 1fr; /* Stack cards on smaller screens */
+  }
+}
+
+
+#tour-guide-filter {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#tour-guide-filterdropdown {
+  padding: 8px;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 200px;
+}
+ 
+
+
+
+
+
+
+
+
+
+
+.profile-picture img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.guide-info {
+  padding: 15px;
+  text-align: left;
+}
+
+.guide-info h3 {
+  margin: 10px 0;
+  font-size: 1.2rem;
+}
+
+.guide-info p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.guide-info .ratings {
+  font-size: 0.9rem;
+  color: #ff9f1c;
+}
+
+.guide-info .status {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.guide-info .status.active {
+  color: green;
+}
+
+.guide-info .status.inactive {
+  color: red;
+}
+
+.view-btn {
+  background-color: #4ecdc4;
+  color: #fff;
   border: none;
-  color: #1A535C; /* Subtle dark cyan */
-  font-size: 16px;
+  padding: 10px;
+  border-radius: 5px;
   cursor: pointer;
-  padding: 0;
-  transition: color 0.3s;
+  width: 100%;
+  margin-top: 10px;
 }
 
-.cancel-btn:hover {
-  color: #4ecdc4; /* Bright turquoise on hover */
-  text-decoration: underline; /* Optional underline on hover */
-}
-
-/* Modal Save or Confirm */
-.confirm-btn {
-  background-color: #4ecdc4; /* Bright turquoise */
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.confirm-btn:hover {
-  background-color: #3cb1a2; /* Slightly darker turquoise on hover */
+.view-btn:hover {
+  background-color: #3cb09f;
 }

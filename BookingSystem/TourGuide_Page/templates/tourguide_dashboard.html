@@ -40,11 +40,37 @@
           <hr>
 
           <div class="profile-overview">
-            <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic-secondary" />
+            <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic" />
             <div class="profile-details">
               <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>, Your Friendly Tour Guide</h2>
+              <div class="profile-stats">
+                <!-- Ratings and Reviews -->
+                <span class="rating">
+                  ★ {{ profile.average_rating or 0 }} 
+                  <span class="review-count">({{ profile.review_count or 0 }} reviews)</span>
+                </span>
+                <!-- Divider -->
+                <span class="divider">|</span>
+                <!-- Total Tours -->
+                <span class="total-tours">
+                  {{ profile.total_tours or 0 }} Tours
+                </span>
+              </div>
             </div>
           </div>
+          
+            <!-- <div class="dashboard-stats">
+              <div class="stat">
+                  <h3>Average Rating</h3>
+                  <p>{{ average_rating }} ★</p>
+              </div>
+              <div class="stat">
+                  <h3>Total Reviews</h3>
+                  <p>{{ review_count }}</p>
+              </div>
+          </div> -->
+          
+       
 
           <!-- About Me Section -->
         <!-- About Me Section -->
@@ -106,68 +132,68 @@
 
 
 
-
-          <!-- Traveler Reviews Section -->
-          <div class="container">
-            <h2>Traveler Reviews</h2>
-
-            <!-- Reviews Grid -->
-            <div class="traveler-reviews-grid">
-              
-              <!-- Review Card -->
-              <div class="review-card">
-                <img src="{{ url_for('static', filename='bolinao.jpg') }}" alt="Tour Picture" class="tour-image" />
-                <div class="review-content">
-                  <div class="traveler-info">
-                    <img src="{{ url_for('static', filename='vincenzo.jpg') }}" alt="Traveler Picture" class="traveler-pic" />
-                    <div class="traveler-details">
-                      <h3>Hyunwoo</h3>
-                      <p class="tour-name">Island Tour</p>
-                      <div class="ratings">4.2 ★★★★☆</div>
-                    </div>
+        <div class="container">
+          <h2>
+              Traveler Reviews 
+              <span class="total-reviews">({{ total_reviews }})</span>
+          </h2>
+      
+          <div class="traveler-reviews">
+              {% if reviews %}
+                  {% for review in reviews %}
+                  <div class="review-card">
+                      <img src="{{ review.tour_image }}" alt="Tour Picture" class="tour-image" />
+                      <div class="review-content">
+                          <div class="traveler-info">
+                              <img src="{{ review.traveler_profile }}" alt="Traveler Picture" class="traveler-pic" />
+                              <div class="traveler-details">
+                                  <h3>{{ review.traveler_name }}</h3>
+                                  <p class="tour-name">Tour Package</p>
+                                  <div class="ratings"><p>{{ review.rating }} ★</p></div>
+                              </div>
+                          </div>
+                          <p class="review-text">{{ review.comment }}</p>
+                          <div class="review-footer">
+                              <p class="review-date">{{ review.review_date }}</p>
+                              <p class="toured-by">Toured by: <span class="tour-guide-name">{{ current_user.first_name }} {{ current_user.last_name }}</span></p>
+                          </div>
+                      </div>
                   </div>
-
-                  <p class="review-text">
-                    Had an amazing experience! The guide was knowledgeable and friendly.
-                  </p>
-
-                  <div class="review-footer">
-                    <p class="review-date">Oct. 10, 2024</p>
-                    <p class="toured-by">Toured by: <span class="tour-guide-name">Tour Guide 1</span></p>
-                  </div>
-
-                </div>
-              </div>
-
-              <!-- Additional Review Card -->
-              <div class="review-card">
-                <img src="{{ url_for('static', filename='italia.jpg') }}" alt="Tour Picture" class="tour-image" />
-                <div class="review-content">
-                  <div class="traveler-info">
-                    <img src="{{ url_for('static', filename='doonaaaaa.jpg') }}" alt="Traveler Picture" class="traveler-pic" />
-                    <div class="traveler-details">
-                      <h3>Jane Doe</h3>
-                      <p class="tour-name">City Walking Tour</p>
-                      <div class="ratings">4.5 ★★★★★</div>
-                    </div>
-                  </div>
-
-                  <p class="review-text">
-                    One of the best tours I’ve ever had! Highly recommend.
-                  </p>
-
-                  <div class="review-footer">
-                    <p class="review-date">Nov. 15, 2024</p>
-                    <p class="toured-by">Toured by: <span class="tour-guide-name">Tour Guide 2</span></p>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-            <button class="see-more-btn">See More Reviews</button>
+                  {% endfor %}
+              {% else %}
+                  <p>No reviews yet.</p>
+              {% endif %}
           </div>
+      <!-- Pagination Controls -->
+<!-- Pagination Controls -->
+{% if profile.pagination.total_pages > 1 %}
+<div class="pagination-container">
+  <!-- First Page -->
+  <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
+
+  <!-- Previous Page -->
+  <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
+
+  <!-- Page Numbers -->
+  {% for page in range(1, profile.pagination.total_pages + 1) %}
+  {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
+    <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
+  {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
+    <span class="pagination-ellipsis">...</span>
+  {% endif %}
+  {% endfor %}
+
+  <!-- Next Page -->
+  <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
+
+  <!-- Last Page -->
+  <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
+</div>
+{% endif %}
 
         </div>
+        </div>
+       
 
         <!-- Bookings Tab -->
         <div class="tab-pane" id="dashboard">
@@ -238,157 +264,61 @@
                 </div>
               </div>
 
+              <div class="booking-category" data-status="cancelled">
+                <h4 class="status-label">Cancelled</h4>
+                <div class="booking-card">
+                  <div class="booking-info">
+                    <span class="booking-date">Oct 22, 2024</span>
+                    <span class="tour-package">Food Tour</span>
+                    <span class="traveler-name">Traveler: Amy Cooper</span>
+                  </div>
+                  <button class="details-btn" onclick="openBookingDetails('Booking #126')">View Details</button>
+                </div>
+              </div>
+
             </div>
           
-            
-            
             <!-- Booking Details Modal -->
             <div id="booking-modal" class="modal hidden">
               <div class="modal-content">
                 <h3>Booking Details</h3>
                 <p id="booking-info">Here will be the booking details...</p>
-                <!-- Status Section -->
-                <div class="status-box">
-                  <span class="status-circle confirmed">Confirmed</span>
-                </div>
-
-                <!-- Traveler Information Container -->
-                <div class="container-section traveler-info expanded">
-                  <h4 class="container-header">Traveler Information</h4>
-                  <br>
-                  <div class="info-item">
-                    <strong>Traveler:</strong> <span>John Doe</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Tour Guide:</strong> <span>Jane Smith</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Tour Guide Number:</strong> <span>09223550501</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Date & Duration:</strong> <span>October 15, 2024 - October 12, 2024</span>
-                  </div>
-                  <div class="info-item">
-                    <strong>Traveler Quantity:</strong> <span>2</span>
-                  </div>
-
-                  <!-- Special Notes Section -->
-                  <div class="notes-box">
-                    <h5 >Special Notes</h5>
-                    <p>Looking forward to a beach visit. Kindly arrange for snorkeling gear.</p>
-                  </div>
-                </div>
-
-                <!-- Tour Package Details Container -->
-                <div class="container-section tour-package-details expanded">
-                  <h4 class="container-header">Tour Package Details</h4>
-                  <br>
-
-              <!-- Header with Image, Title, Location, and Close Button -->
-              <div class="modal-header">
-                <img src="Image/bolinao.jpg" alt="Tour Image" class="modal-header-image">
-                <div class="header-text-overlay">
-                  <h3 class="package-title">Island Hopping Adventure</h3>
-                  <p class="location"><span class="location-icon">&#x1F4CD;</span> Bolinao, Pangasinan</p>
-                </div>
-              </div>
-
-              <!-- Description -->
-              <p class="description">Experience the beautiful islands with guided tours, beach activities, and cultural insights.</p>
-              <!-- Estimated Price Section -->
-              <div class="modal-section">
-                <h4>Estimated Price</h4>
-                <ul class="price-list">
-                  <li>Entrance fee: $10</li>
-                  <li>Taxi: $30</li>
-                </ul>
-              </div>
-
-              <!-- Inclusions Section -->
-              <div class="modal-section">
-                <h4>Inclusions</h4>
-                <ul class="inclusions-list">
-                  <li><span class="checkmark">&#10003;</span> Guided tours</li>
-                  <li><span class="checkmark">&#10003;</span> Meals (breakfast and lunch)</li>
-                  <li><span class="checkmark">&#10003;</span> Snorkeling gear</li>
-                </ul>
-              </div>
-
-              <!-- Exclusions Section -->
-              <div class="modal-section">
-                <h4>Exclusions</h4>
-                <ul class="exclusions-list">
-                  <li><span class="crossmark">&#10007;</span> Dinner</li>
-                  <li><span class="crossmark">&#10007;</span> Personal expenses</li>
-                  <li><span class="crossmark">&#10007;</span> Travel insurance</li>
-                </ul>
-              </div>
-
-              <!-- Itinerary Section -->
-              <div class="modal-section itinerary-section">
-                <h4>Itinerary</h4>
-                <ul class="itinerary-list">
-                  <li>
-                    <span class="timeline-dot"></span>
-                    <div class="timeline-content">
-                      <strong>Meeting Point:</strong>
-                      <p>Down the stairs of BTS Saphan Taksin station exit 3 - Bangkok</p>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="timeline-dot"></span>
-                    <div class="timeline-content">
-                      <strong>Food & Culture:</strong>
-                      <p>Discover why street food is so relevant for locals and their culture.</p>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="timeline-dot"></span>
-                    <div class="timeline-content">
-                      <strong>Authentic Tastings:</strong>
-                      <p>Enjoy sweet sticky rice, roti, and other tastings that showcase the Thai food tradition.</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-                </div>
-                <br>
                 <button class="primary-btn" id="close-booking-modal">Close</button>
               </div>
             </div>
           </div>
 
         </div>
+        
+<!-- Availability Tab Pane -->
+<div class="tab-pane" id="calendar">
+  <div class="availability-container">
+    <h2>Manage Availability</h2>
 
-        <!-- Availability Tab Pane -->
-        <div class="tab-pane" id="calendar">
-          <div class="availability-container">
-            <h2>Manage Availability</h2>
+    <!-- Legend -->
+    <div class="calendar-legend">
+      <h4>Legend:</h4>
+      <ul>
+        <li><span class="legend-available"></span> Available</li>
+        <li><span class="legend-unavailable"></span> Unavailable</li>
+        <li><span class="legend-booked"></span> Booked</li>
+      </ul>
+    </div>
 
-            <!-- Legend -->
-            <div class="calendar-legend">
-              <h4>Legend:</h4>
-              <ul>
-                <li><span class="legend-available"></span> Available</li>
-                <li><span class="legend-unavailable"></span> Unavailable</li>
-                <li><span class="legend-booked"></span> Booked</li>
-              </ul>
-            </div>
+    <!-- Calendar -->
+    <div id="availability-calendar"></div>
 
-            <!-- Calendar -->
-            <div id="availability-calendar" data-tour-guide-id="{{ tour_guide_id }}"></div>
+    <!-- Calendar Controls -->
+    <div class="calendar-controls">
+      <button id="edit-availability" class="primary-btn">Edit Availability</button>
+      <button id="mark-available" class="available-btn hidden">Mark Available</button>
+      <button id="reset-calendar" class="reset-btn hidden">Reset Calendar</button>
+      <button id="mark-unavailable" class="unavailable-btn hidden">Mark Unavailable</button>
+      <button id="save-availability" class="primary-btn hidden">Save Availability</button>
+    </div>
+  </div>
+</div>
 
-            <!-- Calendar Controls -->
-            <div class="calendar-controls">
-              <button id="edit-availability" class="primary-btn">Edit Availability</button>
-              <button id="mark-available" class="available-btn hidden">Mark Available</button>
-              <button id="reset-calendar" class="reset-btn hidden">Reset Calendar</button>
-              <button id="mark-unavailable" class="unavailable-btn hidden">Mark Unavailable</button>
-              <button id="save-availability" class="primary-btn hidden">Save Availability</button>
-            </div>
-
-          </div>
-        </div>
 
         <!-- Account Tab -->
         <div class="tab-pane active" id="account">
@@ -399,7 +329,7 @@
             <!-- Profile Picture Upload -->
             <div class="profile-overview">
               <!-- Dynamically load profile picture from the backend -->
-              <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic-main" />
+              <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic" />
 
             
               <!-- Hidden file input for image upload -->
@@ -407,7 +337,7 @@
             
               <!-- Buttons for changing and saving the profile picture -->
               <button class="primary-btn" id="change-pic-btn">Change Profile Picture</button>
-              <button class="confirm-btn hidden" id="save-pic-btn">Save</button>
+              <button class="primary-btn hidden" id="save-pic-btn">Save</button>
             
               <!-- Cropper Modal for adjusting the profile picture -->
               <div id="cropper-modal" class="modal hidden">
@@ -442,16 +372,16 @@
                 <input type="number" id="price-input" class="editable hidden" placeholder="Enter price" min="0" />
               </div>
               
-              <div class="contact-info">
-                <h2>Contact Information</h2>
-              </div>
+
+              <h2>Contact Information</h2>
+
               <!-- Email Section -->
               <div class="input-group">
                 <label for="email">
                   Email 
                   <button class="edit-btn" id="guide-edit-email-btn">&#9998;</button>
                 </label>
-                <input type="email" id="email-input" value="{{ current_user.email }}" disabled /> 
+                <input type="email" id="email" value="{{ current_user.email }}" disabled /> 
               </div>
 
               <!-- Contact Number Section -->
@@ -469,7 +399,7 @@
                   Current Password
                   <button class="edit-btn" id="guide-edit-password-btn">&#9998;</button>
                 </label>
-                <input type="password" id="current-password" placeholder="••••••••" disabled />
+                <input type="password" id="current-password" placeholder="•••••••••" disabled />
               </div>
 
 
@@ -592,8 +522,7 @@
       <!-- Modal Overlay -->
       <div id="modal-overlay" class="modal-overlay hidden"></div>
 
-    </div>
-
+    
 
   
     <script src="{{ url_for('static', filename='TourGuide.js') }}"defer></script>

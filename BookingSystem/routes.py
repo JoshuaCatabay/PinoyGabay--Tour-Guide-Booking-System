@@ -1,18 +1,32 @@
+# import secrets
+# import os
+# from flask import current_app, session
+# from flask import Blueprint, render_template, url_for, flash, redirect, request, jsonify
+# from BookingSystem import db, bcrypt, mail
+# from BookingSystem.forms import TravelerLoginForm, TravelerRegistrationForm, TravelerRequestResetForm, TravelerResetPasswordForm, UpdateAccountForm
+# from BookingSystem.models import User, TourOperator , send_confirmation_email, Booking, TourPackage, TourGuide, EstimatedPrice, Inclusion, Exclusion, Itinerary
+# from flask_login import login_user, current_user, logout_user, login_required 
+# from werkzeug.utils import secure_filename
+# from BookingSystem.models import Availability, Booking, Notification, ReviewsRating, ReviewImages
+# from werkzeug.security import check_password_hash, generate_password_hash
+# import re
+# from datetime import datetime, timedelta
+# from sqlalchemy import func
+# #from flask_mail import Message
 import secrets
 import os
 from flask import current_app, session
 from flask import Blueprint, render_template, url_for, flash, redirect, request, jsonify
 from BookingSystem import db, bcrypt, mail
 from BookingSystem.forms import TravelerLoginForm, TravelerRegistrationForm, TravelerRequestResetForm, TravelerResetPasswordForm, UpdateAccountForm
-from BookingSystem.models import User, TourOperator , send_confirmation_email, Booking, TourPackage, TourGuide, EstimatedPrice, Inclusion, Exclusion, Itinerary
+from BookingSystem.models import User, TourOperator , send_confirmation_email
 from flask_login import login_user, current_user, logout_user, login_required 
 from werkzeug.utils import secure_filename
-from BookingSystem.models import Availability, Booking, Notification, ReviewsRating, ReviewImages
+from BookingSystem.models import Availability
 from werkzeug.security import check_password_hash, generate_password_hash
-import re
-from datetime import datetime, timedelta
-from sqlalchemy import func
-#from flask_mail import Message
+from BookingSystem.models import ReviewsRating, ReviewImages  #!!!!!
+from sqlalchemy import func   #!!!!!
+from BookingSystem.models import User, TourOperator, TourGuide, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary, Booking
 
 
 main = Blueprint('main', __name__)  # Ensure the 'main' blueprint is set
@@ -236,20 +250,43 @@ def logout():
 #     profile_img = url_for('static', filename='profile_pics/' + profile_img_name)
     
 #     return render_template('account.html', title='Account', profile_img=profile_img, form=form)
+
 @main.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
     form = UpdateAccountForm()
-    if form.picture.data:
-        profile_img = save_picture(form.picture.data)  # Save the picture
-        current_user.profile_img = profile_img  # Update current user's profile image
-        db.session.commit()  # Save changes in the database
 
-    # Use default image if no profile image is set
+    if form.picture.data:
+        profile_img = save_picture(form.picture.data)
+        current_user.profile_img = profile_img
+        db.session.commit()  # Save the new image file name to the database
+
+    # Use a default image if no image file is set
     profile_img_name = current_user.profile_img if current_user.profile_img else 'default.jpg'
-    profile_img_url = url_for('static', filename='profile_pics/' + profile_img_name)
-    
-    return render_template('account.html', title='Account', profile_img=profile_img_url, form=form)
+    profile_img = url_for('static', filename='profile_pics/' + profile_img_name)
+
+    # Fetch bookings for the logged-in traveler with eager loading
+    bookings = (
+        db.session.query(Booking)
+        .filter_by(user_id=current_user.id)
+        .options(
+            db.joinedload(Booking.selected_package),
+            db.joinedload(Booking.assigned_guide).joinedload(TourGuide.user),
+        )
+        .all()
+    )
+
+    # Pass bookings to the template
+    return render_template(
+        'account.html',
+        title='Account',
+        profile_img=profile_img,
+        form=form,
+        bookings=bookings,  # Pass the bookings to the template
+    )
+
+
+
 
 
 
@@ -269,6 +306,7 @@ def traveler_dashboard():
 @main.route('/tour_package')
 def tour_package():
     return render_template('tour_package.html')
+
 
 
 
@@ -430,30 +468,36 @@ def update_password():
     
     
  
+ 
+@main.route('/tour_package/details/<int:package_id>', methods=['GET'])
+def get_tour_package_details(package_id):
+    try:
+        # Fetch package details based on package_id
+        package = TourPackage.query.get_or_404(package_id)
 
-# Route to create a new booking
-@main.route('/create_booking', methods=['POST'])
-@login_required
-def create_booking():
-    data = request.json
-    tour_guide_id = data.get("tour_guide_id")  # Get this from frontend or selection in UI
-    tour_package_id = data.get("tour_type")  # Assuming tour_type maps to package_id
+        # Prepare the data to return
+        package_data = {
+            "name": package.name,
+            "description": package.description,
+            "estimated_prices": [
+                {"description": price.description, "estimated_price": price.estimated_price}
+                for price in package.estimated_prices
+            ],
+            "inclusions": [
+                {"inclusion": inclusion.inclusion} for inclusion in package.inclusions
+            ],
+            "exclusions": [
+                {"exclusion": exclusion.exclusion} for exclusion in package.exclusions
+            ],
+            "itineraries": [
+                {"title": itinerary.title, "subtitle": itinerary.subtitle} for itinerary in package.itineraries
+            ],
+            "package_img": package.package_img
+        }
 
-    booking = Booking(
-        user_id=current_user.id,
-        tour_guide_id=tour_guide_id,
-        package_id=tour_package_id,
-        status="upcoming",
-        date_start=datetime.strptime(data["date_start"], "%Y-%m-%d"),
-        traveler_quantity=data["traveler_quantity"],
-        special_notes=data.get("special_notes", ""),
-        time=datetime.now().time(),  # Example: replace with actual start time
-        price=1000.00  # Placeholder, fetch actual price from package data if needed
-    )
-    db.session.add(booking)
-    db.session.commit()
-
-    return jsonify({"success": True, "message": "Booking created successfully."})
+        return jsonify(package_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 
@@ -484,38 +528,6 @@ def update_email():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': 'An error occurred while updating the email.'}), 500
-
-
-
-@main.route('/tour_package/details/<int:package_id>', methods=['GET'])
-def get_tour_package_details(package_id):
-    try:
-        # Fetch package details based on package_id
-        package = TourPackage.query.get_or_404(package_id)
-
-        # Prepare the data to return
-        package_data = {
-            "name": package.name,
-            "description": package.description,
-            "estimated_prices": [
-                {"description": price.description, "estimated_price": price.estimated_price}
-                for price in package.estimated_prices
-            ],
-            "inclusions": [
-                {"inclusion": inclusion.inclusion} for inclusion in package.inclusions
-            ],
-            "exclusions": [
-                {"exclusion": exclusion.exclusion} for exclusion in package.exclusions
-            ],
-            "itineraries": [
-                {"title": itinerary.title, "subtitle": itinerary.subtitle} for itinerary in package.itineraries
-            ],
-            "package_img": package.package_img
-        }
-
-        return jsonify(package_data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 
@@ -562,98 +574,6 @@ def submit_review():
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
-
-
-
-
-
-
-
-
-
-
-####
-@main.route('/submit_booking', methods=['POST'])
-def submit_booking():
-    print("Backend route '/submit_booking' reached.")  # Log route access
-    
-    booking_data = request.get_json()
-    print("Received booking data:", booking_data)  # Log the raw booking data
-    
-    if not booking_data:
-        print("Error: No booking data received.")
-        return jsonify({'status': 'error', 'message': 'No booking data received'}), 400
-
-    # Extract and log fields
-    date_str = booking_data.get('date')
-    tour_type = booking_data.get('tourType')
-    traveler_quantity = booking_data.get('travelerQuantity')
-    special_notes = booking_data.get('personalizedNotes', '')
-    price = booking_data.get('price')
-    package_id = booking_data.get('packageId')
-    tour_guide_id = booking_data.get('tourGuideId')
-    
-    print("Parsed booking fields:", date_str, tour_type, traveler_quantity, special_notes, price, package_id, tour_guide_id)
-
-    # Check for required fields
-    if not date_str or not tour_type or not traveler_quantity or not tour_guide_id:
-        print("Error: Missing required fields")
-        return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
-
-    # Process date
-    try:
-        date_start = datetime.strptime(date_str, '%Y-%m-%d').date()
-        print("Parsed date_start:", date_start)
-    except ValueError as e:
-        print("Error parsing date:", str(e))
-        return jsonify({'status': 'error', 'message': 'Invalid date format', 'error_details': str(e)}), 400
-
-    # Validate the package and tour guide
-    package = TourPackage.query.get(package_id)
-    tour_guide = TourGuide.query.get(tour_guide_id)
-    if not package:
-        print("Error: Invalid package ID")
-        return jsonify({'status': 'error', 'message': 'Invalid package'}), 400
-    if not tour_guide:
-        print("Error: Invalid tour guide ID")
-        return jsonify({'status': 'error', 'message': 'Invalid tour guide'}), 400
-
-    # Get authenticated user ID
-    user_id = current_user.id if current_user.is_authenticated else None
-    if not user_id:
-        print("Error: User is not authenticated")
-        return jsonify({'status': 'error', 'message': 'User is not authenticated'}), 400
-    print("Authenticated user ID:", user_id)
-
-    # Set the booking status
-    status = "Upcoming"
-    booking_time = datetime.now().time()
-
-    # Create a new booking entry
-    new_booking = Booking(
-        user_id=user_id,
-        tour_guide_id=tour_guide_id,
-        package_id=package_id,
-        status=status,
-        date_start=date_start,
-        traveler_quantity=traveler_quantity,
-        special_notes=special_notes,
-        time=booking_time,
-        price=price
-    )
-
-    try:
-        db.session.add(new_booking)
-        db.session.commit()
-        print("Booking saved successfully in database!")
-        return jsonify({'status': 'success', 'message': 'Booking saved successfully!'})
-    except Exception as e:
-        db.session.rollback()
-        print("Error saving booking in database:", str(e))
-        return jsonify({'status': 'error', 'message': 'Failed to save booking', 'error_details': str(e)})
-
-
-
 
 
 

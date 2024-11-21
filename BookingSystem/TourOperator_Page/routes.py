@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 import os
 from flask import jsonify
 from BookingSystem.models import ReviewsRating, ReviewImages
+from sqlalchemy import func  #!!!!!
 
 
 @touroperator.route('/create_tour_package', methods=['GET', 'POST'])

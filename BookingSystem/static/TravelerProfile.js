@@ -189,39 +189,74 @@ closeBookingModal.addEventListener('click', () => {
   bookingModal.classList.remove('show');
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const reviewModal = document.getElementById('review-modal');
+  const closeReviewModal = document.getElementById('close-review-modal');
+  const stars = document.querySelectorAll('.star');
+  let selectedRating = 0; // Store selected rating
 
-// Open and Close To Review Modal
-const reviewButtons = document.querySelectorAll('.review-btn');
-const reviewModal = document.getElementById('review-modal');
-const closeReviewModal = document.getElementById('close-review-modal');
-const stars = document.querySelectorAll('.star');
-
-// Open the modal when a review button is clicked
-reviewButtons.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    reviewModal.classList.add('show');
+  // Open the modal when a review button is clicked
+  document.querySelectorAll('.review-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+          reviewModal.classList.add('show');
+          document.getElementById('modal-overlay').classList.add('show');
+      });
   });
-});
 
-// Close the modal
-closeReviewModal.addEventListener('click', () => {
-  reviewModal.classList.remove('show');
-});
-
-// Star Rating Logic
-stars.forEach((star, index) => {
-  star.addEventListener('click', () => {
-    stars.forEach((s, i) => {
-      s.classList.toggle('active', i <= index); // Highlight stars up to the clicked one
-    });
+  // Close the modal
+  closeReviewModal.addEventListener('click', () => {
+      reviewModal.classList.remove('show');
+      document.getElementById('modal-overlay').classList.remove('show');
   });
+
+  // Star Rating Logic
+  stars.forEach((star, index) => {
+      star.addEventListener('click', () => {
+          selectedRating = index + 1; // Set the selected rating
+          stars.forEach((s, i) => s.classList.toggle('active', i <= index)); // Highlight up to clicked star
+      });
+  });
+
+
+
+
+
+
+document.getElementById('review-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  if (selectedRating === 0) {
+      alert('Please select a star rating.');
+      return;
+  }
+
+  const comment = document.getElementById('review-text').value;
+  const reviewImage = document.getElementById('review-image').files[0];
+  const formData = new FormData();
+  formData.append('rating', selectedRating);
+  formData.append('comment', comment);
+  formData.append('tour_guide_id', 1); // Replace with the actual tour guide ID
+  if (reviewImage) {
+      formData.append('review_image', reviewImage);
+  }
+
+  fetch('/submit_review', {
+      method: 'POST',
+      body: formData,
+  })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              alert('Review submitted successfully!');
+              location.reload(); // Reload or update the page
+          } else {
+              alert(`Failed to submit review: ${data.message}`);
+          }
+      })
+      .catch(error => console.error('Error submitting review:', error));
 });
 
-
-
-
-
-
+})
 
 
 
@@ -369,3 +404,120 @@ function closeModal() {
   modalOverlay.classList.remove('show');
   confirmPasswordInput.value = ''; // Clear password input
 }
+
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Modal elements
+  const modal = document.getElementById('booking-details-modal');
+  const modalLoader = document.getElementById('modal-loader');
+  const modalDetails = document.getElementById('modal-details');
+  const closeModalButton = document.getElementById('close-booking-modal');
+
+  // Function to fetch and display booking details
+  async function fetchAndDisplayBookingDetails(bookingId) {
+    console.log('Fetching details for booking ID:', bookingId); // Debugging log
+
+    // Reset modal state
+    modalLoader.style.display = 'block';
+    modalDetails.classList.add('hidden');
+    modal.classList.add('show'); // Show modal
+    modal.classList.remove('hidden'); // Ensure it's visible
+    document.body.style.overflow = 'hidden';
+
+    try {
+      // Fetch booking details
+      const response = await fetch(`/booking/details/${bookingId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch booking details: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Booking details fetched:', data); // Debugging log
+
+      // Populate modal with booking details
+      document.getElementById('modal-traveler-name').textContent = data.traveler.name;
+      document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
+      document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
+      document.getElementById('modal-tour-date').textContent = `${data.date_start} - ${data.date_end}`;
+      document.getElementById('modal-traveler-quantity').textContent = data.traveler_quantity;
+      document.getElementById('modal-tour-guide-price').textContent = `₱${data.price}`;
+      document.getElementById('modal-special-notes').textContent = data.special_notes;
+
+      // Populate package details
+      const packageData = data.package;
+      document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
+      document.getElementById('modal-package-title').textContent = packageData.name;
+      document.getElementById('modal-package-description').textContent = packageData.description;
+
+      // Populate estimated prices
+      const priceList = document.getElementById('modal-price-list');
+      priceList.innerHTML = '';
+      packageData.estimated_prices.forEach(price => {
+        const li = document.createElement('li');
+        li.textContent = `${price.description}: ₱${price.estimated_price}`;
+        priceList.appendChild(li);
+      });
+
+      // Populate inclusions
+      const inclusionsList = document.getElementById('modal-inclusions-list');
+      inclusionsList.innerHTML = '';
+      packageData.inclusions.forEach(inclusion => {
+        const li = document.createElement('li');
+        li.textContent = inclusion.inclusion;
+        inclusionsList.appendChild(li);
+      });
+
+      // Populate exclusions
+      const exclusionsList = document.getElementById('modal-exclusions-list');
+      exclusionsList.innerHTML = '';
+      packageData.exclusions.forEach(exclusion => {
+        const li = document.createElement('li');
+        li.textContent = exclusion.exclusion;
+        exclusionsList.appendChild(li);
+      });
+
+      // Populate itineraries
+      const itineraryList = document.getElementById('modal-itinerary-list');
+      itineraryList.innerHTML = '';
+      packageData.itineraries.forEach(itinerary => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${itinerary.title}</strong>: ${itinerary.subtitle}`;
+        itineraryList.appendChild(li);
+      });
+
+      // Show modal content
+      modalLoader.style.display = 'none';
+      modalDetails.classList.remove('hidden');
+      console.log('Modal content populated successfully.'); // Debugging log
+    } catch (error) {
+      console.error('Error loading booking details:', error);
+      modalLoader.style.display = 'none';
+      alert('Failed to load booking details. Please try again.');
+    }
+  }
+
+  // Add event listeners to booking cards
+  document.querySelectorAll('.view-booking').forEach(button => {
+    button.addEventListener('click', function () {
+      const bookingId = this.id.split('-').pop(); // Extract the booking ID from the button ID
+      fetchAndDisplayBookingDetails(bookingId);
+    });
+  });
+
+  // Close modal
+  closeModalButton.addEventListener('click', function () {
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  });
+});
+
+
+
+
