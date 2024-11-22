@@ -706,11 +706,12 @@
     
               <div class="boxx">
               <!-- Name Section -->
-              <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }} {{ current_user.last_name }}</span> </h1>
+              <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }}</span> </h1>
+              <h2 class="h2-guide-name" > <span id="full-name">{{ current_user.tour_operator.municipal }}</span> </h2>
 
                     
               <div class="contact-touroperator-info">
-                <h2>Contact Information</h2>
+                <h3>Contact Information</h3>
               </div>
                <!-- Email Section -->
                <div class="input-group">

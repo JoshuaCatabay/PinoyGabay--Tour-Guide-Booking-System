@@ -138,6 +138,28 @@
             </label>
           </div>
 
+
+          <!-- Modal structure -->
+          <div class="modal-overlay" id="modal-overlay" style="display: none;">
+            <div class="modal" id="confirmation-modal">
+              <button class="close-btn" id="close-modal">&times;</button>
+              <h1>Account Confirmation Required</h1>
+              <p>You have registered successfully. Please check your email for a confirmation link.</p>
+            </div>
+          </div>
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div id="flash-messages">
+                {% for category, message in messages %}
+                  <div id="flash-message" class="alert alert-{{ category }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+
           <div class="button-container">
             <button type="submit" class="primary-btn">Create Account</button>
           </div>
@@ -149,24 +171,56 @@
       </div>
     </div>
 
+    <!-- <script>
+      // Get references to elements
+      const modal = document.querySelector('.modal');
+      const overlay = document.querySelector('.modal-overlay');
+      const closeModalButton = document.getElementById('close-modal');
     
-    <script>
-  // Get references to elements
-  const modal = document.querySelector('.modal');
-  const overlay = document.querySelector('.modal-overlay');
-  const closeModalButton = document.getElementById('close-modal');
+      // Close and redirect to home when 'X' is clicked
+      closeModalButton.addEventListener('click', () => {
+        window.location.href = '{{ url_for("main.home") }}'; // Redirect to home page
+      });
+    
+      // Close and redirect to home when clicking outside the modal
+      overlay.addEventListener('click', () => {
+        window.location.href = '{{ url_for("main.home") }}'; // Redirect to home page
+      });
+    
+        </script> -->
 
-  // Close and redirect to home when 'X' is clicked
-  closeModalButton.addEventListener('click', () => {
-    window.location.href = '{{ url_for("main.home") }}'; // Redirect to home page
-  });
-
-  // Close and redirect to home when clicking outside the modal
-  overlay.addEventListener('click', () => {
-    window.location.href = '{{ url_for("main.home") }}'; // Redirect to home page
-  });
-
-    </script>
+        <script>
+          // Show the modal
+          function showModal() {
+            const overlay = document.getElementById('modal-overlay');
+            const modal = document.getElementById('confirmation-modal');
+            overlay.style.display = 'block';
+            modal.style.display = 'block';
+          }
+        
+          // Close the modal
+          function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            const modal = document.getElementById('confirmation-modal');
+            overlay.style.display = 'none';
+            modal.style.display = 'none';
+            window.location.href = '/'; // Redirect to home page after closing the modal
+          }
+        
+          // Add event listeners for closing the modal
+          document.getElementById('close-modal').addEventListener('click', closeModal);
+          document.getElementById('modal-overlay').addEventListener('click', closeModal);
+        
+          // Detect flash messages and trigger the modal
+          document.addEventListener('DOMContentLoaded', () => {
+            const flashMessage = document.getElementById('flash-message');
+            if (flashMessage && flashMessage.innerText.includes('Registration successful!')) {
+              showModal();
+            }
+          });
+        </script>
+        
+        
 {% endblock %} 
 </body>
 </html>
