@@ -45,9 +45,25 @@
             <p>8</p>
           </div>
           <div class="overview-card">
-            <h3>Completed Tours</h3>
-            <p>15</p>
+            <div class="average-rating">
+                <h3>Average Rating</h3>
+                <p>★ {{ average_rating or 0 }}</p>
+            </div>
+            </div>
+
+            <div class="overview-card">
+            <div class="total-reviews">
+                <h3>Total Reviews</h3>
+                <p>{{ review_count or 0 }}</p>
+            </div>
           </div>
+          <div class="overview-card">
+            <div class="total-tours">
+                <h3>Completed Tours</h3>
+                <p>{{ total_tours or 0 }}</p>
+            </div>
+        </div>
+        
         </div>
   
 <!-- Bookings Tabs Container -->
@@ -132,7 +148,7 @@
             <div class="traveler-reviews-container">
               <h2>
                 Traveler Reviews 
-                <span class="total-reviews">({{ total_reviews }})</span>
+                <span class="total-reviews">({{ review_count or 0 }})</span>
               </h2>
               <div>
                 <label for="tour-guide-filter">Filter by Tour Guide:</label>

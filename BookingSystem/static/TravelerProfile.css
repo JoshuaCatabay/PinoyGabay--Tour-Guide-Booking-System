@@ -487,6 +487,10 @@ body {
   background-color: #4ecdc4;
 }
 
+.tour-status.ongoing {
+  background-color :#1A535C;
+}
+
 .tour-status.completed {
   background-color: #ff9f1c;
 }
@@ -850,5 +854,12 @@ button {
 
 
 
+#review-modal {
+  display: none;
+  /* Other styles */
+}
 
-
+#review-modal.show {
+  display: block;
+  /* Other styles */
+}

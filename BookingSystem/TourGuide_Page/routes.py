@@ -14,7 +14,7 @@
 # import re
 # from werkzeug.security import check_password_hash, generate_password_hash
 
-from flask import render_template, redirect, url_for, flash, request, session, jsonify, current_app
+from flask import abort, render_template, redirect, url_for, flash, request, session, jsonify, current_app
 from flask_login import login_required, current_user, logout_user, login_user
 from BookingSystem.TourOperator_Page import touroperator
 from . import tourguide  
@@ -166,17 +166,32 @@ def tourguide_dashboard():
         flash("Tour guide profile not found.", "error")
         return redirect(url_for('main.home'))  # Redirect if no profile exists
 
-    # Calculate the total number of reviews for this tour guide
-    total_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide.id).count()
-
-    # Fetch the total tours handled by this guide
-    total_tours = Booking.query.filter_by(tour_guide_id=tour_guide.id).count()
-
-    # Fetch the average rating and review count
-    average_rating, review_count = db.session.query(
+    # Subqueries for reviews and completed tours
+    subquery_reviews = db.session.query(
+        ReviewsRating.tour_guide_id,
         func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
         func.count(ReviewsRating.id).label('review_count')
-    ).filter(ReviewsRating.tour_guide_id == tour_guide.id).first()
+    ).filter(ReviewsRating.tour_guide_id == tour_guide.id).group_by(ReviewsRating.tour_guide_id).subquery()
+
+    subquery_completed_tours = db.session.query(
+        Booking.tour_guide_id,
+        func.count(Booking.id).label('completed_tours')
+    ).filter(
+        Booking.tour_guide_id == tour_guide.id,
+        Booking.status == 'completed'  # Only count completed tours
+    ).group_by(Booking.tour_guide_id).subquery()
+
+    # Fetch aggregated data
+    aggregated_data = db.session.query(
+        subquery_reviews.c.average_rating,
+        subquery_reviews.c.review_count,
+        subquery_completed_tours.c.completed_tours
+    ).first()
+
+    # Extract data from the result
+    average_rating = aggregated_data[0] if aggregated_data else 0
+    review_count = aggregated_data[1] if aggregated_data else 0
+    completed_tours = aggregated_data[2] if aggregated_data else 0
 
     # Paginate the reviews
     page = request.args.get('page', 1, type=int)
@@ -197,7 +212,6 @@ def tourguide_dashboard():
             "rating": review.rating,
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
-            "tour_guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}",
             "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
         })
 
@@ -218,17 +232,17 @@ def tourguide_dashboard():
     return render_template(
         'tourguide_dashboard.html',
         profile={
+            "average_rating": round(average_rating, 1),  # Rounded average rating
+            "review_count": review_count,  # Total number of reviews
+            "total_tours": completed_tours,  # Total completed tours
             "pagination": pagination_data  # Add pagination to the profile dictionary
         },
         bio=tour_guide.bio,
         characteristics=characteristics,
         skills=skills,
-        reviews=reviews_data,
-        total_reviews=total_reviews,  # Total number of reviews
-        average_rating=round(average_rating, 1),  # Average rating rounded to 1 decimal
-        review_count=review_count or 0,  # Total number of reviews
-        total_tours=total_tours  # Include total tours
+        reviews=reviews_data
     )
+
 
 
 
@@ -481,26 +495,40 @@ def get_profile_status():
 
 
 
-
-
-
-
-
 @tourguide.route('/profile/<int:tour_guide_id>')
 def profile(tour_guide_id):
     page = request.args.get('page', 1, type=int)
     per_page = 2  # Number of reviews per page
 
-    # Fetch the tour guide's profile
-    tour_guide = TourGuide.query.get_or_404(tour_guide_id)
-    
-    # Fetch the average rating and review count
-    average_rating, review_count = db.session.query(
+    # Subquery for average rating and review count
+    subquery_reviews = db.session.query(
+        ReviewsRating.tour_guide_id,
         func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
         func.count(ReviewsRating.id).label('review_count')
-    ).filter(ReviewsRating.tour_guide_id == tour_guide_id).first()
+    ).group_by(ReviewsRating.tour_guide_id).subquery()
 
-    # Paginate reviews
+    # Subquery for total completed tours
+    subquery_tours = db.session.query(
+        Booking.tour_guide_id,
+        func.count(Booking.id).label('total_tours')
+    ).filter(Booking.status == 'completed').group_by(Booking.tour_guide_id).subquery()
+
+    # Fetch the tour guide's details with aggregated reviews and bookings
+    result = db.session.query(
+        TourGuide,
+        subquery_reviews.c.average_rating,
+        subquery_reviews.c.review_count,
+        subquery_tours.c.total_tours
+    ).outerjoin(subquery_reviews, subquery_reviews.c.tour_guide_id == TourGuide.id) \
+     .outerjoin(subquery_tours, subquery_tours.c.tour_guide_id == TourGuide.id) \
+     .filter(TourGuide.id == tour_guide_id).first()
+
+    if not result:
+        abort(404, description="Tour guide not found")
+
+    tour_guide, average_rating, review_count, total_tours = result
+
+    # Paginate reviews for the tour guide
     paginated_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide_id) \
                                            .order_by(ReviewsRating.datetime.desc()) \
                                            .paginate(page=page, per_page=per_page, error_out=False)
@@ -516,11 +544,10 @@ def profile(tour_guide_id):
             "rating": review.rating,
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
-            "tour_guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}",
             "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
         })
 
-    # Prepare pagination data
+    # Pagination data
     pagination_data = {
         "current_page": paginated_reviews.page,
         "total_pages": paginated_reviews.pages,
@@ -541,8 +568,9 @@ def profile(tour_guide_id):
         "price": tour_guide.price,
         "characteristics": [char.characteristic for char in tour_guide.characteristics],
         "skills": [skill.skill for skill in tour_guide.skills],
-        "average_rating": round(average_rating, 1),
-        "review_count": review_count or 0,
+        "average_rating": round(average_rating or 0, 1),  # Default to 0 if None
+        "review_count": review_count or 0,  # Default to 0 if None
+        "total_tours": total_tours or 0,  # Count only completed tours
         "reviews": reviews_data,
         "pagination": pagination_data,
         "tour_packages": [
@@ -557,20 +585,38 @@ def profile(tour_guide_id):
     return render_template('tourguide_form.html', profile=profile_data, tour_guide=tour_guide)
 
 
-
 @tourguide.route('/active_tourguides', methods=['GET'])
 def get_active_tourguides():
-    # Query for active tour guides with ratings and total tours
+    # Query for active tour guides with distinct counts for reviews and bookings
+    subquery_reviews = db.session.query(
+        ReviewsRating.tour_guide_id,
+        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
+        func.count(ReviewsRating.id).label('review_count')
+    ).group_by(
+        ReviewsRating.tour_guide_id
+    ).subquery()
+
+    subquery_tours = db.session.query(
+        Booking.tour_guide_id,
+        func.count(Booking.id).label('total_tours')
+    ).filter(
+        Booking.status == 'completed'  # Filter only completed bookings
+    ).group_by(
+        Booking.tour_guide_id
+    ).subquery()
+
     active_tourguides = db.session.query(
         TourGuide,
-        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
-        func.count(ReviewsRating.id).label('review_count'),
-        func.coalesce(func.count(Booking.id), 0).label('total_tours')  # Total tours from Bookings
-    ).outerjoin(ReviewsRating, ReviewsRating.tour_guide_id == TourGuide.id) \
-    .outerjoin(Booking, Booking.tour_guide_id == TourGuide.id) \
-    .filter(TourGuide.active == True) \
-    .group_by(TourGuide.id) \
-    .all()
+        subquery_reviews.c.average_rating,
+        subquery_reviews.c.review_count,
+        subquery_tours.c.total_tours
+    ).outerjoin(
+        subquery_reviews, subquery_reviews.c.tour_guide_id == TourGuide.id
+    ).outerjoin(
+        subquery_tours, subquery_tours.c.tour_guide_id == TourGuide.id
+    ).filter(
+        TourGuide.active == True
+    ).all()
 
     guides_data = []
 
@@ -582,14 +628,17 @@ def get_active_tourguides():
                 "name": f"{guide.user.first_name} {guide.user.last_name}",
                 "profile_picture": url_for('static', filename=f"profile_pics/{guide.user.profile_img}", _external=True),
                 "price": guide.price,
-                "average_rating": round(average_rating, 1),  # Round to 1 decimal place
-                "review_count": review_count,
-                "total_tours": total_tours  # Add total tours dynamically
+                "average_rating": round(average_rating or 0, 1),  # Default to 0 if None
+                "review_count": review_count or 0,  # Default to 0 if None
+                "total_tours": total_tours or 0  # Count only completed tours
             }
             guides_data.append(guide_data)
 
     # Return the list as JSON
     return jsonify(guides_data)
+
+
+
 
 
 

@@ -1408,3 +1408,49 @@ input:focus {
 .primary-btn .hidden{
   display: none;
 }
+
+
+.profile-stats {
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #333;
+  margin-top: 10px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.star-icon {
+  color: #FFD700; /* Gold color for the star */
+  font-size: 1.5rem;
+  margin-right: 5px;
+}
+
+.rating-value {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.review-count {
+  color: #666;
+}
+
+.separator {
+  color: #aaa;
+  margin: 0 10px;
+}
+
+.total-tours {
+  font-weight: bold;
+  color: #333;
+}
+
+.tours {
+  font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+}

@@ -84,10 +84,11 @@
                     {% for i in range(5 - profile.average_rating|int - (1 if profile.average_rating % 1 >= 0.5 else 0)) %}
                         &#9734; <!-- Empty star -->
                     {% endfor %}
-                    ({{ profile.review_count or 0 }} Reviews | {{ total_tours or 0 }} Total Tours)
+                    ({{ profile.review_count or 0 }} Reviews | {{ profile.total_tours or 0 }} Completed Tours)
                 </p>
             </div>
         </div>
+        
         
           
 

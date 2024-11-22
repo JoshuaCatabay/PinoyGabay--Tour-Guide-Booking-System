@@ -124,40 +124,6 @@ closeCropperModal.addEventListener('click', () => {
 
 
 
-// My Tours Toggles Function
-const toggleButtons = document.querySelectorAll('.toggle-btn');
-const tourCards = document.querySelectorAll('.tour-card');
-
-// Initialize layout on load to fix spacing issue
-window.addEventListener('DOMContentLoaded', () => {
-  toggleButtons[0].click(); // Simulate a click to trigger layout adjustment
-});
-
-// Toggle visibility based on category
-toggleButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    // Remove active state from all buttons
-    toggleButtons.forEach((btn) => btn.classList.remove('active'));
-    button.classList.add('active');
-
-    const status = button.dataset.status;
-
-    // Show/Hide cards based on the selected status
-    tourCards.forEach((card) => {
-      const cardStatus = card.dataset.status;
-      card.style.display =
-        status === 'all' || cardStatus === status ? 'block' : 'none';
-    });
-  });
-});
-
-
-
-
-
-
-
-
 
 // Review Cards Hide Function
 const toggleReviewsBtn = document.getElementById('toggle-reviews');
@@ -188,75 +154,6 @@ function openBookingDetails(details) {
 closeBookingModal.addEventListener('click', () => {
   bookingModal.classList.remove('show');
 });
-
-document.addEventListener('DOMContentLoaded', () => {
-  const reviewModal = document.getElementById('review-modal');
-  const closeReviewModal = document.getElementById('close-review-modal');
-  const stars = document.querySelectorAll('.star');
-  let selectedRating = 0; // Store selected rating
-
-  // Open the modal when a review button is clicked
-  document.querySelectorAll('.review-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-          reviewModal.classList.add('show');
-          document.getElementById('modal-overlay').classList.add('show');
-      });
-  });
-
-  // Close the modal
-  closeReviewModal.addEventListener('click', () => {
-      reviewModal.classList.remove('show');
-      document.getElementById('modal-overlay').classList.remove('show');
-  });
-
-  // Star Rating Logic
-  stars.forEach((star, index) => {
-      star.addEventListener('click', () => {
-          selectedRating = index + 1; // Set the selected rating
-          stars.forEach((s, i) => s.classList.toggle('active', i <= index)); // Highlight up to clicked star
-      });
-  });
-
-
-
-
-
-
-document.getElementById('review-form').addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  if (selectedRating === 0) {
-      alert('Please select a star rating.');
-      return;
-  }
-
-  const comment = document.getElementById('review-text').value;
-  const reviewImage = document.getElementById('review-image').files[0];
-  const formData = new FormData();
-  formData.append('rating', selectedRating);
-  formData.append('comment', comment);
-  formData.append('tour_guide_id', 1); // Replace with the actual tour guide ID
-  if (reviewImage) {
-      formData.append('review_image', reviewImage);
-  }
-
-  fetch('/submit_review', {
-      method: 'POST',
-      body: formData,
-  })
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              alert('Review submitted successfully!');
-              location.reload(); // Reload or update the page
-          } else {
-              alert(`Failed to submit review: ${data.message}`);
-          }
-      })
-      .catch(error => console.error('Error submitting review:', error));
-});
-
-})
 
 
 
@@ -417,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const modal = document.getElementById('booking-details-modal');
   const modalLoader = document.getElementById('modal-loader');
   const modalDetails = document.getElementById('modal-details');
+  const modalStatus = document.getElementById('modal-status'); // Add this
   const closeModalButton = document.getElementById('close-booking-modal');
 
   // Function to fetch and display booking details
@@ -441,6 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('Booking details fetched:', data); // Debugging log
 
       // Populate modal with booking details
+      modalStatus.textContent = data.status; // Display status
       document.getElementById('modal-traveler-name').textContent = data.traveler.name;
       document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
       document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
@@ -520,4 +419,232 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Modal elements
+  const modalCancelButton = document.getElementById('modal-cancel-booking-btn');
+  const modal = document.getElementById('booking-details-modal');
+
+  // Add event listeners to Cancel buttons in the cards
+  document.querySelectorAll('.cancel-booking-btn').forEach(button => {
+      button.addEventListener('click', async function () {
+          const bookingId = this.dataset.id;
+
+          if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+          try {
+              const response = await fetch(`/booking/cancel/${bookingId}`, { method: 'POST' });
+              const result = await response.json();
+
+              if (response.ok) {
+                  alert(result.message);
+                  location.reload(); // Refresh the page to reflect changes
+              } else {
+                  alert(result.error || 'Failed to cancel the booking.');
+              }
+          } catch (error) {
+              console.error('Error cancelling booking:', error);
+              alert('An error occurred while cancelling the booking.');
+          }
+      });
+  });
+
+  // Handle showing the Cancel button in the modal dynamically
+  async function fetchAndDisplayBookingDetails(bookingId) {
+      try {
+          const response = await fetch(`/booking/details/${bookingId}`);
+          const data = await response.json();
+
+          // Show or hide the Cancel button in the modal
+          if (data.status === 'upcoming') {
+              modalCancelButton.classList.remove('hidden');
+              modalCancelButton.dataset.id = bookingId;
+          } else {
+              modalCancelButton.classList.add('hidden');
+          }
+      } catch (error) {
+          console.error('Error fetching booking details:', error);
+      }
+  }
+
+  // Cancel button in modal
+  modalCancelButton.addEventListener('click', async function () {
+      const bookingId = this.dataset.id;
+
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+      try {
+          const response = await fetch(`/booking/cancel/${bookingId}`, { method: 'POST' });
+          const result = await response.json();
+
+          if (response.ok) {
+              alert(result.message);
+              modal.classList.add('hidden'); // Close modal after cancellation
+              location.reload(); // Refresh the page to reflect changes
+          } else {
+              alert(result.error || 'Failed to cancel the booking.');
+          }
+      } catch (error) {
+          console.error('Error cancelling booking:', error);
+          alert('An error occurred while cancelling the booking.');
+      }
+  });
+});
+
+
+
+
+
+
+
+
+
+
+// My Tours Toggles Function
+const toggleButtons = document.querySelectorAll('.toggle-btn');
+const tourCards = document.querySelectorAll('.tour-card');
+
+// Function to update counts
+function updateCounts() {
+  // Initialize counts
+  const counts = {
+    all: tourCards.length,
+    upcoming: 0,
+    ongoing: 0,
+    completed: 0,
+    cancelled: 0,
+  };
+
+  // Count each status
+  tourCards.forEach((card) => {
+    const cardStatus = card.dataset.status;
+    if (counts[cardStatus] !== undefined) {
+      counts[cardStatus]++;
+    }
+  });
+
+  // Update counts in the buttons
+  toggleButtons.forEach((button) => {
+    const status = button.dataset.status;
+    const countElement = button.querySelector('.count');
+    if (status in counts) {
+      countElement.textContent = `(${counts[status]})`;
+    }
+  });
+}
+
+// Initialize layout on load to fix spacing issue
+window.addEventListener('DOMContentLoaded', () => {
+  toggleButtons[0].click(); // Simulate a click to trigger layout adjustment
+  updateCounts(); // Update counts on load
+});
+
+// Toggle visibility based on category
+toggleButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    // Remove active state from all buttons
+    toggleButtons.forEach((btn) => btn.classList.remove('active'));
+    button.classList.add('active');
+
+    const status = button.dataset.status;
+
+    // Show/Hide cards based on the selected status
+    tourCards.forEach((card) => {
+      const cardStatus = card.dataset.status;
+      card.style.display =
+        status === 'all' || cardStatus === status ? 'block' : 'none';
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const reviewModal = document.getElementById('review-modal');
+  const closeReviewModal = document.getElementById('close-review-modal');
+  const reviewForm = document.getElementById('review-form');
+  const starRating = document.querySelectorAll('.star');
+  let selectedRating = 0;
+
+  // Attach click event to all review buttons
+  document.querySelectorAll('.review-btn').forEach((btn) => {
+    btn.addEventListener('click', function () {
+      const bookingId = btn.dataset.bookingId;
+      const guideId = btn.dataset.guideId;
+      const tourName = btn.dataset.tour;
+
+      // Populate modal fields
+      const tourNameField = document.getElementById('review-tour-name');
+      const guideIdField = document.getElementById('tour-guide-id');
+      const bookingIdField = document.getElementById('booking-id');
+
+      if (tourNameField) tourNameField.textContent = tourName;
+      if (guideIdField) guideIdField.value = guideId;
+      if (bookingIdField) bookingIdField.value = bookingId;
+
+      // Show modal
+      reviewModal.classList.remove('hidden');
+      reviewModal.classList.add('show');
+    });
+  });
+
+  // Close Review Modal
+  closeReviewModal.addEventListener('click', () => {
+    reviewModal.classList.add('hidden');
+    reviewModal.classList.remove('show');
+  });
+
+  // Handle Star Rating
+  starRating.forEach((star, index) => {
+    star.addEventListener('click', () => {
+      selectedRating = index + 1;
+      starRating.forEach((s, i) => s.classList.toggle('active', i <= index));
+    });
+  });
+
+  // Submit Review Form
+  reviewForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (selectedRating === 0) {
+      alert('Please select a star rating.');
+      return;
+    }
+
+    const tourGuideId = document.getElementById('tour-guide-id').value;
+    const bookingId = document.getElementById('booking-id').value;
+    const comment = document.getElementById('review-text').value;
+    const reviewImage = document.getElementById('review-image').files[0];
+    const formData = new FormData();
+    formData.append('rating', selectedRating);
+    formData.append('comment', comment);
+    formData.append('tour_guide_id', tourGuideId);
+    formData.append('booking_id', bookingId);
+    if (reviewImage) formData.append('review_image', reviewImage);
+
+    try {
+      const response = await fetch('/submit_review', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (data.success) {
+        alert(data.message);
+
+        // Optionally reload the page to refresh all sections
+        location.reload();
+      } else {
+        alert(`Error submitting review: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    }
+  });
+});
 

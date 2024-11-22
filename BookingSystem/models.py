@@ -376,7 +376,7 @@ class Booking(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=True)
     tour_guide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
     package_id = db.Column(db.Integer, db.ForeignKey('TourPackage.id'), nullable=False)
-    status = db.Column(db.String(15), nullable=False)
+    status = db.Column(db.String(15), nullable=False, default='upcoming')
     date_start = db.Column(db.Date)
     date_end = db.Column(db.Date)
     traveler_quantity = db.Column(db.Integer, nullable=False)
@@ -410,15 +410,19 @@ class ReviewsRating(db.Model):
     __table_args__ = (
         db.Index('idx_reviews_rating_user_id', 'user_id'),           # Index on user_id
         db.Index('idx_reviews_rating_tour_guide_id', 'tour_guide_id'), # Index on tour_guide_id
-        db.Index('idx_reviews_rating_rating', 'rating'),             # Index on rating
+        db.Index('idx_reviews_rating_rating', 'rating'),  
+        db.Index('idx_reviews_rating_booking_id', 'booking_id'),           # Index on rating
         # {'schema': 'public'},
     )
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=True)
     tour_guide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id', ondelete="CASCADE"), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('Booking.id'), nullable=True)
     rating = db.Column(db.Numeric(2, 1))
     comment = db.Column(db.Text)
     datetime = db.Column(db.DateTime, default=datetime.utcnow)
+
+    booking = db.relationship('Booking', backref='reviews', lazy=True)
 
 
 class ReviewImages(db.Model):

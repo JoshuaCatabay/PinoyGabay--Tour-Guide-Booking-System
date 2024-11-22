@@ -14,7 +14,7 @@
 # from sqlalchemy import func
 # #from flask_mail import Message
 import secrets
-import os
+import os, re
 from flask import current_app, session
 from flask import Blueprint, render_template, url_for, flash, redirect, request, jsonify
 from BookingSystem import db, bcrypt, mail
@@ -27,6 +27,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from BookingSystem.models import ReviewsRating, ReviewImages  #!!!!!
 from sqlalchemy import func   #!!!!!
 from BookingSystem.models import User, TourOperator, TourGuide, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary, Booking
+from BookingSystem.Bookings.routes import update_statuses
 
 
 main = Blueprint('main', __name__)  # Ensure the 'main' blueprint is set
@@ -254,6 +255,9 @@ def logout():
 @main.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
+    # Update statuses before fetching bookings
+    update_statuses()
+
     form = UpdateAccountForm()
 
     if form.picture.data:
@@ -265,7 +269,7 @@ def account():
     profile_img_name = current_user.profile_img if current_user.profile_img else 'default.jpg'
     profile_img = url_for('static', filename='profile_pics/' + profile_img_name)
 
-    # Fetch bookings for the logged-in traveler with eager loading
+    # Fetch bookings for the logged-in traveler
     bookings = (
         db.session.query(Booking)
         .filter_by(user_id=current_user.id)
@@ -276,15 +280,42 @@ def account():
         .all()
     )
 
-    # Pass bookings to the template
+    # Fetch reviews submitted by the traveler
+    reviews = (
+        db.session.query(ReviewsRating)
+        .filter_by(user_id=current_user.id)
+        .all()
+    )
+
+    # Prepare reviews data for rendering
+    reviews_data = []
+    for review in reviews:
+        # Fetch associated tour guide and review image
+        tour_guide = TourGuide.query.get(review.tour_guide_id)
+        review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+
+        # Build image paths
+        tour_image_path = url_for('static', filename=f"review_pics/{review_image.img}") if review_image else url_for('static', filename="default_tour_image.jpg")
+        guide_profile_path = url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}") if tour_guide and tour_guide.user.profile_img else url_for('static', filename="default_guide_image.jpg")
+
+        # Add review data to the list
+        reviews_data.append({
+            "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "Unknown Guide",
+            "guide_profile_img": guide_profile_path,
+            "tour_image": tour_image_path,
+            "rating": review.rating,
+            "comment": review.comment,
+            "review_date": review.datetime.strftime('%b. %d, %Y'),
+        })
+
     return render_template(
         'account.html',
         title='Account',
         profile_img=profile_img,
         form=form,
-        bookings=bookings,  # Pass the bookings to the template
+        bookings=bookings,
+        reviews=reviews_data,  # Pass prepared reviews data to the template
     )
-
 
 
 
@@ -528,62 +559,108 @@ def update_email():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': 'An error occurred while updating the email.'}), 500
-
-
-
 @main.route('/submit_review', methods=['POST'])
+@login_required
 def submit_review():
     try:
-        # Retrieve form data
-        rating = float(request.form.get('rating'))
+        # Retrieve data from the form
+        rating = request.form.get('rating', type=float)
         comment = request.form.get('comment')
-        tour_guide_id = request.form.get('tour_guide_id')
+        tour_guide_id = request.form.get('tour_guide_id', type=int)
+        booking_id = request.form.get('booking_id', type=int)
+        review_image = request.files.get('review_image')
 
-        # Validate input
-        if not rating or not tour_guide_id:
-            return jsonify({"success": False, "message": "Missing rating or tour guide ID."}), 400
+        # Validate required fields
+        if not (rating and comment and tour_guide_id and booking_id):
+            return jsonify({"success": False, "message": "Missing required fields."}), 400
 
-        # Save the review
-        review = ReviewsRating(
+        # Create a new review
+        new_review = ReviewsRating(
             user_id=current_user.id,
             tour_guide_id=tour_guide_id,
+            booking_id=booking_id,
             rating=rating,
             comment=comment
         )
-        db.session.add(review)
-        db.session.commit()
 
-        # Handle image upload
-        if 'review_image' in request.files:
-            image = request.files['review_image']
-            if image.filename != '':
-                # Save the image to the specified folder
-                filename = secure_filename(image.filename)
-                upload_folder = os.path.join(current_app.root_path, 'static/review_pics')
-                os.makedirs(upload_folder, exist_ok=True)  # Create folder if it doesn't exist
-                file_path = os.path.join(upload_folder, filename)
-                image.save(file_path)
+        # Add the review to the database and commit to generate its ID
+        db.session.add(new_review)
+        db.session.commit()  # Commit to assign an ID to the review
 
-                # Save the relative file path to the database
-                review_image = ReviewImages(rr_id=review.id, img=filename)
-                db.session.add(review_image)
-                db.session.commit()
+        # Save the review image if provided
+        if review_image:
+            filename = secure_filename(review_image.filename)
+            upload_path = os.path.join(current_app.root_path, 'static/review_pics', filename)
+            review_image.save(upload_path)
 
-        return jsonify({"success": True, "message": "Review submitted successfully!"})
+            # Create a ReviewImages entry with the newly assigned review ID
+            review_image_entry = ReviewImages(rr_id=new_review.id, img=filename)
+            db.session.add(review_image_entry)
+            db.session.commit()  # Commit the image entry
+
+        return jsonify({"success": True, "message": "Review submitted successfully."})
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
+
+
+
+
+
+@main.route('/my_reviews', methods=['GET'])
+@login_required
+def my_reviews():
+    reviews = ReviewsRating.query.filter_by(user_id=current_user.id).all()
+    reviews_data = []
+
+    for review in reviews:
+        tour_guide = TourGuide.query.get(review.tour_guide_id)
+        tour_package = TourPackage.query.get(review.package_id)
+        review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+
+        reviews_data.append({
+            "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "N/A",
+            "package_name": tour_package.name if tour_package else "N/A",
+            "rating": review.rating,
+            "comment": review.comment,
+            "review_date": review.datetime.strftime('%b. %d, %Y'),
+            "review_image": f"review_pics/{review_image.img}" if review_image else None,
+        })
+
+    return render_template('my_reviews.html', reviews=reviews_data)
 
 
 
 
 
 
+@main.route('/traveler_reviews', methods=['GET'])
+@login_required
+def traveler_reviews():
+    try:
+        # Fetch reviews made by the current user
+        reviews = ReviewsRating.query.filter_by(user_id=current_user.id).all()
 
+        # Prepare data for the template
+        reviews_data = []
+        for review in reviews:
+            review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+            guide = TourGuide.query.get(review.tour_guide_id)
+            reviews_data.append({
+                "tour_name": review.comment,  # Assuming the comment describes the tour
+                "tour_image": url_for('static', filename=f"review_pics/{review_image.img}") if review_image else url_for('static', filename="default.jpg"),
+                "rating": review.rating,
+                "comment": review.comment,
+                "review_date": review.datetime.strftime('%b. %d, %Y'),
+                "guide_name": f"{guide.user.first_name} {guide.user.last_name}" if guide else "Unknown Guide",
+                "guide_profile_img": url_for('static', filename=f"profile_pics/{guide.user.profile_img}") if guide and guide.user.profile_img else url_for('static', filename="default.jpg"),
+            })
 
-
-
+        return render_template("traveler_reviews.html", reviews=reviews_data)
+    except Exception as e:
+        print(f"Error fetching reviews: {e}")
+        return jsonify({"error": "An error occurred while fetching reviews"}), 500
 
 
 

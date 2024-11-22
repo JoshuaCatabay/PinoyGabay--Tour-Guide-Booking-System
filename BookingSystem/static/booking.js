@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           const guideCard = document.createElement('div');
           guideCard.className = 'tour-guide-card';
 
-          // Update the rating and total tours display
-          const ratingDisplay = `
-              <span class="star-icon">★</span>
-              <span class="rating-value">${guide.average_rating || 0}</span>
-              <span class="review-count">(${guide.review_count || 0})</span>
-              <span class="separator">|</span>
-              <span class="total-tours">${guide.total_tours || 0} <span class="tours">Tours</span></span>
-          `;
+            // Update the rating and total tours display
+            const ratingDisplay = `
+                <span class="star-icon">★</span>
+                <span class="rating-value">${guide.average_rating || 0}</span>
+                <span class="review-count">(${guide.review_count || 0})</span>
+                <span class="separator">|</span>
+                <span class="total-tours">${guide.total_tours || 0} <span class="tours">Tours</span></span>
+            `;
 
           guideCard.innerHTML = `
               <div class="profile-picture">

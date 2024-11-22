@@ -4,13 +4,12 @@ from . import touroperator
 from werkzeug.security import generate_password_hash, check_password_hash
 from BookingSystem import bcrypt, db 
 from BookingSystem.TourOperator_Page.form import UserTourGuideForm,TourPackageForm
-from BookingSystem.models import User, TourOperator, TourGuide , send_confirmation_email, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary
+from BookingSystem.models import User, TourOperator, TourGuide , send_confirmation_email, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary, Booking
 from werkzeug.utils import secure_filename
 import os
 from flask import jsonify
 from BookingSystem.models import ReviewsRating, ReviewImages
 from sqlalchemy import func  #!!!!!
-
 
 @touroperator.route('/create_tour_package', methods=['GET', 'POST'])
 @login_required
@@ -298,7 +297,84 @@ def create_tourguide():
 #     operator = TourOperator.query.filter_by(user_id=current_user.id).first()
     
 #     return render_template('touroperator_dashboard.html', title='TourOperator Dashboard', guide_form=guide_form, tour_guides=tour_guides
-#                            ,package_form=package_form,packages=packages,operator=operator)
+# #                            ,package_form=package_form,packages=packages,operator=operator)
+# @touroperator.route('/dashboard', methods=['GET'])
+# @login_required
+# def touroperator_dashboard():
+#     # Ensure only tour operators can access this page
+#     if current_user.role != 'touroperator':
+#         flash('You do not have permission to access this page.', 'danger')
+#         return redirect(url_for('main.home'))
+
+#     guide_form = UserTourGuideForm()  # Instantiate the form for the dashboard
+#     package_form = TourPackageForm()
+#     operator = TourOperator.query.filter_by(user_id=current_user.id).first()
+#     packages = TourPackage.query.filter_by(toperator_id=current_user.tour_operator.id).all()
+
+#     # Fetch all tour guides under the current operator
+#     tour_guides = TourGuide.query.filter_by(toperator_id=operator.id).all()
+
+#     # Get the tour_guide_id filter from the query parameters
+#     tour_guide_id = request.args.get('tour_guide_id', type=int)
+
+#     # Set pagination variables
+#     page = request.args.get('page', 1, type=int)
+#     per_page = 8  # Number of reviews per page
+
+#     # Base query for reviews
+#     reviews_query = ReviewsRating.query.join(TourGuide).filter(
+#         TourGuide.toperator_id == operator.id
+#     )
+
+#     # Apply tour_guide_id filter if provided
+#     if tour_guide_id:
+#         reviews_query = reviews_query.filter(ReviewsRating.tour_guide_id == tour_guide_id)
+
+#     # Paginate the reviews
+#     paginated_reviews = reviews_query.order_by(ReviewsRating.datetime.desc()).paginate(
+#         page=page, per_page=per_page, error_out=False
+#     )
+
+#     # Prepare reviews data for rendering
+#     reviews_data = []
+#     for review in paginated_reviews.items:
+#         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+#         tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
+#         reviews_data.append({
+#             "traveler_name": f"{review.user.first_name} {review.user.last_name}",
+#             "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
+#             "rating": review.rating,
+#             "comment": review.comment,
+#             "review_date": review.datetime.strftime('%b. %d, %Y'),
+#             "tour_guide_name": f"{review.tour_guide.user.first_name} {review.tour_guide.user.last_name}",
+#            "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
+#         })
+
+#     # Prepare pagination data
+#     pagination_data = {
+#         "current_page": paginated_reviews.page,
+#         "total_pages": paginated_reviews.pages,
+#         "has_next": paginated_reviews.has_next,
+#         "has_prev": paginated_reviews.has_prev,
+#         "next_page": paginated_reviews.next_num,
+#         "prev_page": paginated_reviews.prev_num
+#     }
+
+#     return render_template(
+#         'touroperator_dashboard.html',
+#         title='TourOperator Dashboard',
+#         guide_form=guide_form,
+#         package_form=package_form,
+#         tour_guides=tour_guides,
+#         operator=operator,
+#         reviews=reviews_data,
+#         pagination=pagination_data,
+#         total_reviews=paginated_reviews.total,
+#         packages=packages,
+#         selected_tour_guide_id=tour_guide_id  # Pass the selected guide ID for dropdown selection
+#     )
+
+
 @touroperator.route('/dashboard', methods=['GET'])
 @login_required
 def touroperator_dashboard():
@@ -314,6 +390,37 @@ def touroperator_dashboard():
 
     # Fetch all tour guides under the current operator
     tour_guides = TourGuide.query.filter_by(toperator_id=operator.id).all()
+
+    # Subqueries for reviews and completed tours aggregation
+    subquery_reviews = db.session.query(
+        TourGuide.toperator_id,
+        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
+        func.count(ReviewsRating.id).label('review_count')
+    ).join(ReviewsRating, ReviewsRating.tour_guide_id == TourGuide.id, isouter=True) \
+    .filter(TourGuide.toperator_id == operator.id) \
+    .group_by(TourGuide.toperator_id) \
+    .subquery()
+
+    subquery_completed_tours = db.session.query(
+        TourGuide.toperator_id,
+        func.count(Booking.id).label('completed_tours')
+    ).join(Booking, Booking.tour_guide_id == TourGuide.id, isouter=True) \
+    .filter(
+        TourGuide.toperator_id == operator.id,
+        Booking.status == 'completed'  # Only count completed tours
+    ).group_by(TourGuide.toperator_id).subquery()
+
+    # Aggregate the data
+    aggregated_data = db.session.query(
+        subquery_reviews.c.average_rating,
+        subquery_reviews.c.review_count,
+        subquery_completed_tours.c.completed_tours
+    ).first()
+
+    # Extract data from the result
+    average_rating = aggregated_data[0] if aggregated_data else 0
+    review_count = aggregated_data[1] if aggregated_data else 0
+    completed_tours = aggregated_data[2] if aggregated_data else 0
 
     # Get the tour_guide_id filter from the query parameters
     tour_guide_id = request.args.get('tour_guide_id', type=int)
@@ -348,7 +455,7 @@ def touroperator_dashboard():
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
             "tour_guide_name": f"{review.tour_guide.user.first_name} {review.tour_guide.user.last_name}",
-           "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
+            "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
         })
 
     # Prepare pagination data
@@ -371,10 +478,12 @@ def touroperator_dashboard():
         reviews=reviews_data,
         pagination=pagination_data,
         total_reviews=paginated_reviews.total,
+        average_rating=round(average_rating, 1),  # Pass average rating
+        review_count=review_count,  # Pass total reviews
+        total_tours=completed_tours,  # Pass completed tours
         packages=packages,
         selected_tour_guide_id=tour_guide_id  # Pass the selected guide ID for dropdown selection
     )
-
 
 
 

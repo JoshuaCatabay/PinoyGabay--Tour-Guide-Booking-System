@@ -17,6 +17,27 @@ from sqlalchemy import func  #!!!!!
 from BookingSystem.models import ReviewsRating, ReviewImages   #!!!!!
 from flask import Blueprint
 from datetime import datetime, timedelta  # Ensure timedelta is imported
+from datetime import date
+from flask import jsonify
+from datetime import date
+
+
+def update_statuses():
+    today = date.today()
+
+    # Update 'Upcoming' to 'Ongoing'
+    upcoming_bookings = Booking.query.filter(Booking.status == 'upcoming', Booking.date_start <= today).all()
+    for booking in upcoming_bookings:
+        print(f"Updating booking {booking.id} to 'ongoing'")  # Add debug logs
+        booking.status = 'ongoing'
+
+    # Update 'Ongoing' to 'Completed'
+    ongoing_bookings = Booking.query.filter(Booking.status == 'ongoing', Booking.date_end < today).all()
+    for booking in ongoing_bookings:
+        print(f"Updating booking {booking.id} to 'completed'")  # Add debug logs
+        booking.status = 'completed'
+
+    db.session.commit()
 
 
 
@@ -213,7 +234,7 @@ def create_booking():
             traveler_quantity=int(traveler_quantity),
             special_notes=special_notes,
             price=Decimal(price),
-            status='upcomming',  # Default status
+            status='upcoming',  # Default status
             duration=timedelta(days=duration),  # Store as timedelta
             time=datetime.strptime("00:00:00", "%H:%M:%S").time(),  # Default to midnight
         )
@@ -249,10 +270,12 @@ def booking_details(booking_id):
                 "name": f"{booking.traveler.first_name} {booking.traveler.last_name}"
             },
             "tour_guide": {
+                "id": booking.tour_guide_id,  # Include tour guide ID
                 "name": f"{booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name}",
                 "contact": booking.assigned_guide.contact_num,
             },
             "package": {
+                "id": booking.package_id,  # Include package ID
                 "name": booking.selected_package.name,
                 "description": booking.selected_package.description,
                 "package_img": booking.selected_package.package_img,
@@ -279,3 +302,29 @@ def booking_details(booking_id):
     except Exception as e:
         print(f"Unexpected error: {e}")  # Debugging output
         return jsonify({"error": "An unexpected error occurred"}), 500
+
+
+
+
+
+@booking.route('/cancel/<int:booking_id>', methods=['POST'])
+@login_required
+def cancel_booking(booking_id):
+    try:
+        booking = Booking.query.get_or_404(booking_id)
+
+        # Ensure only the owner can cancel their booking
+        if booking.user_id != current_user.id:
+            return jsonify({"error": "Unauthorized action"}), 403
+
+        # Allow cancellation only for upcoming bookings
+        if booking.status != 'upcoming':
+            return jsonify({"error": "Only upcoming bookings can be canceled."}), 400
+
+        booking.status = 'cancelled'
+        db.session.commit()
+
+        return jsonify({"message": "Booking has been successfully canceled."}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500

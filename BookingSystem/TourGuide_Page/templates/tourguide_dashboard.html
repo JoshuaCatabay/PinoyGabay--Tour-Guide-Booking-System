@@ -42,22 +42,25 @@
           <div class="profile-overview">
             <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic" />
             <div class="profile-details">
-              <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>, Your Friendly Tour Guide</h2>
-              <div class="profile-stats">
-                <!-- Ratings and Reviews -->
-                <span class="rating">
-                  ★ {{ profile.average_rating or 0 }} 
-                  <span class="review-count">({{ profile.review_count or 0 }} reviews)</span>
-                </span>
-                <!-- Divider -->
-                <span class="divider">|</span>
-                <!-- Total Tours -->
-                <span class="total-tours">
-                  {{ profile.total_tours or 0 }} Tours
-                </span>
-              </div>
+                <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>, Your Friendly Tour Guide</h2>
+                <div class="profile-stats">
+                    <!-- Star Rating -->
+                    <span class="rating">
+                        <span class="star-icon">★</span>
+                        <span class="rating-value">{{ profile.average_rating or 0 }}</span>
+                        <span class="review-count">({{ profile.review_count or 0 }} reviews)</span>
+                    </span>
+                    <!-- Separator -->
+                    <span class="separator">|</span>
+                    <!-- Total Completed Tours -->
+                    <span class="total-tours">
+                        {{ profile.total_tours or 0 }} <span class="tours">Completed Tours</span>
+                    </span>
+                </div>
             </div>
-          </div>
+        </div>
+        
+        
           
             <!-- <div class="dashboard-stats">
               <div class="stat">
@@ -135,7 +138,7 @@
         <div class="container">
           <h2>
               Traveler Reviews 
-              <span class="total-reviews">({{ total_reviews }})</span>
+              <span class="total-reviews">({{ profile.review_count or 0 }})</span>
           </h2>
       
           <div class="traveler-reviews">
