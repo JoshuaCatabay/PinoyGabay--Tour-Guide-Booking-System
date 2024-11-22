@@ -865,15 +865,19 @@ textarea:focus {
 
 /* Tour Guide List Container */
 .tour-guide-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); */
+  display: flex;
+  justify-content: center;
   gap: 15px;
   margin-top: 20px;
+  align-items: center;
+  /* background: red; */
 }
 
 /* Tour Guide Card Styling */
 .tour-guide-card {
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -882,6 +886,8 @@ textarea:focus {
   align-items: center;
   padding: 15px;
   transition: transform 0.2s ease;
+  max-width: 200px;
+  /* justify-content: center; */
 }
 
 .tour-guide-card:hover {

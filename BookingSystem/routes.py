@@ -1,18 +1,4 @@
-# import secrets
-# import os
-# from flask import current_app, session
-# from flask import Blueprint, render_template, url_for, flash, redirect, request, jsonify
-# from BookingSystem import db, bcrypt, mail
-# from BookingSystem.forms import TravelerLoginForm, TravelerRegistrationForm, TravelerRequestResetForm, TravelerResetPasswordForm, UpdateAccountForm
-# from BookingSystem.models import User, TourOperator , send_confirmation_email, Booking, TourPackage, TourGuide, EstimatedPrice, Inclusion, Exclusion, Itinerary
-# from flask_login import login_user, current_user, logout_user, login_required 
-# from werkzeug.utils import secure_filename
-# from BookingSystem.models import Availability, Booking, Notification, ReviewsRating, ReviewImages
-# from werkzeug.security import check_password_hash, generate_password_hash
-# import re
-# from datetime import datetime, timedelta
-# from sqlalchemy import func
-# #from flask_mail import Message
+import re
 import secrets
 import os
 from flask import current_app, session
@@ -27,6 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from BookingSystem.models import ReviewsRating, ReviewImages  #!!!!!
 from sqlalchemy import func   #!!!!!
 from BookingSystem.models import User, TourOperator, TourGuide, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary, Booking
+from datetime import datetime, timedelta
 
 
 main = Blueprint('main', __name__)  # Ensure the 'main' blueprint is set
@@ -113,8 +100,6 @@ def traveler_login():
 
 
 
-
-# TRAVELER REGISTER 
 @main.route('/traveler_register', methods=['GET', 'POST'])
 def traveler_register():
     if current_user.is_authenticated:
@@ -130,24 +115,22 @@ def traveler_register():
             password=hashed_password,
             profile_img='default.jpg',
             role='traveler',
-             
         )
         db.session.add(new_traveler)
         db.session.commit()
         send_confirmation_email(new_traveler)
         flash('Registration successful! Please confirm your email to complete the process.', 'info')
-        return redirect(url_for('main.pending_confirmation'))
+        return redirect(url_for('main.traveler_register'))
     else:
         print(form.errors)
+        
     return render_template('traveler_register.html', title='Traveler Register', form=form)
+
 
 
 @main.route('/pending_confirmation')
 def pending_confirmation():
     return render_template('pending_confirmation.html') 
-
-
-
 
 
 

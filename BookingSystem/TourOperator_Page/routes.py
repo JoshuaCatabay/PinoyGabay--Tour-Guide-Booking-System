@@ -269,7 +269,7 @@ def create_tourguide():
 
             # Success message and redirect
             flash('Tour Guide account created successfully!', 'success')
-            return redirect(url_for('main.pending_confirmation'))
+            return redirect(url_for('touroperator.touroperator_dashboard'))
 
         except Exception as e:
             # Rollback in case of error and log for debugging
