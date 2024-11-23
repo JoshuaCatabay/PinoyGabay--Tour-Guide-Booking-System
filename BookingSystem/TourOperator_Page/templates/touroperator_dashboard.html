@@ -236,96 +236,98 @@
               <h3 id="form-modal-title">Create/Edit Tour Package</h3>
               <form id="tour-package-form" class="form-layout" method="POST" enctype="multipart/form-data" action="{{ url_for('touroperator.create_tour_package') }}">
                 {{ package_form.hidden_tag() }}
-                  
-                  <div class="form-section">
-                    <label for="package-name">Tour Package Name</label>
-                    <input type="text" 
-                           name="{{ package_form.name.name }}"  
-                           id="package-name" 
-                           placeholder="Enter package name" 
-                           class="editable-item" />
+                
+                <!-- Package Name -->
+                <div class="form-section">
+                  <label for="package-name">Tour Package Name</label>
+                  <input type="text" name="{{ package_form.name.name }}" id="package-name" placeholder="Enter package name" class="editable-item" />
+                </div>
+                
+                <!-- Description -->
+                <div class="form-section">
+                  <label for="description">Description</label>
+                  <textarea name="{{ package_form.description.name }}" id="description" placeholder="Enter package description" class="editable-item"></textarea>
+                </div>
+                
+                <!-- Location -->
+                <div class="form-section">
+                  <label for="location">Location</label>
+                  <input type="text" name="location" id="location" placeholder="Enter location" class="editable-item" />
+                </div>
+                
+                <!-- Image Upload -->
+                <div class="form-section">
+                  <label for="image-upload">Image Upload</label>
+                  <input type="file" name="{{ package_form.package_img.name }}" id="image-upload" class="editable-item" />
+                </div>
+          
+                <!-- Estimated Price -->
+                <div class="form-section inclusion-exclusion">
+                  <label for="estimated-price">Estimated Price</label>
+                  <div>
+                    <ul id="estimated-price-list" class="editable-list">
+                      <li>
+                        <input type="text" name="estimated_price_description[]" placeholder="Description" class="editable-item" />
+                        <input type="text" name="estimated_price_value[]" placeholder="Price" class="editable-item" />
+                        <button type="button" class="remove-btn">Remove</button>
+                      </li>
+                    </ul>
+                    <button type="button" id="add-estimated-price-btn" class="secondary-btn">Add Estimated Price</button>
                   </div>
-                  
-                  <div class="form-section">
-                    <label for="description">Description</label>
-                    <textarea 
-                           name="{{ package_form.description.name }}" 
-                           id="description" 
-                           placeholder="Enter package description" 
-                           class="editable-item"></textarea>
+                </div>
+                
+                <!-- Inclusions -->
+                <div class="form-section inclusion-exclusion">
+                  <label for="inclusions">Inclusions</label>
+                  <div>
+                    <ul id="inclusions-list" class="editable-list">
+                      <li>
+                        <input type="text" name="inclusions[]" placeholder="Add inclusion" class="editable-item" />
+                        <button type="button" class="remove-btn">Remove</button>
+                      </li>
+                    </ul>
+                    <button type="button" id="add-inclusion-btn" class="secondary-btn">Add Inclusion</button>
                   </div>
-                  
-                  
-                  <div class="form-section">
-                    <label for="image-upload">Image Upload</label>
-                    <input type="file" 
-                           name="{{ package_form.package_img.name }}" 
-                           id="image-upload" 
-                           class="editable-item" />
+                </div>
+                
+                <!-- Exclusions -->
+                <div class="form-section inclusion-exclusion">
+                  <label for="exclusions">Exclusions</label>
+                  <div>
+                    <ul id="exclusions-list" class="editable-list">
+                      <li>
+                        <input type="text" name="exclusions[]" placeholder="Add exclusion" class="editable-item" />
+                        <button type="button" class="remove-btn">Remove</button>
+                      </li>
+                    </ul>
+                    <button type="button" id="add-exclusion-btn" class="secondary-btn">Add Exclusion</button>
                   </div>
-
-                  <div class="form-section inclusion-exclusion">
-                    <label for="estimated-price">Estimated Price</label>
-                    <div>
-                      <ul id="estimated-price-list" class="editable-list">
-                        <li>
-                          <input type="text" name="estimated_price_description[]" placeholder="Description" class="editable-item" />
-                          <input type="text" name="estimated_price_value[]" placeholder="Price" class="editable-item" />
-                          <button type="button" class="remove-btn">Remove</button>
-                        </li>
-                      </ul>
-                      <button type="button" id="add-estimated-price-btn" class="secondary-btn">Add Estimated Price</button>
-                    </div>
+                </div>
+                
+                <!-- Itinerary -->
+                <div class="form-section inclusion-exclusion">
+                  <label for="itinerary">Itinerary</label>
+                  <div>
+                    <ul id="itinerary-list" class="editable-list">
+                      <li>
+                        <input type="text" name="itinerary_title[]" placeholder="Title" class="editable-item" />
+                        <input type="text" name="itinerary_subtitle[]" placeholder="Subtitle" class="editable-item" />
+                        <button type="button" class="remove-btn">Remove</button>
+                      </li>
+                    </ul>
+                    <button type="button" id="add-itinerary-btn" class="secondary-btn">Add Itinerary</button>
                   </div>
-                  
-                  <div class="form-section inclusion-exclusion">
-                    <label for="inclusions">Inclusions</label>
-                    <div>
-                      <ul id="inclusions-list" class="editable-list">
-                        <li>
-                          <input type="text" name="inclusions[]" placeholder="Add inclusion" class="editable-item" />
-                          <button type="button" class="remove-btn">Remove</button>
-                        </li>
-                      </ul>
-                      <button type="button" id="add-inclusion-btn" class="secondary-btn">Add Inclusion</button>
-                    </div>
-                  </div>
-                  
-                  <div class="form-section inclusion-exclusion">
-                    <label for="exclusions">Exclusions</label>
-                    <div>
-                      <ul id="exclusions-list" class="editable-list">
-                        <li>
-                          <input type="text" name="exclusions[]" placeholder="Add exclusion" class="editable-item" />
-                          <button type="button" class="remove-btn">Remove</button>
-                        </li>
-                      </ul>
-                      <button type="button" id="add-exclusion-btn" class="secondary-btn">Add Exclusion</button>
-                    </div>
-                  </div>
-                  
-                  <div class="form-section inclusion-exclusion">
-                    <label for="itinerary">Itinerary</label>
-                    <div>
-                      <ul id="itinerary-list" class="editable-list">
-                        <li>
-                          <input type="text" name="itinerary_title[]" placeholder="Title" class="editable-item" />
-                          <input type="text" name="itinerary_subtitle[]" placeholder="Subtitle" class="editable-item" />
-                          <button type="button" class="remove-btn">Remove</button>
-                        </li>
-                      </ul>
-                      <button type="button" id="add-itinerary-btn" class="secondary-btn">Add Itinerary</button>
-                    </div>
-                  </div>                          
-                  
-              
-                  <div class="button-container">
-                    <button type="submit" name="submit_tour_package" class="primary-btn">Create</button>
-                    <button type="button" id="close-form-modal" class="secondary-btn">Cancel</button>
-                  </div>
-                </form>
-              </div>
+                </div>
+          
+                <!-- Buttons -->
+                <div class="button-container">
+                  <button type="submit" name="submit_tour_package" class="primary-btn">Create</button>
+                  <button type="button" id="close-form-modal" class="secondary-btn">Cancel</button>
+                </div>
+              </form>
             </div>
+          </div>
+          
 
             <section id="tour-packages">
               <h2><span style="color: #ff9f1c">Available Tour Packages/Itineraries</span></h2>
@@ -364,6 +366,7 @@
           <div class="modal-header">
             <img src="" alt="Tour Package Image" class="modal-header-image">
             <h2 class="modal-title"></h2>
+            <p><strong>Location:</strong> <span class="location"></span></p> <!-- Added Location -->
             <span id="close-modal" class="close-btn">&times;</span>
           </div>
 
@@ -394,143 +397,12 @@
             </div>
           </div>
 
-          <!-- Form Modal for Creating/Editing Tour Packages -->
-          <div id="form-modal" class="modal hidden">
-            <div class="modal-content">
-              <h3>Create/Edit Tour Package</h3>
-              <form id="tour-package-form" class="form-layout">
-                <div class="form-section">
-                  <label for="package-name">Tour Package Name</label>
-                  <input type="text" id="package-name" placeholder="Enter package name" required />
-                </div>
-              
-                <div class="form-section">
-                  <label for="description">Description</label>
-                  <textarea id="description" placeholder="Enter package description" required></textarea>
-                </div>
-              
-                <div class="form-section">
-                  <label for="estimated-price">Estimated Price</label>
-                  <input type="text" id="estimated-price" placeholder="Enter estimated starting price" required />
-                </div>
-              
-                <div class="form-section inclusion-exclusion">
-                  <label for="inclusions">Inclusions</label>
-                  <div>
-                    <ul id="inclusions-list" class="editable-list">
-                      <li>
-                        <input type="text" placeholder="Add inclusion" class="editable-item" />
-                        <button type="button" class="remove-btn">Remove</button>
-                      </li>
-                    </ul>
-                    <button type="button" id="add-inclusion-btn" class="secondary-btn">Add Inclusion</button>
-                  </div>
-                </div>
-              
-                <div class="form-section inclusion-exclusion">
-                  <label for="exclusions">Exclusions</label>
-                  <div>
-                    <ul id="exclusions-list" class="editable-list">
-                      <li>
-                        <input type="text" placeholder="Add exclusion" class="editable-item" />
-                        <button type="button" class="remove-btn">Remove</button>
-                      </li>
-                    </ul>
-                    <button type="button" id="add-exclusion-btn" class="secondary-btn">Add Exclusion</button>
-                  </div>
-                </div>
-              
-                <div class="form-section">
-                  <label for="itinerary">Itinerary Details</label>
-                  <textarea id="itinerary" placeholder="Enter itinerary details" required></textarea>
-                </div>
-              
-                <div class="form-section">
-                  <label for="image-upload">Image Upload</label>
-                  <input type="file" id="image-upload" accept="image/*" required />
-                </div>
-              
-                <div class="button-container">
-                  <button type="submit" class="primary-btn">Create</button>
-                  <button type="button" id="close-form-modal" class="secondary-btn">Cancel</button>
-                </div>
-              </form>
-              
-            </div>
-          </div>
 
           <!-- Display Cards for Existing Tour Packages -->
           <div id="tour-packages-display" class="card-container">
             <!-- Repeat for more tour cards as needed -->
           </div>
 
-          <!-- Details Modal for Viewing Tour Packages -->
-          <div id="details-modal" class="modal hidden">
-            <div class="modal-content">
-              <h3>Tour Package Details</h3>
-              <div id="details-content">
-                <!-- Tour Package Details Container -->
-                <div class="container-section tour-package-details expanded">
-                  <h4 class="container-header">Tour Package Details</h4>
-                  <br>
-
-                  <!-- Package Overview -->
-                  <div class="package-overview">
-                    <strong>Tour Name:</strong> <span>Island Hopping Adventure</span>
-                    <p class="package-description">Experience the beautiful islands with guided tours, beach activities, and cultural insights.</p>
-                  </div>
-                  <br>
-
-                  <!-- Itinerary Section -->
-                  <div class="section itinerary-section">
-                    <h4 class="subsection-title">Itinerary</h4>
-                    <ul class="timeline">
-                      <li>
-                        <span class="timeline-dot"></span>
-                        <div class="timeline-content">
-                          <strong>Day 1:</strong> Arrival and Welcome Tour
-                        </div>
-                      </li>
-                      <li>
-                        <span class="timeline-dot"></span>
-                        <div class="timeline-content">
-                          <strong>Day 2:</strong> Island Hopping and Snorkeling
-                        </div>
-                      </li>
-                      <li>
-                        <span class="timeline-dot"></span>
-                        <div class="timeline-content">
-                          <strong>Day 3:</strong> Cultural Exploration and Departure
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                  <br>
-
-                  <!-- Inclusion/Exclusion Section -->
-                  <div class="section inclusion-exclusion">
-                    <h4 class="subsection-title">What's Included</h4>
-                    <ul class="checklist">
-                      <li><span class="checkmark">&#10003;</span> Guided tours</li>
-                      <li><span class="checkmark">&#10003;</span> Meals (breakfast and lunch)</li>
-                      <li><span class="checkmark">&#10003;</span> Snorkeling gear</li>
-                    </ul>
-                    <br>
-
-                    <h4 class="subsection-title">What's Not Included</h4>
-                    <ul class="checklist exclusion">
-                      <li><span class="crossmark">&#10007;</span> Dinner</li>
-                      <li><span class="crossmark">&#10007;</span> Personal expenses</li>
-                      <li><span class="crossmark">&#10007;</span> Travel insurance</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <button id="edit-package-btn" class="primary-btn">Edit</button>
-              <button id="delete-package-btn" class="danger-btn">Delete</button>
-              <button id="close-details-modal" class="secondary-btn">Close</button>
-            </div>
-          </div>
 
           <!-- Modal Overlay -->
           <div id="modal-overlay" class="modal-overlay hidden"></div>

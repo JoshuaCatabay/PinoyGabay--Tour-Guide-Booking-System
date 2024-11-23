@@ -984,6 +984,8 @@ function closeBookingDetailsModal() {
 
 
 
+
+
 document.addEventListener('DOMContentLoaded', function () {
   const formModal = document.getElementById('form-modal');
   const modalOverlay = document.getElementById('modal-overlay');
@@ -999,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', function () {
     modalOverlay.classList.add('show');
   });
 
-  // Close "Add Package" Modal
+  // Close Modal
   document.getElementById('close-form-modal').addEventListener('click', () => {
     formModal.classList.remove('show');
     modalOverlay.classList.remove('show');
@@ -1083,6 +1085,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function populateEditForm(data, packageId) {
     document.getElementById('package-name').value = data.name || '';
     document.getElementById('description').value = data.description || '';
+    document.getElementById('location').value = data.location || '';
     document.getElementById('image-upload').value = ''; // Leave file input empty for new uploads
     document.getElementById('tour-package-form').action = `/touroperator/edit_tour_package/${packageId}`; // Set form action dynamically
 
@@ -1109,13 +1112,33 @@ document.addEventListener('DOMContentLoaded', function () {
   // Reset Form Fields for "Add Package"
   function resetForm() {
     document.getElementById('tour-package-form').reset();
-    document.getElementById('estimated-price-list').innerHTML = '';
-    document.getElementById('inclusions-list').innerHTML = '';
-    document.getElementById('exclusions-list').innerHTML = '';
-    document.getElementById('itinerary-list').innerHTML = '';
+    document.getElementById('location').value = ''; // Reset location field
+    document.getElementById('estimated-price-list').innerHTML = `
+      <li>
+        <input type="text" name="estimated_price_description[]" placeholder="Description" class="editable-item" />
+        <input type="text" name="estimated_price_value[]" placeholder="Price" class="editable-item" />
+        <button type="button" class="remove-btn">Remove</button>
+      </li>`;
+    document.getElementById('inclusions-list').innerHTML = `
+      <li>
+        <input type="text" name="inclusions[]" placeholder="Add inclusion" class="editable-item" />
+        <button type="button" class="remove-btn">Remove</button>
+      </li>`;
+    document.getElementById('exclusions-list').innerHTML = `
+      <li>
+        <input type="text" name="exclusions[]" placeholder="Add exclusion" class="editable-item" />
+        <button type="button" class="remove-btn">Remove</button>
+      </li>`;
+    document.getElementById('itinerary-list').innerHTML = `
+      <li>
+        <input type="text" name="itinerary_title[]" placeholder="Title" class="editable-item" />
+        <input type="text" name="itinerary_subtitle[]" placeholder="Subtitle" class="editable-item" />
+        <button type="button" class="remove-btn">Remove</button>
+      </li>`;
     document.getElementById('tour-package-form').action = '/touroperator/create_tour_package'; // Reset form action
   }
 });
+
 
 
 
@@ -1143,6 +1166,12 @@ document.addEventListener('DOMContentLoaded', function () {
           : '/static/default.jpg';
         modal.querySelector('.modal-title').textContent = data.name || 'Unnamed Package';
         modal.querySelector('.description').textContent = data.description || 'No description provided';
+
+        // Populate Location
+        const locationContainer = modal.querySelector('.location');
+        if (locationContainer) {
+          locationContainer.textContent = data.location || 'Location not specified';
+        }
 
         // Populate Estimated Prices
         const priceList = modal.querySelector('.price-list');
@@ -1215,6 +1244,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+
 // Open and Populate Edit Form
 function openEditForm(packageId, data) {
   const formModal = document.getElementById('form-modal');
@@ -1223,6 +1253,7 @@ function openEditForm(packageId, data) {
   // Populate form fields with package data
   document.getElementById('package-name').value = data.name || '';
   document.getElementById('description').value = data.description || '';
+  document.getElementById('location').value = data.location || ''; // Populate location
 
   // Leave file input empty for the user to upload a new file if needed
   document.getElementById('image-upload').value = '';
@@ -1284,6 +1315,10 @@ function openEditForm(packageId, data) {
   formModal.classList.add('show');
   modalOverlay.classList.add('show');
 }
+
+
+
+
 /**
  * Add functionality to the "Delete" button.
  * @param {Number} packageId - The ID of the package to delete.

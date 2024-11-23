@@ -352,14 +352,16 @@ document.addEventListener('DOMContentLoaded', function () {
       const packageData = data.package;
       document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
       document.getElementById('modal-package-title').textContent = packageData.name;
+      document.getElementById('modal-package-location').textContent = packageData.location || "Location not provided";
       document.getElementById('modal-package-description').textContent = packageData.description;
+
 
       // Populate estimated prices
       const priceList = document.getElementById('modal-price-list');
       priceList.innerHTML = '';
       packageData.estimated_prices.forEach(price => {
         const li = document.createElement('li');
-        li.textContent = `${price.description}: ₱${price.estimated_price}`;
+        li.innerHTML = `<span class="price-icon">💰</span> ${price.description}: ₱${price.estimated_price}`;
         priceList.appendChild(li);
       });
 
@@ -368,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
       inclusionsList.innerHTML = '';
       packageData.inclusions.forEach(inclusion => {
         const li = document.createElement('li');
-        li.textContent = inclusion.inclusion;
+        li.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
         inclusionsList.appendChild(li);
       });
 
@@ -377,18 +379,24 @@ document.addEventListener('DOMContentLoaded', function () {
       exclusionsList.innerHTML = '';
       packageData.exclusions.forEach(exclusion => {
         const li = document.createElement('li');
-        li.textContent = exclusion.exclusion;
+        li.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
         exclusionsList.appendChild(li);
       });
 
-      // Populate itineraries
-      const itineraryList = document.getElementById('modal-itinerary-list');
-      itineraryList.innerHTML = '';
-      packageData.itineraries.forEach(itinerary => {
-        const li = document.createElement('li');
-        li.innerHTML = `<strong>${itinerary.title}</strong>: ${itinerary.subtitle}`;
-        itineraryList.appendChild(li);
-      });
+// Populate itineraries
+const itineraryList = document.getElementById('modal-itinerary-list');
+itineraryList.innerHTML = '';
+packageData.itineraries.forEach(itinerary => {
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <span class="timeline-dot"></span>
+    <div class="timeline-content">
+      <strong>${itinerary.title}</strong>
+      <p>${itinerary.subtitle}</p>
+    </div>`;
+  itineraryList.appendChild(li);
+});
+
 
       // Show modal content
       modalLoader.style.display = 'none';
@@ -499,16 +507,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
-
-
 // My Tours Toggles Function
 const toggleButtons = document.querySelectorAll('.toggle-btn');
 const tourCards = document.querySelectorAll('.tour-card');
 
 // Function to update counts
 function updateCounts() {
-  // Initialize counts
   const counts = {
     all: tourCards.length,
     upcoming: 0,
@@ -535,7 +539,7 @@ function updateCounts() {
   });
 }
 
-// Initialize layout on load to fix spacing issue
+// Initialize layout on load
 window.addEventListener('DOMContentLoaded', () => {
   toggleButtons[0].click(); // Simulate a click to trigger layout adjustment
   updateCounts(); // Update counts on load
@@ -544,7 +548,6 @@ window.addEventListener('DOMContentLoaded', () => {
 // Toggle visibility based on category
 toggleButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    // Remove active state from all buttons
     toggleButtons.forEach((btn) => btn.classList.remove('active'));
     button.classList.add('active');
 
@@ -558,12 +561,6 @@ toggleButtons.forEach((button) => {
     });
   });
 });
-
-
-
-
-
-
 
 
 
@@ -583,13 +580,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const tourName = btn.dataset.tour;
 
       // Populate modal fields
-      const tourNameField = document.getElementById('review-tour-name');
-      const guideIdField = document.getElementById('tour-guide-id');
-      const bookingIdField = document.getElementById('booking-id');
-
-      if (tourNameField) tourNameField.textContent = tourName;
-      if (guideIdField) guideIdField.value = guideId;
-      if (bookingIdField) bookingIdField.value = bookingId;
+      document.getElementById('review-tour-name').textContent = tourName;
+      document.getElementById('tour-guide-id').value = guideId;
+      document.getElementById('booking-id').value = bookingId;
 
       // Show modal
       reviewModal.classList.remove('hidden');
@@ -637,8 +630,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         alert(data.message);
 
-        // Optionally reload the page to refresh all sections
-        location.reload();
+        // Update the review button dynamically
+        const reviewButton = document.querySelector(`.review-btn[data-booking-id="${bookingId}"]`);
+        if (reviewButton) {
+          reviewButton.classList.replace('review-btn', 'reviewed-btn');
+          reviewButton.textContent = 'Reviewed';
+          reviewButton.disabled = true;
+        }
+
+        // Close modal
+        reviewModal.classList.add('hidden');
+        reviewModal.classList.remove('show');
       } else {
         alert(`Error submitting review: ${data.message}`);
       }
@@ -647,4 +649,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 

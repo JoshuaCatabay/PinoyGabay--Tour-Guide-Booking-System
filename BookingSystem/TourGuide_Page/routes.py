@@ -16,6 +16,7 @@
 
 from flask import abort, render_template, redirect, url_for, flash, request, session, jsonify, current_app
 from flask_login import login_required, current_user, logout_user, login_user
+from BookingSystem.Bookings.routes import update_statuses
 from BookingSystem.TourOperator_Page import touroperator
 from . import tourguide  
 from BookingSystem.TourOperator_Page.form import UserTourGuideForm
@@ -31,6 +32,7 @@ import re
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import func  #!!!!!
 from BookingSystem.models import ReviewsRating, ReviewImages   #!!!!!
+from BookingSystem.models import BookingStatus
 
 
 @tourguide.route('/upload_profile_picture', methods=['POST'])
@@ -158,6 +160,9 @@ def save_profile():
 @tourguide.route('/tourguide_dashboard')
 @login_required
 def tourguide_dashboard():
+    # Update statuses before fetching bookings
+    update_statuses()
+
     print(f"Current user in dashboard: {current_user.email}, Role: {current_user.role}")
 
     # Get the tour guide profile for the logged-in user
@@ -178,7 +183,7 @@ def tourguide_dashboard():
         func.count(Booking.id).label('completed_tours')
     ).filter(
         Booking.tour_guide_id == tour_guide.id,
-        Booking.status == 'completed'  # Only count completed tours
+        Booking.status == BookingStatus.STATUS_COMPLETED.value
     ).group_by(Booking.tour_guide_id).subquery()
 
     # Fetch aggregated data
@@ -195,7 +200,7 @@ def tourguide_dashboard():
 
     # Paginate the reviews
     page = request.args.get('page', 1, type=int)
-    per_page = 2  # Number of reviews per page
+    per_page = 4  # Number of reviews per page
 
     paginated_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide.id) \
                                            .order_by(ReviewsRating.datetime.desc()) \
@@ -229,6 +234,26 @@ def tourguide_dashboard():
     characteristics = [c.characteristic for c in tour_guide.characteristics]
     skills = [s.skill for s in tour_guide.skills]
 
+    # Fetch bookings assigned to the tour guide
+    bookings = (
+        db.session.query(Booking)
+        .filter_by(tour_guide_id=tour_guide.id)
+        .filter(Booking.status.in_([
+            BookingStatus.STATUS_UPCOMING.value,
+            BookingStatus.STATUS_ONGOING.value,
+            BookingStatus.STATUS_COMPLETED.value,
+            BookingStatus.STATUS_CANCELLED.value
+        ]))  # Ensure the status matches defined statuses
+        .options(
+            db.joinedload(Booking.selected_package),
+            db.joinedload(Booking.traveler),
+        )
+        .order_by(Booking.date_start.desc())  # Order by start date
+        .all()
+    )
+
+
+
     return render_template(
         'tourguide_dashboard.html',
         profile={
@@ -236,11 +261,15 @@ def tourguide_dashboard():
             "review_count": review_count,  # Total number of reviews
             "total_tours": completed_tours,  # Total completed tours
             "pagination": pagination_data  # Add pagination to the profile dictionary
+
         },
         bio=tour_guide.bio,
         characteristics=characteristics,
         skills=skills,
-        reviews=reviews_data
+        reviews=reviews_data,
+        BookingStatus=BookingStatus,
+        bookings=bookings,  # Include bookings data here
+        
     )
 
 

@@ -319,6 +319,7 @@ class TourPackage(db.Model):
     inclusions = db.relationship('Inclusion', backref='tour_package', cascade="all, delete-orphan")
     exclusions = db.relationship('Exclusion', backref='tour_package', cascade="all, delete-orphan")
     itineraries = db.relationship('Itinerary', backref='tour_package', cascade="all, delete-orphan")
+    location = db.Column(db.String(255), nullable=True)  # New field for location
 
 
 class EstimatedPrice(db.Model):
@@ -362,6 +363,15 @@ class Itinerary(db.Model):
     title = db.Column(db.String(100))
     subtitle = db.Column(db.String(100))
 
+
+    # Status Constants
+class BookingStatus(Enum):
+    STATUS_UPCOMING = "upcoming"
+    STATUS_ONGOING = "ongoing"
+    STATUS_COMPLETED = "completed"
+    STATUS_CANCELLED = "cancelled"
+
+
 class Booking(db.Model):
     __tablename__ = 'Booking'
     __table_args__ = (
@@ -372,11 +382,13 @@ class Booking(db.Model):
         db.Index('idx_booking_date_start', 'date_start'),         # Index on date_start
         # {'schema': 'public'},
     )
+
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=True)
     tour_guide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
     package_id = db.Column(db.Integer, db.ForeignKey('TourPackage.id'), nullable=False)
-    status = db.Column(db.String(15), nullable=False, default='upcoming')
+    status = db.Column(db.String(15), nullable=False, default=BookingStatus.STATUS_UPCOMING.value)
     date_start = db.Column(db.Date)
     date_end = db.Column(db.Date)
     traveler_quantity = db.Column(db.Integer, nullable=False)
@@ -384,11 +396,14 @@ class Booking(db.Model):
     time = db.Column(db.Time, nullable=False)
     duration = db.Column(db.Interval)
     price = db.Column(db.Numeric(10, 2))
+    is_reviewed = db.Column(db.Boolean, nullable=False, default=False)
 
        # Relationships
     traveler = db.relationship('User', backref='traveler_bookings', lazy=True)
     assigned_guide = db.relationship('TourGuide', backref='assigned_bookings', lazy=True)
     selected_package = db.relationship('TourPackage', backref='bookings', lazy=True)
+
+    
     
 class Notification(db.Model):
     __tablename__ = 'Notification'

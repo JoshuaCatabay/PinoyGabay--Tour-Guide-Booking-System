@@ -863,3 +863,245 @@ button {
   display: block;
   /* Other styles */
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Modal Header */
+.modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2b2d42;
+  font-size: 24px;
+  border-bottom: 2px solid #4ecdc4;
+  padding-bottom: 10px;
+}
+
+/* Status Box */
+.status-box {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+}
+
+.status-circle {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #4ecdc4;
+  border-radius: 50px;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Container Section Styling */
+.container-section {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 80%; /* Ensure full width for consistency */
+}
+
+.container-section.expanded {
+  padding: 20px;
+}
+
+/* Container Headers */
+.container-header {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #2b2d42;
+  border-bottom: 2px solid #4ecdc4;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+/* Section Headers */
+.subsection-title {
+  font-size: 16px;
+  color: #2b2d42;
+  margin-top: 15px;
+  padding-bottom: 5px;
+  position: relative;
+}
+
+.subsection-title::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 100%;
+  background-color: #4ecdc4;
+  position: absolute;
+  left: -15px;
+}
+
+/* Notes Box */
+.notes-box {
+  background-color: #eaf7f7;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  border-left: 5px solid #4ecdc4;
+}
+
+/* General Information Styling */
+.info-item {
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #2b2d42;
+}
+
+/* Timeline Styling */
+.timeline {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 10px;
+}
+
+.timeline li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #4ecdc4;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.timeline-content {
+  background-color: #f7f7f7;
+  padding: 10px;
+  border-radius: 6px;
+  flex-grow: 1;
+}
+
+/* Checklist Styling */
+.checklist {
+  padding-left: 0;
+  list-style: none;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.checkmark {
+  color: #4ecdc4;
+  margin-right: 8px;
+}
+
+.crossmark {
+  color: #ff4b4b;
+  margin-right: 8px;
+}
+
+/* Primary Button */
+.primary-btn {
+  display: block;
+  margin: 20px auto;
+  background-color: #4ecdc4;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  background-color: #1a535c;
+}
+
+
+
+
+
+/* Header with Image and Overlay Text */
+.modal-header {
+  position: relative;
+}
+
+.modal-header-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+}
+
+.header-text-overlay {
+  position: absolute;
+  bottom: 20px; /* Position at the bottom of the image */
+  left: 20px;
+  color: white;
+}
+
+.package-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7); /* Shadow for text visibility */
+}
+
+.location {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.location-icon {
+  margin-right: 5px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+}
+
+
+
+/* Modal Styling */
+/* Modal Styling */
+.modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  max-width: 900px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+
+

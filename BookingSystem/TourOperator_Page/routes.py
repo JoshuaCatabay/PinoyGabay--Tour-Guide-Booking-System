@@ -41,6 +41,7 @@ def create_tour_package():
             toperator_id=current_user.tour_operator.id,
             name=package_form.name.data,
             description=package_form.description.data,
+            location=request.form.get('location'),  # Add location from form data
             package_img=f"package_pics/{filename}"  # Store relative path
         )
         db.session.add(tour_package)
@@ -97,8 +98,8 @@ def create_tour_package():
     # Render the tour operator dashboard with the form
     return render_template('touroperator_dashboard.html', guide_form=guide_form, package_form=package_form,
                            tour_guides=tour_guides, operator=operator, packages=packages)
-    
 
+    
 @touroperator.route('/get_tour_package/<int:package_id>', methods=['GET'])
 @login_required
 def get_tour_package(package_id):
@@ -109,6 +110,7 @@ def get_tour_package(package_id):
         "name": package.name,
         "description": package.description,
         "package_img": package.package_img,  # Relative path to the package image
+        "location": package.location,  # Add the location field
         "estimated_prices": [
             {"description": ep.description, "estimated_price": str(ep.estimated_price)}
             for ep in package.estimated_prices
@@ -120,6 +122,7 @@ def get_tour_package(package_id):
         ],
     }
     return jsonify(package_data)
+
 
 
 @touroperator.route('/delete_tour_package/<int:package_id>', methods=['DELETE'])
@@ -145,6 +148,7 @@ def delete_tour_package(package_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
 
 
 @touroperator.route('/edit_tour_package/<int:package_id>', methods=['POST'])
@@ -175,6 +179,7 @@ def edit_tour_package(package_id):
     # Update the main TourPackage instance
     package.name = package_form.name.data
     package.description = package_form.description.data
+    package.location = request.form.get('location', '')  # Update location
     package.package_img = filename
 
     # Remove old entries before adding new ones
@@ -220,6 +225,7 @@ def edit_tour_package(package_id):
     db.session.commit()
     flash("Tour package updated successfully!", "success")
     return redirect(url_for('touroperator.touroperator_dashboard'))
+
 
 
 @touroperator.route('/create_tourguide', methods=['GET', 'POST'])

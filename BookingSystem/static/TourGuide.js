@@ -595,58 +595,6 @@ const viewNotificationDetails = (notificationText) => {
 
 
 
-// Get elements
-const toggleTabsBtn = document.getElementById('toggle-tabs-btn');
-const bookingsTabs = document.getElementById('bookings-tabs');
-const bookingTabBtns = document.querySelectorAll('.booking-tab-btn');
-const bookingCategories = document.querySelectorAll('.booking-category');
-
-// Check screen size and adjust visibility
-function adjustTabsForScreenSize() {
-  if (window.innerWidth > 768) {
-    // Show tabs and hide the toggle button on larger screens
-    bookingsTabs.classList.remove('hidden');
-    toggleTabsBtn.style.display = 'none';
-  } else {
-    // Hide tabs and show the toggle button on mobile screens
-    bookingsTabs.classList.add('hidden');
-    toggleTabsBtn.style.display = 'block';
-  }
-}
-
-// Toggle tabs visibility on mobile screens
-toggleTabsBtn.addEventListener('click', () => {
-  bookingsTabs.classList.toggle('hidden');
-  toggleTabsBtn.textContent = bookingsTabs.classList.contains('hidden') ? 'Show Tabs' : 'Hide Tabs';
-});
-
-// Handle tab selection and auto-collapse on mobile
-bookingTabBtns.forEach((btn) => {
-  btn.addEventListener('click', () => {
-    // Set active tab
-    bookingTabBtns.forEach((btn) => btn.classList.remove('active'));
-    btn.classList.add('active');
-
-    const status = btn.dataset.status;
-
-    // Show/Hide booking categories based on tab selection
-    bookingCategories.forEach((category) => {
-      const categoryStatus = category.dataset.status;
-      category.style.display = status === 'all' || categoryStatus === status ? 'block' : 'none';
-    });
-
-    // Collapse the tabs if on mobile
-    if (window.innerWidth <= 768) {
-      bookingsTabs.classList.add('hidden');
-      toggleTabsBtn.textContent = 'Show Tabs'; // Reset button text
-    }
-  });
-});
-
-// Initial check and add event listener to adjust on window resize
-adjustTabsForScreenSize();
-window.addEventListener('resize', adjustTabsForScreenSize);
-
 
 
 
@@ -1845,3 +1793,289 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initial Load
   loadReviews(currentPage);
 });
+
+
+
+// DOM Elements
+const toggleButtons = document.querySelectorAll('.toggle-btn');
+const tourCards = document.querySelectorAll('.tour-card');
+
+// Function to update category counts
+function updateCounts() {
+  const counts = {
+    all: tourCards.length,
+    upcoming: 0,
+    ongoing: 0,
+    completed: 0,
+    cancelled: 0,
+  };
+
+  tourCards.forEach((card) => {
+    const status = card.dataset.status;
+    if (counts[status] !== undefined) {
+      counts[status]++;
+    }
+  });
+
+  toggleButtons.forEach((button) => {
+    const status = button.dataset.status;
+    const countElement = button.querySelector('.count');
+    if (status in counts) {
+      countElement.textContent = `(${counts[status]})`;
+    }
+  });
+}
+
+// Function to toggle categories
+function toggleCategory() {
+  toggleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      toggleButtons.forEach((btn) => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      const status = button.dataset.status;
+
+      tourCards.forEach((card) => {
+        const cardStatus = card.dataset.status;
+        card.style.display =
+          status === 'all' || cardStatus === status ? 'block' : 'none';
+      });
+    });
+  });
+}
+
+// Initialize counts and toggles on page load
+window.addEventListener('DOMContentLoaded', () => {
+  updateCounts();
+  toggleCategory();
+});
+
+// }
+
+
+// // Function to handle "Mark as Completed"
+// function handleCompleteBooking() {
+//   const completeButtons = document.querySelectorAll('.complete-booking-btn');
+
+//   completeButtons.forEach((button) => {
+//     button.addEventListener('click', async () => {
+//       const bookingId = button.dataset.id;
+
+//       try {
+//         const response = await fetch(`/booking/complete/${bookingId}`, {
+//           method: 'POST',
+//         });
+
+//         if (response.ok) {
+//           const data = await response.json();
+//           alert(data.message);
+
+//           // Update booking status to completed
+//           const card = document.querySelector(`.tour-card[data-id="${bookingId}"]`);
+//           if (card) {
+//             card.dataset.status = 'completed';
+//             card.querySelector('.status-label').textContent = 'Completed';
+//             card.querySelector('.tour-status').textContent = 'Completed';
+
+//             // Hide the "Mark as Completed" button
+//             const completeButton = card.querySelector('.complete-booking-btn');
+//             if (completeButton) {
+//               completeButton.style.display = 'none';
+//             }
+
+//             // Update counts
+//             updateCounts();
+//           } else {
+//             console.error(`Card for booking ID ${bookingId} not found.`);
+//           }
+//         } else {
+//           const errorData = await response.json();
+//           alert(errorData.error || 'Failed to complete the booking.');
+//         }
+//       } catch (err) {
+//         console.error('Error completing booking:', err);
+//         alert('An error occurred. Please try again.');
+//       }
+//     });
+//   });
+// }
+
+// // Initialize functionality
+// document.addEventListener('DOMContentLoaded', () => {
+//   toggleCategory();
+//   updateCounts();
+//   handleCompleteBooking();
+// });
+
+async function handleCompleteBooking() {
+  const completeButtons = document.querySelectorAll('.complete-booking-btn');
+
+  completeButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const bookingId = button.dataset.id;
+
+      try {
+        const response = await fetch(`/booking/complete/${bookingId}`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          alert(data.message);
+
+          // Update the card's status
+          const card = document.querySelector(`.tour-card[data-id="${bookingId}"]`);
+          if (card) {
+            card.dataset.status = 'completed';
+            card.querySelector('.status-label').textContent = 'Completed';
+            card.querySelector('.status-label').classList.remove('ongoing');
+            card.querySelector('.status-label').classList.add('completed');
+
+            // Remove the "Mark as Completed" button
+            const completeButton = card.querySelector('.complete-booking-btn');
+            if (completeButton) completeButton.remove();
+
+            updateCounts(); // Refresh counts
+          } else {
+            console.error(`Card for booking ID ${bookingId} not found.`);
+          }
+        } else {
+          const errorData = await response.json();
+          alert(errorData.error || 'Failed to complete the booking.');
+        }
+      } catch (err) {
+        console.error('Error completing booking:', err);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  });
+}
+
+// Initialize complete booking functionality
+document.addEventListener('DOMContentLoaded', () => {
+  handleCompleteBooking();
+});
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Modal elements
+  const modal = document.getElementById('booking-details-modal');
+  const modalLoader = document.getElementById('modal-loader');
+  const modalDetails = document.getElementById('modal-details');
+  const modalStatus = document.getElementById('modal-status'); // Add this
+  const closeModalButton = document.getElementById('close-booking-modal');
+
+  // Function to fetch and display booking details
+  async function fetchAndDisplayBookingDetails(bookingId) {
+    console.log('Fetching details for booking ID:', bookingId); // Debugging log
+
+    // Reset modal state
+    modalLoader.style.display = 'block';
+    modalDetails.classList.add('hidden');
+    modal.classList.add('show'); // Show modal
+    modal.classList.remove('hidden'); // Ensure it's visible
+    document.body.style.overflow = 'hidden';
+
+    try {
+      // Fetch booking details
+      const response = await fetch(`/booking/details/${bookingId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch booking details: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Booking details fetched:', data); // Debugging log
+
+      // Populate modal with booking details
+      modalStatus.textContent = data.status; // Display status
+      document.getElementById('modal-traveler-name').textContent = data.traveler.name;
+      document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
+      document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
+      document.getElementById('modal-tour-date').textContent = `${data.date_start} - ${data.date_end}`;
+      document.getElementById('modal-traveler-quantity').textContent = data.traveler_quantity;
+      document.getElementById('modal-tour-guide-price').textContent = `₱${data.price}`;
+      document.getElementById('modal-special-notes').textContent = data.special_notes;
+
+      // Populate package details
+      const packageData = data.package;
+      document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
+      document.getElementById('modal-package-title').textContent = packageData.name;
+      document.getElementById('modal-package-location').textContent = packageData.location || "Location not provided";
+      document.getElementById('modal-package-description').textContent = packageData.description;
+
+
+      // Populate estimated prices
+      const priceList = document.getElementById('modal-price-list');
+      priceList.innerHTML = '';
+      packageData.estimated_prices.forEach(price => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="price-icon">💰</span> ${price.description}: ₱${price.estimated_price}`;
+        priceList.appendChild(li);
+      });
+
+      // Populate inclusions
+      const inclusionsList = document.getElementById('modal-inclusions-list');
+      inclusionsList.innerHTML = '';
+      packageData.inclusions.forEach(inclusion => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
+        inclusionsList.appendChild(li);
+      });
+
+      // Populate exclusions
+      const exclusionsList = document.getElementById('modal-exclusions-list');
+      exclusionsList.innerHTML = '';
+      packageData.exclusions.forEach(exclusion => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
+        exclusionsList.appendChild(li);
+      });
+
+// Populate itineraries
+const itineraryList = document.getElementById('modal-itinerary-list');
+itineraryList.innerHTML = '';
+packageData.itineraries.forEach(itinerary => {
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <span class="timeline-dot"></span>
+    <div class="timeline-content">
+      <strong>${itinerary.title}</strong>
+      <p>${itinerary.subtitle}</p>
+    </div>`;
+  itineraryList.appendChild(li);
+});
+
+
+      // Show modal content
+      modalLoader.style.display = 'none';
+      modalDetails.classList.remove('hidden');
+      console.log('Modal content populated successfully.'); // Debugging log
+    } catch (error) {
+      console.error('Error loading booking details:', error);
+      modalLoader.style.display = 'none';
+      alert('Failed to load booking details. Please try again.');
+    }
+  }
+
+  // Add event listeners to booking cards
+  document.querySelectorAll('.view-booking').forEach(button => {
+    button.addEventListener('click', function () {
+      const bookingId = this.id.split('-').pop(); // Extract the booking ID from the button ID
+      fetchAndDisplayBookingDetails(bookingId);
+    });
+  });
+
+  // Close modal
+  closeModalButton.addEventListener('click', function () {
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  });
+});
+
+

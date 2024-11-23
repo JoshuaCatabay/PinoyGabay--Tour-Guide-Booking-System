@@ -218,81 +218,149 @@
             </ul>
           </div>
 
-          <!-- Bookings Tabs Container -->
-          <div class="bookings-container">
-            <!-- Toggle for Tabs on Mobile -->
-            <button class="toggle-tabs-btn" id="toggle-tabs-btn">Show Tabs</button>
+          <h2>My Bookings</h2>
 
-            <div class="bookings-tabs hidden" id="bookings-tabs">
-              <button class="booking-tab-btn active" data-status="all">All (5)</button>
-              <button class="booking-tab-btn" data-status="upcoming">Upcoming (2)</button>
-              <button class="booking-tab-btn" data-status="completed">Completed (1)</button>
-              <button class="booking-tab-btn" data-status="cancelled">Cancelled (2)</button>
-            </div>
-
-            <div class="bookings-content">
-              <div class="booking-category" data-status="upcoming">
-                <h4 class="status-label">Upcoming</h4>
-                <div class="booking-card">
-                  <div class="booking-info">
-                    <span class="booking-date">Oct 30, 2024</span>
-                    <span class="tour-package">Island Hopping Tour</span>
-                    <span class="traveler-name">Traveler: Jane Doe</span>
-                  </div>
-                  <button class="details-btn" onclick="openBookingDetails('Booking #123')">View Details</button>
-                </div>
-              </div>
-
-              <div class="booking-category" data-status="completed">
-                <h4 class="status-label">Completed</h4>
-                <div class="booking-card">
-                  <div class="booking-info">
-                    <span class="booking-date">Oct 25, 2024</span>
-                    <span class="tour-package">Mountain Trekking</span>
-                    <span class="traveler-name">Traveler: Mark Lee</span>
-                  </div>
-                  <button class="details-btn" onclick="openBookingDetails('Booking #125')">View Details</button>
-                </div>
-              </div>
-
-              <div class="booking-category" data-status="cancelled">
-                <h4 class="status-label">Cancelled</h4>
-                <div class="booking-card">
-                  <div class="booking-info">
-                    <span class="booking-date">Oct 22, 2024</span>
-                    <span class="tour-package">Food Tour</span>
-                    <span class="traveler-name">Traveler: Amy Cooper</span>
-                  </div>
-                  <button class="details-btn" onclick="openBookingDetails('Booking #126')">View Details</button>
-                </div>
-              </div>
-
-              <div class="booking-category" data-status="cancelled">
-                <h4 class="status-label">Cancelled</h4>
-                <div class="booking-card">
-                  <div class="booking-info">
-                    <span class="booking-date">Oct 22, 2024</span>
-                    <span class="tour-package">Food Tour</span>
-                    <span class="traveler-name">Traveler: Amy Cooper</span>
-                  </div>
-                  <button class="details-btn" onclick="openBookingDetails('Booking #126')">View Details</button>
-                </div>
-              </div>
-
-            </div>
+          <!-- Toggle Buttons for Categories -->
+          <div class="tour-toggle-buttons">
+            <button class="toggle-btn active" data-status="all">
+              All <span class="count">(0)</span>
+            </button>
+            <button class="toggle-btn" data-status="upcoming">
+              Upcoming <span class="count">(0)</span>
+            </button>
+            <button class="toggle-btn" data-status="ongoing">
+              Ongoing <span class="count">(0)</span>
+            </button>
+            <button class="toggle-btn" data-status="completed">
+              Completed <span class="count">(0)</span>
+            </button>
+            <button class="toggle-btn" data-status="cancelled">
+              Cancelled <span class="count">(0)</span>
+            </button>
+          </div>
           
-            <!-- Booking Details Modal -->
-            <div id="booking-modal" class="modal hidden">
-              <div class="modal-content">
-                <h3>Booking Details</h3>
-                <p id="booking-info">Here will be the booking details...</p>
-                <button class="primary-btn" id="close-booking-modal">Close</button>
+          <!-- Bookings Container -->
+          <div class="tours-container">
+            {% for booking in bookings %}
+            <div class="tour-card" data-status="{{ booking.status }}" data-id="{{ booking.id }}">
+              <div class="status-label {{ booking.status|lower }}">{{ booking.status.capitalize() }}</div>
+              <div class="tour-header">
+                <h3 class="tour-title">{{ booking.selected_package.name }}</h3>
+                <span class="tour-status {{ booking.status }}">{{ booking.status }}</span>
+              </div>
+              <p class="tour-date">
+                {{ booking.date_start.strftime('%B %d, %Y') }}
+                {% if booking.date_start != booking.date_end %} -
+                {{ booking.date_end.strftime('%B %d, %Y') }}
+                {% endif %}
+              </p>
+              <div class="tour-header">
+                <p class="tour-guide">Traveler: 
+                  <span class="guide-name">
+                    {{ booking.traveler.first_name }} {{ booking.traveler.last_name }}
+                  </span>
+                </p>
+                {% if booking.status == 'ongoing' %}
+                <button class="complete-booking-btn" data-id="{{ booking.id }}">Mark as Completed</button>
+                {% endif %}
+              </div>
+              <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
+            </div>
+            {% else %}
+            <p>No bookings available.</p>
+            {% endfor %}
+          </div>
+          
+          
+          <div id="booking-details-modal" class="modal hidden">
+            <div class="modal-content">
+              <!-- Loader -->
+              <div id="modal-loader" style="display: none;">Loading...</div>
+          
+              <!-- Booking Details -->
+              <div id="modal-details" class="hidden">
+                <!-- Traveler Information -->
+                <div class="container-section traveler-info expanded">
+                  <h4 class="container-header">Traveler Information</h4>
+                  <div class="status-box">
+                    <span class="status-circle" id="modal-status">Loading...</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
+                  </div>
+                  <!-- Special Notes -->
+                  <div class="notes-box">
+                    <h5>Special Notes</h5>
+                    <p id="modal-special-notes">Loading...</p>
+                  </div>
+                </div>
+          
+                <!-- Tour Package Details -->
+                <div class="container-section tour-package-details expanded">
+                  <h4 class="container-header">Tour Package Details</h4>
+                  <div class="modal-header">
+                    <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+                    <div class="header-text-overlay">
+                      <h3 id="modal-package-title">Loading...</h3>
+                      <p id="modal-package-location">
+                        <span class="location-icon">&#x1F4CD;</span> Loading location...
+                      </p>
+                    </div>
+                  </div>
+                  <p id="modal-package-description" class="description">Loading...</p>
+          
+                  <!-- Estimated Prices -->
+                  <div class="modal-section">
+                    <h4>Estimated Prices</h4>
+                    <ul id="modal-price-list" class="price-list"></ul>
+                  </div>
+          
+                  <!-- Inclusions -->
+                  <div class="modal-section">
+                    <h4>Inclusions</h4>
+                    <ul id="modal-inclusions-list" class="checklist inclusions-list"></ul>
+                  </div>
+          
+                  <!-- Exclusions -->
+                  <div class="modal-section">
+                    <h4>Exclusions</h4>
+                    <ul id="modal-exclusions-list" class="checklist exclusions-list"></ul>
+                  </div>
+          
+                  <!-- Itinerary -->
+                  <div class="modal-section itinerary-section">
+                    <h4>Itinerary</h4>
+                    <ul id="modal-itinerary-list" class="timeline"></ul>
+                  </div>
+                </div>
+              </div>
+          
+              <!-- Action Buttons -->
+              <div class="modal-footer">
+                <button id="modal-cancel-booking-btn" class="cancel-booking-btn hidden" data-id="">Cancel Booking</button>
+                <button id="close-booking-modal" class="primary-btn">Close</button>
               </div>
             </div>
           </div>
+          
+          
+          </div>
 
-        </div>
-        
 <!-- Availability Tab Pane -->
 <div class="tab-pane" id="calendar">
   <div class="availability-container">

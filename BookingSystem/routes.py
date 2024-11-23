@@ -13,11 +13,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from BookingSystem.models import ReviewsRating, ReviewImages  #!!!!!
 from sqlalchemy import func   #!!!!!
 from BookingSystem.models import User, TourOperator, TourGuide, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary, Booking
-<<<<<<< HEAD
 from BookingSystem.Bookings.routes import update_statuses
-=======
 from datetime import datetime, timedelta
->>>>>>> 8a13914b00fc84242dde9381edc23a1beefe6539
+from BookingSystem.models import BookingStatus
 
 
 main = Blueprint('main', __name__)  # Ensure the 'main' blueprint is set
@@ -259,6 +257,12 @@ def account():
     bookings = (
         db.session.query(Booking)
         .filter_by(user_id=current_user.id)
+        .filter(Booking.status.in_([
+            BookingStatus.STATUS_UPCOMING.value,
+            BookingStatus.STATUS_ONGOING.value,
+            BookingStatus.STATUS_COMPLETED.value,
+            BookingStatus.STATUS_CANCELLED.value
+        ]))  # Ensure the status matches defined statuses
         .options(
             db.joinedload(Booking.selected_package),
             db.joinedload(Booking.assigned_guide).joinedload(TourGuide.user),
@@ -273,18 +277,22 @@ def account():
         .all()
     )
 
+    # Fetch completed bookings with no reviews
+    to_review = [
+        booking for booking in bookings
+        if booking.status == BookingStatus.STATUS_COMPLETED.value and not booking.is_reviewed
+    ]
+    to_review_count = len(to_review)
+
     # Prepare reviews data for rendering
     reviews_data = []
     for review in reviews:
-        # Fetch associated tour guide and review image
         tour_guide = TourGuide.query.get(review.tour_guide_id)
         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
 
-        # Build image paths
         tour_image_path = url_for('static', filename=f"review_pics/{review_image.img}") if review_image else url_for('static', filename="default_tour_image.jpg")
         guide_profile_path = url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}") if tour_guide and tour_guide.user.profile_img else url_for('static', filename="default_guide_image.jpg")
 
-        # Add review data to the list
         reviews_data.append({
             "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "Unknown Guide",
             "guide_profile_img": guide_profile_path,
@@ -300,8 +308,12 @@ def account():
         profile_img=profile_img,
         form=form,
         bookings=bookings,
-        reviews=reviews_data,  # Pass prepared reviews data to the template
+        reviews=reviews_data,
+        BookingStatus=BookingStatus,  # Pass BookingStatus to the template
+        to_review=to_review,  # Pass the to_review list
+        to_review_count=to_review_count  # Pass the count
     )
+
 
 
 
@@ -495,6 +507,7 @@ def get_tour_package_details(package_id):
         # Prepare the data to return
         package_data = {
             "name": package.name,
+            "location": package.location,  # Include location in the response
             "description": package.description,
             "estimated_prices": [
                 {"description": price.description, "estimated_price": price.estimated_price}
@@ -545,6 +558,7 @@ def update_email():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': 'An error occurred while updating the email.'}), 500
+    
 @main.route('/submit_review', methods=['POST'])
 @login_required
 def submit_review():
@@ -569,9 +583,15 @@ def submit_review():
             comment=comment
         )
 
-        # Add the review to the database and commit to generate its ID
+        # Mark the booking as reviewed
+        booking = Booking.query.get(booking_id)
+        if not booking:
+            return jsonify({"success": False, "message": "Booking not found."}), 404
+        booking.is_reviewed = True
+
+        # Save the review to the database
         db.session.add(new_review)
-        db.session.commit()  # Commit to assign an ID to the review
+        db.session.commit()
 
         # Save the review image if provided
         if review_image:
@@ -582,7 +602,7 @@ def submit_review():
             # Create a ReviewImages entry with the newly assigned review ID
             review_image_entry = ReviewImages(rr_id=new_review.id, img=filename)
             db.session.add(review_image_entry)
-            db.session.commit()  # Commit the image entry
+            db.session.commit()
 
         return jsonify({"success": True, "message": "Review submitted successfully."})
 

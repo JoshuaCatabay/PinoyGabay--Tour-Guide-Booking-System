@@ -232,27 +232,32 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
 
       try {
-          // Fetch Package Details
-          const packageDetailsResponse = await fetch(`/tour_package/details/${tourPackageId}`);
-          if (!packageDetailsResponse.ok) throw new Error("Failed to fetch package details.");
-          const packageData = await packageDetailsResponse.json();
+    // Fetch Package Details
+    const packageDetailsResponse = await fetch(`/tour_package/details/${tourPackageId}`);
+    if (!packageDetailsResponse.ok) throw new Error("Failed to fetch package details.");
+    const packageData = await packageDetailsResponse.json();
 
-          // Populate modal with package and booking details
-          modalTourDate.textContent = dateValue;
-          modalTravelerQuantity.textContent = travelerQuantity;
-          modalSpecialNotes.textContent = specialNotes || "N/A";
+    // Populate modal with package and booking details
+    modalTourDate.textContent = dateValue;
+    modalTravelerQuantity.textContent = travelerQuantity;
+    modalSpecialNotes.textContent = specialNotes || "N/A";
 
-          modalTourImage.src = `/static/${packageData.package_img || "default.jpg"}`;
-          modalPackageTitle.textContent = packageData.name;
-          modalPackageDescription.textContent = packageData.description;
+    modalTourImage.src = `/static/${packageData.package_img || "default.jpg"}`;
+    modalPackageTitle.textContent = packageData.name;
+    modalPackageDescription.textContent = packageData.description;
 
-          // Populate estimated prices
-          modalPriceList.innerHTML = '';
-          packageData.estimated_prices.forEach(price => {
-              const li = document.createElement('li');
-              li.textContent = `${price.description}: ₱${price.estimated_price}`;
-              modalPriceList.appendChild(li);
-          });
+    // Populate location
+    const modalPackageLocation = document.getElementById('modal-package-location');
+    modalPackageLocation.textContent = packageData.location || "Location not provided";
+
+    // Populate estimated prices
+    modalPriceList.innerHTML = '';
+    packageData.estimated_prices.forEach(price => {
+        const li = document.createElement('li');
+        li.textContent = `${price.description}: ₱${price.estimated_price}`;
+        modalPriceList.appendChild(li);
+    });
+
 
           // Populate inclusions
           modalInclusionsList.innerHTML = '';
