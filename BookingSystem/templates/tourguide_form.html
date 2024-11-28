@@ -30,19 +30,23 @@
                 <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
 
                 <div class="notification-container">
+                  <!-- Notification Bell -->
                   <button id="notification-bell" class="notification-bell">
                     <span class="bell-icon">&#128276;</span>
-                    <span class="notification-count">0</span> <!-- Number of notifications -->
+                    <span class="notification-count">0</span>
                   </button>
-                  
-                <div class="notification-dropdown">
+                
+                  <!-- Notification Dropdown -->
+                  <div id="notification-dropdown" class="notification-dropdown hidden">
                     <h3>Notifications</h3>
-                    <ul class="notification-list">
-                      <li class="notification-item">No Notifications</li> <!-- Example empty notification -->
+                    <ul id="notification-list">
+                      <li class="notification-item">No new notifications</li>
                     </ul>
-                    <button class="view-all-btn">View all</button>
                   </div>
-                </div>  
+                </div>
+                
+                
+                
                 
                <!-- Dark Mode Toggle Icon -->
                 <div class="icon dark-mode-toggle">
@@ -361,197 +365,269 @@
       window.addEventListener('resize', handleFooterVisibility);
       window.addEventListener('DOMContentLoaded', handleFooterVisibility);
 
-      
-      // // Get modal and popup elements
-      // const bookingModal = document.getElementById("booking-modal");
-      // const thankYouPopup = document.getElementById("thank-you-popup");
-      // const closeModalButton = document.getElementById("close-modal");
-    
-      // // Open Modal Function
-      // function openModal() {
-      //   bookingModal.style.display = "flex"; // Show the modal
-      //   document.body.style.overflow = "hidden"; // Disable background scrolling
-      // }
-    
-      // // Close Modal Function
-      // function closeModal() {
-      //   bookingModal.style.display = "none"; // Hide the modal
-      //   document.body.style.overflow = "auto"; // Enable background scrolling
-      // }
-    
-      // // Attach event listener to close button
-      // closeModalButton.addEventListener('click', closeModal);
-    
-      // // Show Thank You Popup After Confirming Booking
-      // function showThankYouMessage() {
-      //   closeModal(); // Close the booking modal
-      //   thankYouPopup.style.display = "flex"; // Show thank you popup
-    
-      //   // Hide the popup automatically after 3 seconds
-      //   setTimeout(() => {
-      //     thankYouPopup.style.display = "none";
-      //   }, 3000);
-      // }
-    
-      // // Optional: Close Modal by Clicking Outside of It
-      // window.onclick = function (event) {
-      //   if (event.target === bookingModal) {
-      //     closeModal();
-      //   }
-      // };
+
+document.addEventListener('DOMContentLoaded', () => {
+const NOTIFICATIONS_URL = '/notifications';
+const notificationBell = document.getElementById('notification-bell');
+const notificationDropdown = document.getElementById('notification-dropdown');
+const notificationCount = document.querySelector('.notification-count');
+const notificationList = document.getElementById('notification-list');
+
+// Fetch notifications
+async function fetchNotifications() {
+  try {
+    const response = await fetch(`${NOTIFICATIONS_URL}/`);
+    if (!response.ok) throw new Error('Failed to fetch notifications');
+
+    const data = await response.json();
+    console.log("Fetched Notifications:", data); // Debugging fetched notifications
+
+    notificationList.innerHTML = ''; // Clear old notifications
+
+    if (!data.notifications || data.notifications.length === 0) {
+      notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+    } else {
+      data.notifications.forEach(notification => {
+        const li = document.createElement('li');
+        li.classList.add('notification-item');
+        li.setAttribute('data-id', notification.id);
+        li.innerHTML = `
+          <span>${notification.message}</span>
+          <small>${notification.created_at}</small>
+        `;
+        notificationList.appendChild(li);
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+  }
+}
+
+// Fetch notification count
+async function fetchNotificationCount() {
+  try {
+    const response = await fetch(`${NOTIFICATIONS_URL}/count`);
+    if (!response.ok) throw new Error('Failed to fetch notification count');
+
+    const data = await response.json();
+    notificationCount.textContent = data.count || 0; // Update count display
+  } catch (error) {
+    console.error('Error fetching notification count:', error);
+  }
+}
+  // Toggle dropdown visibility
+  notificationBell.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    notificationDropdown.classList.toggle('hidden');
+    notificationDropdown.style.display = notificationDropdown.classList.contains('hidden') ? 'none' : 'block';
+
+    if (!notificationDropdown.classList.contains('hidden')) {
+      await fetchNotifications();
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!notificationDropdown.contains(e.target) && e.target !== notificationBell) {
+      notificationDropdown.classList.add('hidden');
+      notificationDropdown.style.display = 'none';
+    }
+  });
+
+
+// Mark notification as read
+notificationList.addEventListener('click', async (e) => {
+  const notificationItem = e.target.closest('.notification-item');
+  if (!notificationItem) return;
+
+  const notificationId = notificationItem.getAttribute('data-id');
+  try {
+    const response = await fetch(`${NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error('Failed to mark notification as read');
+
+    notificationItem.remove(); // Remove the notification from the list
+
+    // Update count
+    const count = parseInt(notificationCount.textContent, 10);
+    notificationCount.textContent = Math.max(count - 1, 0); // Ensure count doesn't go below 0
+
+    // Display "No new notifications" if list is empty
+    if (notificationList.children.length === 0) {
+      notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+    }
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
+});
+
+// Fetch notification count on page load
+fetchNotificationCount();
+
+})
 
       </script>
 
+<!-- 
+
+// const NOTIFICATIONS_URL = '/notifications';
+
+// // Fetch notifications
+// async function fetchNotifications() {
+//   try {
+//     const response = await fetch(`${NOTIFICATIONS_URL}/`); // Fetch unread notifications
+//     if (!response.ok) throw new Error('Failed to fetch notifications');
+
+//     const data = await response.json();
+//     const notificationList = document.getElementById('notification-list');
+//     notificationList.innerHTML = ''; // Clear old notifications
+
+//     if (data.notifications.length === 0) {
+//       notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+//     } else {
+//       data.notifications.forEach(notification => {
+//         notificationList.innerHTML += `
+//           <li class="notification-item" data-id="${notification.id}">
+//             ${notification.message} <span>${notification.created_at}</span>
+//           </li>
+//         `;
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Error fetching notifications:', error);
+//   }
+// }
+
+// // Fetch notification count
+// async function fetchNotificationCount() {
+//   try {
+//     const response = await fetch(`${NOTIFICATIONS_URL}/count`); // Fetch unread count
+//     if (!response.ok) throw new Error('Failed to fetch notification count');
+
+//     const data = await response.json();
+//     const notificationCount = document.querySelector('.notification-count');
+//     notificationCount.textContent = data.count || 0; // Show 0 if no notifications
+//   } catch (error) {
+//     console.error('Error fetching notification count:', error);
+//   }
+// }
+
+
+// document.addEventListener('DOMContentLoaded', () => {
+//   const notificationBell = document.getElementById('notification-bell');
+//   const notificationDropdown = document.getElementById('notification-dropdown');
+//   const notificationCount = document.querySelector('.notification-count');
+//   const notificationList = document.getElementById('notification-list');
+
+//   // Fetch notification count on page load
+//   async function fetchNotificationCount() {
+//     try {
+//       const response = await fetch('/notifications/count');
+//       if (!response.ok) throw new Error('Failed to fetch notification count');
+
+//       const data = await response.json();
+//       notificationCount.textContent = data.count;
+//     } catch (error) {
+//       console.error('Error fetching notification count:', error);
+//     }
+//   }
+
+//   // Open notifications dropdown
+//   notificationBell.addEventListener('click', async () => {
+//     notificationDropdown.classList.toggle('hidden');
+//     notificationDropdown.style.display = notificationDropdown.classList.contains('hidden') ? 'none' : 'block';
+
+//     // Fetch notifications when dropdown is opened
+//     try {
+//       const response = await fetch('/notifications/');
+//       if (!response.ok) throw new Error('Failed to fetch notifications');
+
+//       const data = await response.json();
+//       notificationList.innerHTML = '';
+
+//       if (data.notifications.length === 0) {
+//         notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+//       } else {
+//         data.notifications.forEach(notification => {
+//           notificationList.innerHTML += `
+//             <li class="notification-item" data-id="${notification.id}">
+//               ${notification.message} <span>${notification.created_at}</span>
+//             </li>
+//           `;
+//         });
+//       }
+//     } catch (error) {
+//       console.error('Error fetching notifications:', error);
+//     }
+//   });
+
+//   fetchNotificationCount(); // Fetch count initially
+// });
+
+// // Mark notification as read
+// notificationList.addEventListener('click', async (e) => {
+//   const notificationItem = e.target.closest('.notification-item');
+//   if (!notificationItem) return;
+
+//   const notificationId = notificationItem.getAttribute('data-id');
+//   try {
+//     const response = await fetch(`/notifications/mark_as_read/${notificationId}`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//     });
+//     if (!response.ok) throw new Error('Failed to mark notification as read');
+
+//     notificationItem.remove(); // Remove the notification from the list
+//     const count = parseInt(notificationCount.textContent, 10);
+//     notificationCount.textContent = Math.max(count - 1, 0); // Decrement count, ensuring it doesn't go below 0
+
+//     // Close dropdown if all notifications are read
+//     if (notificationList.children.length === 0) {
+//       notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+//     }
+//   } catch (error) {
+//     console.error('Error marking notification as read:', error);
+//   }
+// });
+
+// // Mark notification as read
+// notificationList.addEventListener('click', async (e) => {
+//   const notificationItem = e.target.closest('.notification-item');
+//   if (!notificationItem) return;
+
+//   const notificationId = notificationItem.getAttribute('data-id');
+//   try {
+//     const response = await fetch(`/notifications/mark_as_read/${notificationId}`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//     });
+//     if (!response.ok) throw new Error('Failed to mark notification as read');
+
+//     notificationItem.remove(); // Remove the notification from the list
+//     const count = parseInt(notificationCount.textContent, 10);
+//     notificationCount.textContent = Math.max(count - 1, 0); // Decrement count, ensuring it doesn't go below 0
+
+//     // Close dropdown if all notifications are read
+//     if (notificationList.children.length === 0) {
+//       notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+//     }
+//   } catch (error) {
+//     console.error('Error marking notification as read:', error);
+//   }
+// });
+
+// document.addEventListener('click', (e) => {
+//   if (!notificationDropdown.contains(e.target) && e.target !== notificationBell) {
+//     notificationDropdown.classList.add('hidden');
+//     notificationDropdown.style.display = 'none';
+//   }
+// }); -->
 
 
 
 
-              <!--COPY ALL FOR NOTIFICATION BELL AND DARKMODE-->
-<script>
-  
-document.querySelector('.dark-mode-toggle').addEventListener('click', function() {
-  document.body.classList.toggle('dark-mode');
-  document.querySelector('.navbar').classList.toggle('dark-mode');
-  document.querySelector('.profile-icon').classList.toggle('dark-mode');
-});
-
-  document.addEventListener("DOMContentLoaded", function() {
-  const notificationBell = document.getElementById("notification-bell");
-  const notificationDropdown = document.querySelector(".notification-dropdown");
-
-  // Toggle notification dropdown on bell click
-  notificationBell.addEventListener("click", function(event) {
-    notificationDropdown.classList.toggle("active");
-    event.stopPropagation(); // Prevent click from closing immediately
-  });
-
-  // Close dropdown if clicked outside
-  document.addEventListener("click", function(event) {
-    if (!notificationDropdown.contains(event.target) && !notificationBell.contains(event.target)) {
-      notificationDropdown.classList.remove("active");
-    }
-  });
-});
-
-
-// Toggle the notification dropdown visibility
-document.getElementById('notification-bell').addEventListener('click', function() {
-  const dropdown = document.getElementById('notification-dropdown');
-  dropdown.classList.toggle('hidden');
-  dropdown.style.display = dropdown.classList.contains('hidden') ? 'none' : 'block';
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  const notificationBell = document.getElementById("notification-bell");
-  const notificationContainer = document.querySelector(".notification-container");
-  const notificationCount = document.querySelector(".notification-count");
-  const notificationList = document.getElementById("notification-list");
-
-  // Toggle notification dropdown on bell click
-  notificationBell.addEventListener("click", function () {
-    notificationContainer.classList.toggle("active");
-  });
-
-  // Example function to add notifications
-  function addNotification(message) {
-    const newNotification = document.createElement("li");
-    newNotification.classList.add("notification-item");
-    newNotification.textContent = message;
-    notificationList.appendChild(newNotification);
-
-    // Update notification count
-    const count = parseInt(notificationCount.textContent);
-    notificationCount.textContent = count + 1;
-
-    // Remove "No Notifications" message if present
-    const noNotificationMessage = document.querySelector(".notification-item");
-    if (noNotificationMessage && noNotificationMessage.textContent === "No Notifications") {
-      noNotificationMessage.remove();
-    }
-  }
-
-  // Example: Add a notification on page load (replace or remove in production)
-  addNotification("New booking confirmed!");
-  addNotification("Your tour guide has arrived.");
-});
-</script>
-
-
-
-
-
-
-<!--COPY ALL FOR NOTIFICATION BELL AND DARKMODE-->
-<script>
-  
-document.querySelector('.dark-mode-toggle').addEventListener('click', function() {
-  document.body.classList.toggle('dark-mode');
-  document.querySelector('.navbar').classList.toggle('dark-mode');
-  document.querySelector('.profile-icon').classList.toggle('dark-mode');
-});
-
-  document.addEventListener("DOMContentLoaded", function() {
-  const notificationBell = document.getElementById("notification-bell");
-  const notificationDropdown = document.querySelector(".notification-dropdown");
-
-  // Toggle notification dropdown on bell click
-  notificationBell.addEventListener("click", function(event) {
-    notificationDropdown.classList.toggle("active");
-    event.stopPropagation(); // Prevent click from closing immediately
-  });
-
-  // Close dropdown if clicked outside
-  document.addEventListener("click", function(event) {
-    if (!notificationDropdown.contains(event.target) && !notificationBell.contains(event.target)) {
-      notificationDropdown.classList.remove("active");
-    }
-  });
-});
-
-
-// Toggle the notification dropdown visibility
-document.getElementById('notification-bell').addEventListener('click', function() {
-  const dropdown = document.getElementById('notification-dropdown');
-  dropdown.classList.toggle('hidden');
-  dropdown.style.display = dropdown.classList.contains('hidden') ? 'none' : 'block';
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  const notificationBell = document.getElementById("notification-bell");
-  const notificationContainer = document.querySelector(".notification-container");
-  const notificationCount = document.querySelector(".notification-count");
-  const notificationList = document.getElementById("notification-list");
-
-  // Toggle notification dropdown on bell click
-  notificationBell.addEventListener("click", function () {
-    notificationContainer.classList.toggle("active");
-  });
-
-  // Example function to add notifications
-  function addNotification(message) {
-    const newNotification = document.createElement("li");
-    newNotification.classList.add("notification-item");
-    newNotification.textContent = message;
-    notificationList.appendChild(newNotification);
-
-    // Update notification count
-    const count = parseInt(notificationCount.textContent);
-    notificationCount.textContent = count + 1;
-
-    // Remove "No Notifications" message if present
-    const noNotificationMessage = document.querySelector(".notification-item");
-    if (noNotificationMessage && noNotificationMessage.textContent === "No Notifications") {
-      noNotificationMessage.remove();
-    }
-  }
-
-  // Example: Add a notification on page load (replace or remove in production)
-  addNotification("New booking confirmed!");
-  addNotification("Your tour guide has arrived.");
-});
-</script>
-
-    </script>
     <script src="{{ url_for('static', filename='TravelerBooking.js') }}"defer></script>
   </body>
 </html>

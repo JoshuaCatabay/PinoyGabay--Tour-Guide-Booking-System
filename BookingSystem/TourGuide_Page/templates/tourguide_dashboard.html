@@ -197,27 +197,21 @@
         </div>
         </div>
        
+      <!-- Bookings Tab -->
+      <div class="tab-pane" id="dashboard">
+        <h2>My Tours</h2>
 
-        <!-- Bookings Tab -->
-        <div class="tab-pane" id="dashboard">
-          <h2>My Tours</h2>
-
-          <!-- Notification Panel -->
-          <div class="notification-panel">
-            <h3>Notifications</h3>
-            <ul class="notification-list">
-              <li class="notification-item">
-                New Booking from Jane Doe 
-                <button class="notification-btn" onclick="viewNotificationDetails('Booking #123')">View</button>
-              </li> 
-
-              <li class="notification-item">
-                Cancellation: Island Tour 
-                <button class="notification-btn" onclick="viewNotificationDetails('Cancellation #456')">View</button>
-              </li>
-            </ul>
-          </div>
-
+        <!-- Notification Panel -->
+        <div class="notification-panel">
+          <h3>
+            Notifications
+            <span id="notification-count" class="notification-count">(0)</span>
+          </h3>
+          <ul id="notification-list" class="notification-list">
+            <li class="notification-item">No new notifications</li>
+          </ul>
+        </div>
+     
           <h2>My Bookings</h2>
 
           <!-- Toggle Buttons for Categories -->

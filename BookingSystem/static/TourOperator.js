@@ -47,37 +47,23 @@ window.addEventListener('DOMContentLoaded', () => {
         logoutModal.classList.remove('show');
     });
 
-    // Booking Tab Switching Logic
-    const bookingTabBtns = document.querySelectorAll('.booking-tab-btn');
-    const bookingCategories = document.querySelectorAll('.booking-category');
+    // // Booking Tab Switching Logic
+    // const bookingTabBtns = document.querySelectorAll('.booking-tab-btn');
+    // const bookingCategories = document.querySelectorAll('.booking-category');
 
-    bookingTabBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            bookingTabBtns.forEach((btn) => btn.classList.remove('active'));
-            btn.classList.add('active');
+    // bookingTabBtns.forEach((btn) => {
+    //     btn.addEventListener('click', () => {
+    //         bookingTabBtns.forEach((btn) => btn.classList.remove('active'));
+    //         btn.classList.add('active');
 
-            const status = btn.dataset.status;
-            bookingCategories.forEach((category) => {
-                const categoryStatus = category.dataset.status;
-                category.style.display =
-                    status === 'all' || categoryStatus === status ? 'block' : 'none';
-            });
-        });
-    });
-
-// Booking Details Modal Logic
-const bookingModal = document.getElementById('booking-modal');
-const bookingInfo = document.getElementById('booking-info');
-const closeBookingModal = document.getElementById('close-booking-modal');
-
-function openBookingDetails(details) {
-  bookingInfo.textContent = details;
-  bookingModal.classList.add('show');
-}
-
-closeBookingModal.addEventListener('click', () => {
-  bookingModal.classList.remove('show');
-});
+    //         const status = btn.dataset.status;
+    //         bookingCategories.forEach((category) => {
+    //             const categoryStatus = category.dataset.status;
+    //             category.style.display =
+    //                 status === 'all' || categoryStatus === status ? 'block' : 'none';
+    //         });
+    //     });
+    // });
 
 
 
@@ -1559,3 +1545,273 @@ document.addEventListener('DOMContentLoaded', () => {
 function redirectToProfile(guideId) {
   window.location.href = `/tourguide/profile/${guideId}`;
 }
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleButtons = document.querySelectorAll('.toggle-btn');
+  const bookingRows = document.querySelectorAll('.booking-row');
+
+  // Update counts
+  function updateCounts() {
+    const counts = {
+      all: bookingRows.length,
+      upcoming: 0,
+      ongoing: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+
+    bookingRows.forEach((row) => {
+      const status = row.dataset.status;
+      if (counts[status] !== undefined) {
+        counts[status]++;
+      }
+    });
+
+    toggleButtons.forEach((button) => {
+      const status = button.dataset.status;
+      const countElement = button.querySelector('.count');
+      if (status in counts) {
+        countElement.textContent = `(${counts[status]})`;
+      }
+    });
+  }
+
+  // Filter rows by status
+  toggleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const status = button.dataset.status;
+
+      // Toggle active class
+      toggleButtons.forEach((btn) => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // Show/hide rows
+      bookingRows.forEach((row) => {
+        row.style.display =
+          status === 'all' || row.dataset.status === status ? '' : 'none';
+      });
+    });
+  });
+
+  updateCounts();
+});
+
+
+
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Modal elements
+  const modal = document.getElementById('booking-details-modal');
+  const modalLoader = document.getElementById('modal-loader');
+  const modalDetails = document.getElementById('modal-details');
+  const modalStatus = document.getElementById('modal-status'); // Add this
+  const closeModalButton = document.getElementById('close-booking-modal');
+
+  // Function to fetch and display booking details
+  async function fetchAndDisplayBookingDetails(bookingId) {
+    console.log('Fetching details for booking ID:', bookingId); // Debugging log
+
+    // Reset modal state
+    modalLoader.style.display = 'block';
+    modalDetails.classList.add('hidden');
+    modal.classList.add('show'); // Show modal
+    modal.classList.remove('hidden'); // Ensure it's visible
+    document.body.style.overflow = 'hidden';
+
+    try {
+      // Fetch booking details
+      const response = await fetch(`/booking/details/${bookingId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch booking details: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Booking details fetched:', data); // Debugging log
+
+      // Populate modal with booking details
+      modalStatus.textContent = data.status; // Display status
+      document.getElementById('modal-traveler-name').textContent = data.traveler.name;
+      document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
+      document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
+      document.getElementById('modal-tour-date').textContent = `${data.date_start} - ${data.date_end}`;
+      document.getElementById('modal-traveler-quantity').textContent = data.traveler_quantity;
+      document.getElementById('modal-tour-guide-price').textContent = `₱${data.price}`;
+      document.getElementById('modal-special-notes').textContent = data.special_notes;
+
+      // Populate package details
+      const packageData = data.package;
+      document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
+      document.getElementById('modal-package-title').textContent = packageData.name;
+      document.getElementById('modal-package-location').textContent = packageData.location || "Location not provided";
+      document.getElementById('modal-package-description').textContent = packageData.description;
+
+
+      // Populate estimated prices
+      const priceList = document.getElementById('modal-price-list');
+      priceList.innerHTML = '';
+      packageData.estimated_prices.forEach(price => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="price-icon">💰</span> ${price.description}: ₱${price.estimated_price}`;
+        priceList.appendChild(li);
+      });
+
+      // Populate inclusions
+      const inclusionsList = document.getElementById('modal-inclusions-list');
+      inclusionsList.innerHTML = '';
+      packageData.inclusions.forEach(inclusion => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
+        inclusionsList.appendChild(li);
+      });
+
+      // Populate exclusions
+      const exclusionsList = document.getElementById('modal-exclusions-list');
+      exclusionsList.innerHTML = '';
+      packageData.exclusions.forEach(exclusion => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
+        exclusionsList.appendChild(li);
+      });
+
+// Populate itineraries
+const itineraryList = document.getElementById('modal-itinerary-list');
+itineraryList.innerHTML = '';
+packageData.itineraries.forEach(itinerary => {
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <span class="timeline-dot"></span>
+    <div class="timeline-content">
+      <strong>${itinerary.title}</strong>
+      <p>${itinerary.subtitle}</p>
+    </div>`;
+  itineraryList.appendChild(li);
+});
+
+
+      // Show modal content
+      modalLoader.style.display = 'none';
+      modalDetails.classList.remove('hidden');
+      console.log('Modal content populated successfully.'); // Debugging log
+    } catch (error) {
+      console.error('Error loading booking details:', error);
+      modalLoader.style.display = 'none';
+      alert('Failed to load booking details. Please try again.');
+    }
+  }
+
+  // Add event listeners to booking cards
+  document.querySelectorAll('.view-booking').forEach(button => {
+    button.addEventListener('click', function () {
+      const bookingId = this.id.split('-').pop(); // Extract the booking ID from the button ID
+      fetchAndDisplayBookingDetails(bookingId);
+    });
+  });
+
+  // Close modal
+  closeModalButton.addEventListener('click', function () {
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  });
+});
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const NOTIFICATIONS_URL = '/notifications';
+  const notificationList = document.getElementById('notification-list');
+  const notificationCount = document.getElementById('notification-count');
+
+  // Fetch notifications
+  async function fetchNotifications() {
+    try {
+      const response = await fetch(`${NOTIFICATIONS_URL}/`);
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+  
+      const data = await response.json();
+      console.log('Fetched Notifications:', data); // Debugging
+  
+      notificationList.innerHTML = ''; // Clear old notifications
+  
+      if (data.notifications.length === 0) {
+        notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+      } else {
+        data.notifications.forEach(notification => {
+          console.log(`Processing Notification: ${notification.message}`); // Debugging
+  
+          notificationList.innerHTML += `
+            <li class="notification-item" data-id="${notification.id}">
+              ${notification.message}
+              <button class="notification-btn" onclick="viewNotificationDetails('Booking #${notification.id}')">View</button>
+            </li>
+          `;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }
+  
+
+  // Fetch notification count
+  async function fetchNotificationCount() {
+    try {
+      const response = await fetch(`${NOTIFICATIONS_URL}/count`);
+      if (!response.ok) throw new Error('Failed to fetch notification count');
+
+      const data = await response.json();
+      const count = data.count || 0;
+      notificationCount.textContent = `(${count})`;
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+    }
+  }
+
+  // Event delegation for marking notifications as read
+  notificationList.addEventListener('click', async (e) => {
+    const notificationItem = e.target.closest('.notification-item');
+    if (!notificationItem) return;
+
+    const notificationId = notificationItem.getAttribute('data-id');
+    try {
+      const response = await fetch(`${NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to mark notification as read');
+
+      notificationItem.remove(); // Remove from the list
+      const count = parseInt(notificationCount.textContent.replace(/[()]/g, ''), 10);
+      notificationCount.textContent = `(${Math.max(count - 1, 0)})`;
+
+      // Display "No new notifications" if list is empty
+      if (notificationList.children.length === 0) {
+        notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  });
+
+  // Fetch notifications and count on page load
+  fetchNotifications();
+  fetchNotificationCount();
+
+  // Placeholder function for the "View" button
+  window.viewNotificationDetails = (detail) => {
+    alert(`View details for: ${detail}`);
+  };
+});

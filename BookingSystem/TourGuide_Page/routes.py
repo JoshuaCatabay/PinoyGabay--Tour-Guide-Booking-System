@@ -16,7 +16,7 @@
 
 from flask import abort, render_template, redirect, url_for, flash, request, session, jsonify, current_app
 from flask_login import login_required, current_user, logout_user, login_user
-from BookingSystem.Bookings.routes import update_statuses
+from BookingSystem.utils import update_statuses
 from BookingSystem.TourOperator_Page import touroperator
 from . import tourguide  
 from BookingSystem.TourOperator_Page.form import UserTourGuideForm
@@ -33,6 +33,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import func  #!!!!!
 from BookingSystem.models import ReviewsRating, ReviewImages   #!!!!!
 from BookingSystem.models import BookingStatus
+
 
 
 @tourguide.route('/upload_profile_picture', methods=['POST'])
@@ -527,7 +528,7 @@ def get_profile_status():
 @tourguide.route('/profile/<int:tour_guide_id>')
 def profile(tour_guide_id):
     page = request.args.get('page', 1, type=int)
-    per_page = 2  # Number of reviews per page
+    per_page = 4  # Number of reviews per page
 
     # Subquery for average rating and review count
     subquery_reviews = db.session.query(

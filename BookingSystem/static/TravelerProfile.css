@@ -31,9 +31,8 @@ body {
   padding-right: 10%;
 }
 
-
-    /* =======================
-   Header Styles
+/* =======================
+Header Styles
 ======================= */
 .header {
   position: fixed;
@@ -69,105 +68,102 @@ body {
 
 .public-navbar a:hover {
   color: #ff9f1c; /* Golden Orange */
-
 }
 
-
-
-  a {
-    color: #4ecdc4; /* Bright Turquoise */
-    text-decoration: none;
-    transition: color 0.3s;
-  }
+a {
+  color: #4ecdc4; /* Bright Turquoise */
+  text-decoration: none;
+  transition: color 0.3s;
+}
   
-  a:hover {
-    color: #ff9f1c; /* Golden Orange */
-  }
+a:hover {
+  color: #ff9f1c; /* Golden Orange */
+}
     
-  /* Navbar Styling */
-  .navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    background-color: #1A535C; /* Deep Cyan */
-    padding: 5px 5px;
-    color: white;
-    z-index: 100;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
-  }
+/* Navbar Styling */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: #1A535C; /* Deep Cyan */
+  padding: 5px 5px;
+  color: white;
+  z-index: 100;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+}
 
-  /* Navbar Container with Body Alignment */
-  .navbar-container {
-    max-width: 100%; /* Full width */
-    padding-left: 10%; /* Same padding as the body */
-    padding-right: 10%; /* Same padding as the body */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+/* Navbar Container with Body Alignment */
+.navbar-container {
+  max-width: 100%; /* Full width */
+  padding-left: 10%; /* Same padding as the body */
+  padding-right: 10%; /* Same padding as the body */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
     
-  .navbar a {
-    font-size: 18px;
-    color:  white;
-    text-decoration: none;
-    font-weight: 700;
-    margin-left: 33px;
-    margin-right: 20px;
-    transition: .3s;
-  }
+.navbar a {
+  font-size: 18px;
+  color:  white;
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 33px;
+  margin-right: 20px;
+  transition: .3s;
+}
 
-  .navbar a:hover {
-    color: #ff9f1c; /* Golden Orange */
-  }
+.navbar a:hover {
+  color: #ff9f1c; /* Golden Orange */
+}
 
-  /* Navbar Links Adjustments */
-  .navbar-links {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
+/* Navbar Links Adjustments */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
-  /* Navbar Adjustment on Small Screens */
-  @media (max-width: 480px) {
-    .navbar-container {
-      flex-direction: column; /* Stack links vertically */
-      gap: 10px;
-    }
+/* Navbar Adjustment on Small Screens */
+@media (max-width: 480px) {
+.navbar-container {
+  flex-direction: column; /* Stack links vertically */
+  gap: 10px;
+}
 
-    .nav-link {
-      font-size: 16px; /* Adjust font size */
-    }
+.nav-link {
+  font-size: 16px; /* Adjust font size */
   }
+}
 
-  /* Profile Icon */
-  .profile-container {
-    display: flex;
-    align-items: center;
-    margin: 0%;
-  }
+/* Profile Icon !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+.profile-container-nav {
+  display: flex;
+  align-items: center;
+  margin: 0%;
+}
 
-  .profile-icon {
-    width: 100%;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%; /* Circular shape */
-    object-fit: cover; /* Prevent image distortion */
-    border: 2px solid #4ecdc4; /* Bright Turquoise border */
-    cursor: pointer;
-    transition: transform 0.3s ease;
-  }
+.profile-icon {
+  width: 100%;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%; /* Circular shape */
+  object-fit: cover; /* Prevent image distortion */
+  border: 2px solid #4ecdc4; /* Bright Turquoise border */
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
 
-  .profile-icon:hover {
-    transform: scale(1.1); /* Slight zoom on hover */
-  }
+.profile-icon:hover {
+  transform: scale(1.1); /* Slight zoom on hover */
+}
 
 /* Tabs Panel (Left) */
 .tabs-panel {
   width: 200px;
   position: sticky; /* Stick to the top while scrolling */
-  top: 110px; /* Ensure space between the navbar and the panel */
+  top: 120px; /* Ensure space between the navbar and the panel */
   height: fit-content;
   background-color: #1A535C;
   padding: 20px;
@@ -208,7 +204,6 @@ body {
   background-color: #FF9F1C;
 }
 
-
 .modal {
   position: fixed;
   top: 50%;
@@ -222,6 +217,25 @@ body {
   padding: 20px;
   z-index: 1001;
   display: none;
+}
+
+/* Modal Styling -----2nd Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  max-width: 900px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 90vh;
 }
 
 .modal.show {
@@ -252,7 +266,6 @@ body {
   padding: 20px;
 }
 
-
 /* Button Container */
 .modal-button-container {
   display: flex;
@@ -270,6 +283,49 @@ body {
   cursor: pointer;
   padding: 0;
   transition: color 0.3s;
+}
+
+/* Cropper-specific modal container */
+#cropper-container {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+/* Adjusting Modal Layout for Small Screens */
+@media (max-width: 768px) {
+.modal {
+  width: 90%; /* Take more width on very small screens */
+  max-width: none; /* Allow it to expand if needed */
+  margin: 20px; /* Add spacing from the edges */
+  padding: 15px; /* Reduce padding slightly */
+  box-sizing: border-box;
+} 
+
+#review-modal {
+  display: none;
+  /* Other styles */
+}
+
+#review-modal.show {
+  display: block;
+  /* Other styles */
+}
+
+/* Modal Header */
+.modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2b2d42;
+  font-size: 24px;
+  border-bottom: 2px solid #4ecdc4;
+  padding-bottom: 10px;
+}
+  
+#cropper-container {
+  height: 250px; /* Adjust the cropper height */
+  }
 }
 
 .cancel-btn:hover {
@@ -293,8 +349,6 @@ body {
   background-color: #3cb1a2; /* Slightly darker turquoise on hover */
 }
 
-
-
 /* Profile Container */
 .profile-container {
   display: flex;
@@ -307,7 +361,7 @@ body {
   flex-grow: 1;
   margin-left: 40px;
   padding: 0px;
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 /* Content Sections */
@@ -376,16 +430,7 @@ body {
 .edit-pic-btn:hover {
   background-color: #e68a00;
 }
-
-/* Cropper-specific modal container */
-#cropper-container {
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-  
+ 
 /* Hidden Elements */
 .hidden {
   display: none;
@@ -394,24 +439,6 @@ body {
 /* Hide Upload Input */
 #upload-pic {
   display: none;
-}
-
-
-
-/* Adjusting Modal Layout for Small Screens */
-@media (max-width: 768px) {
-  .modal {
-    width: 90%; /* Take more width on very small screens */
-    max-width: none; /* Allow it to expand if needed */
-    margin: 20px; /* Add spacing from the edges */
-    padding: 15px; /* Reduce padding slightly */
-    box-sizing: border-box;
-  }
-  
-
-  #cropper-container {
-    height: 250px; /* Adjust the cropper height */
-  }
 }
 
 /* My Tours Section */
@@ -472,6 +499,11 @@ body {
   justify-content: space-between;
   align-items: center;
 }
+
+#modal-cancel-booking-btn{
+  align-items: left;
+}
+
 
 /* Tour Status */
 .tour-status {
@@ -556,7 +588,6 @@ display: none;
 display: none;
 }
 
-
 /* Review Card */
 .to-review-card{
   display: flex;
@@ -635,8 +666,6 @@ textarea {
   font-size: 16px;
 }
 
-
-
 /* Reviews Grid */
 .traveler-reviews-grid {
   display: grid;
@@ -655,7 +684,6 @@ textarea {
   flex-direction: column;
   width: 100%;
 }
-
 
 /* Tour Image */
 .tour-image {
@@ -852,41 +880,6 @@ button {
   width: 100%;
 }
 
-
-
-#review-modal {
-  display: none;
-  /* Other styles */
-}
-
-#review-modal.show {
-  display: block;
-  /* Other styles */
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Modal Header */
-.modal-header {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #2b2d42;
-  font-size: 24px;
-  border-bottom: 2px solid #4ecdc4;
-  padding-bottom: 10px;
-}
-
 /* Status Box */
 .status-box {
   position: absolute;
@@ -1032,22 +1025,6 @@ button {
   background-color: #1a535c;
 }
 
-
-
-
-
-/* Header with Image and Overlay Text */
-.modal-header {
-  position: relative;
-}
-
-.modal-header-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px 8px 0 0;
-}
-
 .header-text-overlay {
   position: absolute;
   bottom: 20px; /* Position at the bottom of the image */
@@ -1082,26 +1059,6 @@ button {
 }
 
 
-
-/* Modal Styling */
-/* Modal Styling */
-.modal {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 80%;
-  max-width: 900px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  padding: 20px;
-  overflow-y: auto;
-  max-height: 90vh;
-}
 
 
 

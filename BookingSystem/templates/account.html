@@ -1,40 +1,38 @@
-
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Traveler Profile</title>
       <link rel="stylesheet" href="{{ url_for('static', filename='TravelerProfile.css') }}"defer>
       <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-    </head>
-      <body>
-        <!-- Top Sticky Navbar -->
-        <!-- Navbar -->
-        <nav class="navbar">
-          <div class="navbar-container">
+</head>
+<body>
+      <!-- Top Sticky Navbar -->
+      <!-- Navbar -->
+      <nav class="navbar">
+        <div class="navbar-container">
               <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
                   <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay.</span>
               </a>
-              <div class="navbar-links">
+          <div class="navbar-links">
                 <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
     
                 <!-- Profile Icon -->
-                <div class="profile-container-nav">
-                  <a href="{{ url_for('main.account') }}">
+            <div class="profile-container-nav">
+                <a href="{{ url_for('main.account') }}">
                       <img class= "profile-icon" id="profile-pic-nav" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
-                    </a>
-                </div>
-    
-              </div>
+                </a>
+            </div>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <!-- Main Profile Container -->
-        <div class="profile-container">
-          <!-- Left Sticky Tabs Panel -->
-          <aside class="tabs-panel">
+      <!-- Main Profile Container -->
+      <div class="profile-container">
+      <!-- Left Sticky Tabs Panel -->
+      <aside class="tabs-panel">
             <h2>My Page</h2>
             <nav> 
               <ul>
@@ -45,15 +43,15 @@
                 <li><a href="{{ url_for('main.logout') }}" class="nav-link" data-tab="logout">Log Out</a></li>
               </ul>
             </nav>
-          </aside>
+      </aside>
 
           <!-- Right Content Section -->
-          <main class="content-area">
+      <main class="content-area">
         
-            <!-- Profile Section -->
-            <section id="profile-section" class="content-section">
-              <h2>Profile</h2>
-              <div class="profile-overview">  
+          <!-- Profile Section -->
+      <section id="profile-section" class="content-section">
+            <h2>Profile</h2>
+            <div class="profile-overview">  
                 <div class="profile-pic-container">
                   <img class= "profile-pic"  id="profile-pic-panel" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
 
@@ -61,10 +59,10 @@
                 </div>
                 <h2 class="h2-guide-name"><span>{{ current_user.first_name }} {{ current_user.last_name }}</span></h2>
                 <p>Total Tours: <span id="tour-count">{{ total_completed_tours }}</span></p>
-              </div>
+            </div>
 
-              <!-- Confirmation Modal -->
-              <div id="confirm-modal" class="modal hidden">
+            <!-- Confirmation Modal -->
+            <div id="confirm-modal" class="modal hidden">
                 <div class="modal-content">
                 <h3>Change Profile Picture</h3>
                 <p>Do you want to change your profile picture?</p>
@@ -73,10 +71,10 @@
                     <button class="confirm-btn" id="confirm-change-btn">Yes</button>
                   </div>
                 </div>
-              </div>
-          
+            </div>
+
               <!-- Cropper Modal -->
-              <div id="cropper-modal" class="modal hidden">
+            <div id="cropper-modal" class="modal hidden">
                 <div class="modal-content">
                   <h3>Adjust Your Picture</h3>
                   <div id="cropper-container"></div>
@@ -85,15 +83,15 @@
                       <button class="confirm-btn" id="crop-btn">Crop and Save</button>
                     </div>
                 </div>
-              </div>
-              <input type="file" id="upload-pic" class="hidden" accept="image/*">
-            </section>
+            </div>
+            <input type="file" id="upload-pic" class="hidden" accept="image/*">
+      </section>
 
-            <section id="my-tours-section" class="content-section">
-              <h2>My Tours</h2>
+      <section id="my-tours-section" class="content-section">
+            <h2>My Tours</h2>
             
-              <!-- Toggle Buttons for Categories -->
-              <div class="tour-toggle-buttons">
+            <!-- Toggle Buttons for Categories -->
+            <div class="tour-toggle-buttons">
                 <button class="toggle-btn active" data-status="all">
                   All <span class="count">(0)</span>
                 </button>
@@ -109,56 +107,54 @@
                 <button class="toggle-btn" data-status="cancelled">
                   Cancelled <span class="count">(0)</span>
                 </button>
-              </div>
+            </div>
             
-<!-- Tours Container -->
-<div class="tours-container">
-  {% for booking in bookings %}
-  <div class="tour-card" data-status="{{ booking.status }}" data-id="{{ booking.id }}">
-    <div class="status-label {{ booking.status|lower }}">{{ booking.status.capitalize() }}</div>
-    <div class="tour-header">
-      <h3 class="tour-title">{{ booking.selected_package.name }}</h3>
-      <span class="tour-status {{ booking.status }}">{{ booking.status }}</span>
-    </div>
-    <p class="tour-date">
-      {{ booking.date_start.strftime('%B %d, %Y') }}
-      {% if booking.date_start != booking.date_end %} -
-      {{ booking.date_end.strftime('%B %d, %Y') }}
-      {% endif %}
-    </p>
-    <div class="tour-header">
-      <p class="tour-guide">With:
-        <span class="guide-name">
-          {{ booking.tour_guide.user.first_name }} {{ booking.tour_guide.user.last_name }}
-        </span>
-      </p>
-      {% if booking.status == BookingStatus.STATUS_UPCOMING.value %}
-      <button class="cancel-booking-btn" data-id="{{ booking.id }}">Cancel Booking</button>
-      {% endif %}
-      <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
-      {% if booking.status == BookingStatus.STATUS_COMPLETED.value %}
-        {% if booking.is_reviewed %}
-        <!-- Show "Reviewed" label for reviewed bookings -->
-        <button class="reviewed-btn" disabled>Reviewed</button>
-        {% else %}
-        <!-- Show the "Review" button for bookings not yet reviewed -->
-        <button class="review-btn" 
-                data-booking-id="{{ booking.id }}" 
-                data-guide-id="{{ booking.tour_guide_id }}" 
-                data-tour="{{ booking.selected_package.name }}">
-          Review
-        </button>
-        {% endif %}
-      {% endif %}
-    </div>
-  </div>
-  {% else %}
-  <p>No bookings available.</p>
-  {% endfor %}
-</div>
-
-
-            </section>
+            <!-- Tours Container -->
+            <div class="tours-container">
+              {% for booking in bookings %}
+            <div class="tour-card" data-status="{{ booking.status }}" data-id="{{ booking.id }}">
+              <div class="status-label {{ booking.status|lower }}">{{ booking.status.capitalize() }}</div>
+                <div class="tour-header">
+                  <h3 class="tour-title">{{ booking.selected_package.name }}</h3>
+                  <span class="tour-status {{ booking.status }}">{{ booking.status }}</span>
+                </div>
+                <p class="tour-date">
+                    {{ booking.date_start.strftime('%B %d, %Y') }}
+                    {% if booking.date_start != booking.date_end %} -
+                    {{ booking.date_end.strftime('%B %d, %Y') }}
+                    {% endif %}
+                </p>
+              <div class="tour-header">
+                <p class="tour-guide">With:
+                  <span class="guide-name">
+                    {{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}
+                  </span>
+                </p>
+                    {% if booking.status == BookingStatus.STATUS_UPCOMING.value %}
+                    <button class="cancel-booking-btn" data-id="{{ booking.id }}">Cancel Booking</button>
+                    {% endif %}
+                    <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
+                    {% if booking.status == BookingStatus.STATUS_COMPLETED.value %}
+                    {% if booking.is_reviewed %}
+                <!-- Show "Reviewed" label for reviewed bookings -->
+                <button class="reviewed-btn" disabled>Reviewed</button>
+                    {% else %}
+                <!-- Show the "Review" button for bookings not yet reviewed -->
+                <button class="review-btn" 
+                              data-booking-id="{{ booking.id }}" 
+                              data-guide-id="{{ booking.tour_guide_id }}" 
+                              data-tour="{{ booking.selected_package.name }}">
+                    Review
+                </button>
+                    {% endif %}
+                    {% endif %}
+              </div>
+            </div>
+                    {% else %}
+              <p>No bookings available.</p>
+                    {% endfor %}
+            </div>
+      </section>
             
             <div id="booking-details-modal" class="modal hidden">
               <div class="modal-content">
@@ -167,7 +163,7 @@
             
                 <!-- Booking Details -->
                 <div id="modal-details" class="hidden">
-                  <!-- Traveler Information -->
+                <!-- Traveler Information -->
                   <div class="container-section traveler-info expanded">
                     <h4 class="container-header">Traveler Information</h4>
                     <div class="status-box">
@@ -249,7 +245,7 @@
             
                   
            <!-- My Reviews Section -->
-           <section id="my-reviews-section" class="content-section">
+          <section id="my-reviews-section" class="content-section">
             <h2>My Reviews 
               <span id="toggle-reviews" class="toggle-icon">&#128065;</span> <!-- Eye Icon -->
             </h2>
@@ -258,17 +254,16 @@
             <div id="to-review-container" class="to-review-grid">
               <h2>To Review <span class="count">({{ to_review_count }})</span></h2>
               <div class="to-review-container">
-                {% if to_review %}
-                  {% for booking in to_review %}
+                    {% if to_review %}
+                    {% for booking in to_review %}
                   <div class="to-review-card">
                     <img 
                       src="{{ booking.selected_package.package_img or url_for('static', filename='default_tour_image.jpg') }}" 
                       alt="Tour Image" 
-                      class="guide-photo" 
-                    />
+                      class="guide-photo"/>
                     <div class="review-info">
                       <h3>{{ booking.selected_package.name }}</h3>
-                      <p>Guide: {{ booking.tour_guide.user.first_name }} {{ booking.tour_guide.user.last_name }}</p>
+                      <p>Guide: {{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</p>
                       <p>Date: {{ booking.date_start.strftime('%B %d, %Y') }}</p>
                     </div>
                     <button class="review-btn" 
@@ -278,42 +273,39 @@
                       Review Now
                     </button>
                   </div>
-                  {% endfor %}
-                {% else %}
+                    {% endfor %}
+                    {% else %}
                   <p>No tours are pending review.</p>
-                {% endif %}
+                    {% endif %}
               </div>
             </div>
             
-
             <div id="reviews-container" class="traveler-reviews-grid">
-              {% if reviews %}
-                {% for review in reviews %}
-                <div class="review-card">
-                  <img src="{{ review.tour_image }}" alt="Tour Image" class="tour-image" />
-                  <div class="review-content">
-                    <div class="traveler-info">
+                    {% if reviews %}
+                    {% for review in reviews %}
+              <div class="review-card">
+                <img src="{{ review.tour_image }}" alt="Tour Image" class="tour-image" />
+                <div class="review-content">
+                  <div class="traveler-info">
                       <img src="{{ review.guide_profile_img }}" alt="Guide Picture" class="traveler-pic" />
                       <div class="traveler-details">
                         <h3>{{ review.guide_name }}</h3>
                         <div class="ratings">{{ review.rating }} ★</div>
                       </div>
-                    </div>
+                  </div>
                     <p class="review-text">{{ review.comment }}</p>
-                    <div class="review-footer">
+                  <div class="review-footer">
                       <p class="review-date">{{ review.review_date }}</p>
                       <p class="toured-by">Toured by: <span class="tour-guide-name">{{ review.guide_name }}</span></p>
-                    </div>
                   </div>
                 </div>
-                {% endfor %}
-              {% else %}
+              </div>
+                    {% endfor %}
+                    {% else %}
                 <p>No reviews submitted yet.</p>
-              {% endif %}
+                    {% endif %}
             </div>
             
-            
-
             <div id="review-modal" class="modal hidden">
               <div class="modal-content">
                 <h2>How was your tour?</h2>
@@ -353,80 +345,75 @@
               </div>
             </div>
             
-            
-            
-            
-
             <!-- Modal Overlay -->
             <div id="modal-overlay" class="modal-overlay hidden"></div>
-
           </section>
 
             <!-- Account Section -->
-            <section id="account-section" class="content-section">
-              <h2>Account Settings</h2>
+          <section id="account-section" class="content-section">
+            <h2>Account Settings</h2>
 
-              <!-- Current Email Field -->
-              <div class="input-group">
-                <label for="current-email">
-                  Current Email:
-                  <button class="edit-btn" id="edit-email-btn">&#9998;</button>
-                </label>
-                <input type="email" id="current-email" value="{{ current_user.email }}" disabled />
-              </div>
+            <!-- Current Email Field -->
+            <div class="input-group">
+              <label for="current-email">
+                Current Email:
+                <button class="edit-btn" id="edit-email-btn">&#9998;</button>
+              </label>
+              <input type="email" id="current-email" value="{{ current_user.email }}" disabled />
+            </div>
               
-              <!-- Current Password Field -->
-              <div class="input-group">
-                <label for="current-password">
-                  Password:
-                  <button class="edit-btn" id="edit-password-btn">&#9998;</button>
-                </label>
+            <!-- Current Password Field -->
+            <div class="input-group">
+              <label for="current-password">
+                Password:
+                <button class="edit-btn" id="edit-password-btn">&#9998;</button>
+              </label>
                 <input type="password" id="current-password" value="{{ current_user.password }}" disabled />
-              </div>
+            </div>
 
-              <!-- Password Confirmation Modal -->
-              <div id="password-confirm-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h3>Enter Password</h3>
+            <!-- Password Confirmation Modal -->
+            <div id="password-confirm-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Enter Password</h3>
                   <input type="password" id="confirm-password-input" placeholder="Enter your password" />
-                  <div class="modal-button-container">
-                    <button class="cancel-btn" id="password-cancel-btn">Cancel</button>
-                    <button class="confirm-btn" id="password-confirm-btn">Confirm</button>
-                  </div>
+                <div class="modal-button-container">
+                  <button class="cancel-btn" id="password-cancel-btn">Cancel</button>
+                  <button class="confirm-btn" id="password-confirm-btn">Confirm</button>
                 </div>
               </div>
+            </div>
 
-              <!-- Change Email Modal -->
-              <div id="change-email-modal" class="modal hidden">
-                <div class="modal-content">
+            <!-- Change Email Modal -->
+            <div id="change-email-modal" class="modal hidden">
+              <div class="modal-content">
                   <h3>Change Email</h3>
                   <label for="new-email">New Email:</label>
                   <input type="email" id="new-email-input" placeholder="Enter new email" />
-                  <div class="modal-button-container">
-                    <button class="cancel-btn" id="cancel-email-btn">Cancel</button>
-                    <button class="confirm-btn" id="save-email-btn">Save Email</button>
-                  </div>
-                </div>
+                    <div class="modal-button-container">
+                      <button class="cancel-btn" id="cancel-email-btn">Cancel</button>
+                      <button class="confirm-btn" id="save-email-btn">Save Email</button>
+                    </div>
               </div>
+            </div>
 
-              <!-- Change Password Modal -->
-              <div id="change-password-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h3>Change Password</h3>
-                  <label for="new-password">New Password:</label>
-                  <input type="password" id="new-password" placeholder="Enter new password" />
+            <!-- Change Password Modal -->
+            <div id="change-password-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Change Password</h3>
+                <label for="new-password">New Password:</label>
+                <input type="password" id="new-password" placeholder="Enter new password" />
 
-                  <label for="confirm-new-password">Confirm New Password:</label>
-                  <input type="password" id="confirm-new-password" placeholder="Confirm new password" />
+                <label for="confirm-new-password">Confirm New Password:</label>
+                <input type="password" id="confirm-new-password" placeholder="Confirm new password" />
 
-                  <div class="modal-button-container">
+                <div class="modal-button-container">
                     <button class="cancel-btn" id="cancel-password-btn">Cancel</button>
                     <button class="confirm-btn" id="save-password-btn">Save Password</button>
-                  </div>
                 </div>
               </div>
+            </div>
 
-            </section>
+          </section>
             <!-- Logout Section -->
             <section id="logout-section" class="content-section">
               <h2>Log Out</h2>
@@ -447,14 +434,12 @@
               </div>
             </div>
 
-          </main>
+      </main>
           <!-- Modal Overlay -->
           <div id="modal-overlay" class="modal-overlay hidden"></div>
-
-        </div>
-
+      </div>
         <script src="{{ url_for('static', filename='TravelerProfile.js') }}"defer></script>
-      </body>
-    </html>
+  </body>
+</html>
 
 

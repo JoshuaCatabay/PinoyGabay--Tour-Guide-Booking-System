@@ -10,6 +10,8 @@ import os
 from flask import jsonify
 from BookingSystem.models import ReviewsRating, ReviewImages
 from sqlalchemy import func  #!!!!!
+from BookingSystem.models import BookingStatus
+from BookingSystem.utils import update_statuses
 
 @touroperator.route('/create_tour_package', methods=['GET', 'POST'])
 @login_required
@@ -384,6 +386,10 @@ def create_tourguide():
 @touroperator.route('/dashboard', methods=['GET'])
 @login_required
 def touroperator_dashboard():
+
+    # Update statuses before fetching bookings
+    update_statuses()
+
     # Ensure only tour operators can access this page
     if current_user.role != 'touroperator':
         flash('You do not have permission to access this page.', 'danger')
@@ -396,37 +402,56 @@ def touroperator_dashboard():
 
     # Fetch all tour guides under the current operator
     tour_guides = TourGuide.query.filter_by(toperator_id=operator.id).all()
+    guide_ids = [guide.id for guide in tour_guides]
 
-    # Subqueries for reviews and completed tours aggregation
-    subquery_reviews = db.session.query(
-        TourGuide.toperator_id,
-        func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'),
-        func.count(ReviewsRating.id).label('review_count')
-    ).join(ReviewsRating, ReviewsRating.tour_guide_id == TourGuide.id, isouter=True) \
-    .filter(TourGuide.toperator_id == operator.id) \
-    .group_by(TourGuide.toperator_id) \
-    .subquery()
+        # Fetch bookings for all guides under this operator
+    bookings = (
+        db.session.query(Booking)
+        .filter(Booking.tour_guide_id.in_(guide_ids))
+        .options(
+            db.joinedload(Booking.selected_package),
+            db.joinedload(Booking.traveler),
+            db.joinedload(Booking.assigned_guide).joinedload(TourGuide.user),
+        )
+        .order_by(Booking.date_start.asc())  # Order by start date
+        .all()
+    )
+    # Calculate booking counts by status
+    booking_counts = {
+        "all": len(bookings),
+        "upcoming": sum(1 for b in bookings if b.status == BookingStatus.STATUS_UPCOMING.value),
+        "ongoing": sum(1 for b in bookings if b.status == BookingStatus.STATUS_ONGOING.value),
+        "completed": sum(1 for b in bookings if b.status == BookingStatus.STATUS_COMPLETED.value),
+        "cancelled": sum(1 for b in bookings if b.status == BookingStatus.STATUS_CANCELLED.value),
+    }
 
-    subquery_completed_tours = db.session.query(
-        TourGuide.toperator_id,
-        func.count(Booking.id).label('completed_tours')
-    ).join(Booking, Booking.tour_guide_id == TourGuide.id, isouter=True) \
-    .filter(
-        TourGuide.toperator_id == operator.id,
-        Booking.status == 'completed'  # Only count completed tours
-    ).group_by(TourGuide.toperator_id).subquery()
+    # Fetch completed tours for operator's guides
+    completed_tours_query = (
+        db.session.query(func.count(Booking.id).label('completed_tours'))
+        .filter(
+            Booking.tour_guide_id.in_(guide_ids),
+            Booking.status == BookingStatus.STATUS_COMPLETED.value
+        )
+        .scalar()
+    )
+    completed_tours = completed_tours_query or 0
 
-    # Aggregate the data
-    aggregated_data = db.session.query(
-        subquery_reviews.c.average_rating,
-        subquery_reviews.c.review_count,
-        subquery_completed_tours.c.completed_tours
-    ).first()
+    # Fetch reviews for guides under the operator
+    reviews_query = (
+        db.session.query(ReviewsRating)
+        .join(TourGuide, ReviewsRating.tour_guide_id == TourGuide.id)
+        .filter(TourGuide.toperator_id == operator.id)
+    )
+    total_reviews = reviews_query.count()
 
-    # Extract data from the result
-    average_rating = aggregated_data[0] if aggregated_data else 0
-    review_count = aggregated_data[1] if aggregated_data else 0
-    completed_tours = aggregated_data[2] if aggregated_data else 0
+    # Calculate average rating from reviews
+    average_rating_query = (
+        db.session.query(func.coalesce(func.avg(ReviewsRating.rating), 0).label('average_rating'))
+        .join(TourGuide, ReviewsRating.tour_guide_id == TourGuide.id)
+        .filter(TourGuide.toperator_id == operator.id)
+        .scalar()
+    )
+    average_rating = round(average_rating_query, 1) if average_rating_query else 0
 
     # Get the tour_guide_id filter from the query parameters
     tour_guide_id = request.args.get('tour_guide_id', type=int)
@@ -483,12 +508,14 @@ def touroperator_dashboard():
         operator=operator,
         reviews=reviews_data,
         pagination=pagination_data,
-        total_reviews=paginated_reviews.total,
         average_rating=round(average_rating, 1),  # Pass average rating
-        review_count=review_count,  # Pass total reviews
-        total_tours=completed_tours,  # Pass completed tours
+        total_reviews=total_reviews,
+        completed_tours=completed_tours,
         packages=packages,
-        selected_tour_guide_id=tour_guide_id  # Pass the selected guide ID for dropdown selection
+        selected_tour_guide_id=tour_guide_id,  # Pass the selected guide ID for dropdown selection
+        bookings=bookings,
+        booking_counts=booking_counts,
+        BookingStatus=BookingStatus
     )
 
 

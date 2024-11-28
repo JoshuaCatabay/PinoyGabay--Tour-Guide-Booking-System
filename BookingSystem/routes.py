@@ -13,7 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from BookingSystem.models import ReviewsRating, ReviewImages  #!!!!!
 from sqlalchemy import func   #!!!!!
 from BookingSystem.models import User, TourOperator, TourGuide, TourPackage, EstimatedPrice, Inclusion, Exclusion, Itinerary, Booking
-from BookingSystem.Bookings.routes import update_statuses
+from BookingSystem.utils import update_statuses
 from datetime import datetime, timedelta
 from BookingSystem.models import BookingStatus
 
@@ -41,36 +41,18 @@ def traveler_login():
     if current_user.is_authenticated:
         logout_user()
         print(f"Previous user logged out. Current user (should be anonymous): {current_user}")
-
-    # form = TravelerLoginForm()
-    # if form.validate_on_submit():
-    #     user = (
-    #         UserAdmin.query.filter_by(email=form.email.data).first() or
-    #         UserTourOperator.query.filter_by(email=form.email.data).first() or
-    #         UserTraveler.query.filter_by(email=form.email.data).first() or
-    #         UserTourGuide.query.filter_by(email=form.email.data).first()
-    #     )
         
     form = TravelerLoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user:
-            if user.role == 'Admin':
-            # Process as Admin
-                pass  # Replace with actual logic
-            elif user.role == 'TourOperator':
-            # Process as Tour Operator
-                pass  # Replace with actual logic
-            elif user.role == 'Traveler':
-            # Process as Traveler
-                pass  # Replace with actual logic
-            elif user.role == 'TourGuide':
-            # Process as Tour Guide
-                pass  # Replace with actual logic
-        
 
         if user:
             print(f"User found: {user.email}, Role: {user.role}")
+
+            # Check if email is confirmed
+            if not user.confirmed:
+                flash('Please confirm your email before logging in.', 'warning')
+                return redirect(url_for('main.pending_confirmation'))  # Redirect to confirmation pending page
 
             if bcrypt.check_password_hash(user.password, form.password.data):
                 # Log out any previous session

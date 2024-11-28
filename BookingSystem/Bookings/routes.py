@@ -20,7 +20,8 @@ from datetime import datetime, timedelta  # Ensure timedelta is imported
 from datetime import date
 from flask import jsonify
 from datetime import date
-from BookingSystem.models import BookingStatus
+from BookingSystem.models import BookingStatus, Notification
+from BookingSystem.utils import update_statuses
 
 # def update_statuses():
 #     today = date.today()
@@ -47,32 +48,6 @@ from BookingSystem.models import BookingStatus
 
 #     db.session.commit()
 
-
-def update_statuses():
-    today = date.today()
-
-    # Update 'Upcoming' to 'Ongoing' if the start date is today or in the past and the end date is in the future or today
-    upcoming_bookings = Booking.query.filter(
-        Booking.status == BookingStatus.STATUS_UPCOMING.value,
-        Booking.date_start <= today,
-        Booking.date_end >= today
-    ).all()
-
-    for booking in upcoming_bookings:
-        print(f"Updating booking {booking.id} to '{BookingStatus.STATUS_ONGOING.value}'")
-        booking.status = BookingStatus.STATUS_ONGOING.value
-
-    # Update 'Ongoing' to 'Completed' if the end date is in the past
-    ongoing_bookings = Booking.query.filter(
-        Booking.status == BookingStatus.STATUS_ONGOING.value,
-        Booking.date_end < today
-    ).all()
-
-    for booking in ongoing_bookings:
-        print(f"Updating booking {booking.id} to '{BookingStatus.STATUS_COMPLETED.value}'")
-        booking.status = BookingStatus.STATUS_COMPLETED.value
-
-    db.session.commit()
 
 
 
@@ -245,17 +220,15 @@ def create_booking():
             return jsonify({"error": "Invalid date format. Expected YYYY-MM-DD."}), 400
 
         # Calculate duration in days
-        duration = (date_end - date_start).days + 1  # Inclusive of both dates
+        duration = (date_end - date_start).days + 1
 
         # Check if the tour guide and package exist
         tour_guide = TourGuide.query.get(tour_guide_id)
-        tour_package = TourPackage.query.get(package_id)
-
         if not tour_guide:
-            print(f"Tour guide with ID {tour_guide_id} not found.")
             return jsonify({"error": "Tour guide not found"}), 404
+
+        tour_package = TourPackage.query.get(package_id)
         if not tour_package:
-            print(f"Tour package with ID {package_id} not found.")
             return jsonify({"error": "Tour package not found."}), 404
 
         # Create the booking
@@ -268,13 +241,51 @@ def create_booking():
             traveler_quantity=int(traveler_quantity),
             special_notes=special_notes,
             price=Decimal(price),
-            status=BookingStatus.STATUS_UPCOMING.value,  # Use Enum for status
-            duration=timedelta(days=duration),  # Store as timedelta
-            time=datetime.strptime("00:00:00", "%H:%M:%S").time(),  # Default to midnight
-            is_reviewed=False  # Ensure this is explicitly set during creation
+            status=BookingStatus.STATUS_UPCOMING.value,
+            duration=timedelta(days=duration),
+            time=datetime.strptime("00:00:00", "%H:%M:%S").time(),
+            is_reviewed=False
         )
 
         db.session.add(booking)
+        db.session.commit()
+
+         # Add Notifications
+        # Traveler Notification
+        traveler_message = f"Your tour with {tour_guide.user.first_name} {tour_guide.user.last_name} has been successfully booked for {date_start}."
+        traveler_notification = Notification(
+            user_id=current_user.id,
+            booking_id=booking.id,
+            role='traveler',
+            message=traveler_message,
+            is_read=False
+        )
+        db.session.add(traveler_notification)
+
+        # Tour Guide Notification
+        guide_message = f"You have a new booking from {current_user.first_name} {current_user.last_name} for {date_start}."
+        guide_notification = Notification(
+            user_id=tour_guide.user_id,
+            booking_id=booking.id,
+            role='guide',
+            message=guide_message,
+            is_read=False
+        )
+        db.session.add(guide_notification)
+
+        # Add Tour Operator Notification
+        if tour_guide.tour_operator:
+            operator_message = f"Your guide {tour_guide.user.first_name} {tour_guide.user.last_name} has been booked by {current_user.first_name} {current_user.last_name} for {date_start}."
+            operator_notification = Notification(
+                user_id=tour_guide.tour_operator.user_id,  # Operator's user ID
+                booking_id=booking.id,
+                role='operator',
+                message=operator_message,
+                is_read=False
+            )
+            db.session.add(operator_notification)
+
+
         db.session.commit()
 
         print(f"Booking successfully created with ID {booking.id}")
@@ -284,6 +295,7 @@ def create_booking():
         print(f"Error in create_booking route: {e}")
         db.session.rollback()
         return jsonify({"error": f"Server error: {str(e)}"}), 500
+    
 
     
 
@@ -295,9 +307,17 @@ def booking_details(booking_id):
         # Fetch the booking
         booking = Booking.query.get_or_404(booking_id)
 
-      # Check if the current user is authorized
-        if booking.user_id != current_user.id and (
-            not hasattr(current_user, 'tour_guide') or booking.tour_guide_id != current_user.tour_guide.id
+        # Check if the current user is authorized
+        if (
+            booking.user_id != current_user.id and  # Traveler check
+            (
+                not hasattr(current_user, 'tour_guide') or
+                booking.tour_guide_id != getattr(current_user.tour_guide, 'id', None)  # Tour guide check
+            ) and
+            (
+                not hasattr(current_user, 'tour_operator') or
+                booking.assigned_guide.toperator_id != getattr(current_user.tour_operator, 'id', None)  # Tour operator check
+            )
         ):
             return jsonify({"error": "Unauthorized access"}), 403
 
@@ -348,10 +368,6 @@ def booking_details(booking_id):
 
 
 
-
-
-from BookingSystem.models import BookingStatus
-
 @booking.route('/cancel/<int:booking_id>', methods=['POST'])
 @login_required
 def cancel_booking(booking_id):
@@ -369,11 +385,52 @@ def cancel_booking(booking_id):
         booking.status = BookingStatus.STATUS_CANCELLED.value
         db.session.commit()
 
+        # Add notification for the traveler
+        cancellation_message = f"Your tour scheduled for {booking.date_start} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} has been canceled. Please rebook or contact support."
+        traveler_notification = Notification(
+            user_id=booking.user_id,
+            booking_id=booking.id,
+            role='traveler',
+            message=cancellation_message,
+            is_read=False
+        )
+        db.session.add(traveler_notification)
+
+        # Add notification for the tour guide
+
+        # Add notification for the tour guide
+        guide_message = f"The tour scheduled with {booking.traveler.first_name} {booking.traveler.last_name} on {booking.date_start} has been canceled."
+        guide_notification = Notification(
+            user_id=booking.assigned_guide.user_id,  # Use the guide's user ID
+            booking_id=booking.id,
+            role='guide',  # Set role as guide
+            message=guide_message,
+            is_read=False
+        )
+        db.session.add(guide_notification)
+
+        # Add Notification for Operator on Cancellation
+        if booking.assigned_guide.tour_operator:
+            operator_message_cancel = f"Booking by {booking.traveler.first_name} {booking.traveler.last_name} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} on {booking.date_start} has been canceled."
+            operator_notification_cancel = Notification(
+                user_id=booking.assigned_guide.tour_operator.user_id,  # Operator's user ID
+                booking_id=booking.id,
+                role='operator',
+                message=operator_message_cancel,
+                is_read=False
+            )
+            db.session.add(operator_notification_cancel)
+
+
+        db.session.commit()
+
         return jsonify({"message": "Booking has been successfully canceled."}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
     
+    
+
 
 @booking.route('/complete/<int:booking_id>', methods=['POST'])
 @login_required
@@ -382,7 +439,7 @@ def complete_booking(booking_id):
         booking = Booking.query.get_or_404(booking_id)
 
         # Ensure the current user is the assigned tour guide
-        if booking.tour_guide_id != current_user.tour_guide.id:
+        if booking.assigned_guide.id != current_user.tour_guide.id:
             return jsonify({"error": "Unauthorized action"}), 403
 
         # Allow marking as completed only for ongoing bookings
@@ -391,6 +448,43 @@ def complete_booking(booking_id):
 
         # Update booking status to completed
         booking.status = BookingStatus.STATUS_COMPLETED.value
+        db.session.commit()
+
+        # Add notification for the traveler
+        completion_message = f"Your tour with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} has been completed. Leave a review to help others!"
+        traveler_notification = Notification(
+            user_id=booking.user_id,
+            booking_id=booking.id,
+            role='traveler',
+            message=completion_message,
+            is_read=False
+        )
+        db.session.add(traveler_notification)
+
+        # Add notification for the tour guide
+        guide_message = f"The tour with {booking.traveler.first_name} {booking.traveler.last_name} on {booking.date_start} has been successfully completed."
+        guide_notification = Notification(
+            user_id=booking.assigned_guide.user_id,  # Use the guide's user ID
+            booking_id=booking.id,
+            role='guide',  # Set role as guide
+            message=guide_message,
+            is_read=False
+        )
+        db.session.add(guide_notification)
+
+        # Add Notification for Operator on Completion
+        if booking.assigned_guide.tour_operator:
+            operator_message_complete = f"The tour by {booking.traveler.first_name} {booking.traveler.last_name} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} on {booking.date_start} has been completed."
+            operator_notification_complete = Notification(
+                user_id=booking.assigned_guide.tour_operator.user_id,  # Operator's user ID
+                booking_id=booking.id,
+                role='operator',
+                message=operator_message_complete,
+                is_read=False
+            )
+            db.session.add(operator_notification_complete)
+
+
         db.session.commit()
 
         return jsonify({"message": "Booking has been successfully marked as completed."}), 200

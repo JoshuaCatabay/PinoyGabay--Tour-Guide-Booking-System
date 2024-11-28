@@ -1636,3 +1636,54 @@ input:focus {
 .complete-booking-btn:hover {
   background-color: #388e3c;
 }
+
+
+
+.notification-count {
+  background-color: red;
+  color: white;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 50%;
+  margin-left: 10px;
+}
+
+.notification-panel {
+  margin-top: 20px;
+  background-color: #1A535C;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  color: white;
+}
+
+.notification-item:hover {
+  background-color: #4ecdc4;
+}
+
+.notification-btn {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.notification-btn:hover {
+  background-color: #ddd;
+}

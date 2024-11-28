@@ -40,7 +40,8 @@ class User(db.Model, UserMixin):
     tour_operator = db.relationship('TourOperator',backref='user',uselist=False,cascade="all, delete-orphan")
     tour_guide = db.relationship('TourGuide',backref='user',uselist=False,cascade="all, delete-orphan")
     reviews = db.relationship('ReviewsRating',backref='user', cascade="all, delete-orphan")
-    bookings = db.relationship('Booking',backref='user',cascade="all, delete-orphan")
+    bookings = db.relationship('Booking', back_populates='traveler', lazy=True, cascade="all, delete-orphan")
+    notifications = db.relationship('Notification', back_populates='user', cascade="all, delete-orphan", lazy=True)
     
     
     # @property
@@ -208,8 +209,9 @@ class TourGuide(db.Model, UserMixin):
     skills = db.relationship('Skill', backref='tour_guide', cascade="all, delete-orphan")
     availability = db.relationship('Availability', backref='tour_guide', cascade="all, delete-orphan")
     reviews = db.relationship('ReviewsRating', backref='tour_guide', cascade="all, delete-orphan")
-    bookings = db.relationship('Booking', backref='tour_guide', cascade="all, delete-orphan")
-    notifications = db.relationship('Notification', backref='tour_guide', cascade="all, delete-orphan")
+    bookings = db.relationship('Booking', back_populates='assigned_guide', lazy=True, cascade="all, delete-orphan")
+
+
     
     @staticmethod
     def verify_reset_token(token, expires_sec=3600):
@@ -321,6 +323,8 @@ class TourPackage(db.Model):
     itineraries = db.relationship('Itinerary', backref='tour_package', cascade="all, delete-orphan")
     location = db.Column(db.String(255), nullable=True)  # New field for location
 
+    bookings = db.relationship('Booking', back_populates='selected_package', lazy=True)
+
 
 class EstimatedPrice(db.Model):
     __tablename__ = 'Estimated_Price'
@@ -398,26 +402,37 @@ class Booking(db.Model):
     price = db.Column(db.Numeric(10, 2))
     is_reviewed = db.Column(db.Boolean, nullable=False, default=False)
 
-       # Relationships
-    traveler = db.relationship('User', backref='traveler_bookings', lazy=True)
-    assigned_guide = db.relationship('TourGuide', backref='assigned_bookings', lazy=True)
-    selected_package = db.relationship('TourPackage', backref='bookings', lazy=True)
+    # Relationships with overlaps
+
+    # Relationships
+    traveler = db.relationship('User', back_populates='bookings', lazy=True)
+    assigned_guide = db.relationship('TourGuide', back_populates='bookings', lazy=True)
+    selected_package = db.relationship('TourPackage', back_populates='bookings', lazy=True)
+    notifications = db.relationship('Notification', back_populates='booking', cascade="all, delete-orphan", lazy=True)
 
     
     
 class Notification(db.Model):
     __tablename__ = 'Notification'
     __table_args__ = (
-        db.Index('idx_notification_tguide_id', 'tguide_id'),   # Index on tguide_id
-        db.Index('idx_notification_booking_id', 'booking_id'), # Index on booking_id
-        db.Index('idx_notification_is_read', 'is_read'),       # Index on is_read
-        # {'schema': 'public'},
+        db.Index('idx_notification_user_id', 'user_id'),
+        db.Index('idx_notification_booking_id', 'booking_id'),
+        db.Index('idx_notification_is_read', 'is_read'),
     )
+
     id = db.Column(db.Integer, primary_key=True)
-    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
-    booking_id = db.Column(db.Integer, db.ForeignKey('Booking.id', ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)  # User receiving the notification
+    booking_id = db.Column(db.Integer, db.ForeignKey('Booking.id', ondelete="CASCADE"), nullable=True)
+    role = db.Column(db.String(15), nullable=False)  # Role of the user (traveler, guide, operator)
+    message = db.Column(db.String(255), nullable=False)
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+        # Relationships
+    user = db.relationship('User', back_populates='notifications', lazy=True)
+    booking = db.relationship('Booking', back_populates='notifications', lazy=True)
+
+
 
 
 class ReviewsRating(db.Model):

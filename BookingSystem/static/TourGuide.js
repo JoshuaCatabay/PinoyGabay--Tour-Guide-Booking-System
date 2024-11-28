@@ -2079,3 +2079,91 @@ packageData.itineraries.forEach(itinerary => {
 });
 
 
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const NOTIFICATIONS_URL = '/notifications';
+  const notificationList = document.getElementById('notification-list');
+  const notificationCount = document.getElementById('notification-count');
+
+  // Fetch notifications
+  async function fetchNotifications() {
+    try {
+      const response = await fetch(`${NOTIFICATIONS_URL}/`);
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+  
+      const data = await response.json();
+      console.log('Fetched Notifications:', data); // Debugging
+  
+      notificationList.innerHTML = ''; // Clear old notifications
+  
+      if (data.notifications.length === 0) {
+        notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+      } else {
+        data.notifications.forEach(notification => {
+          console.log(`Processing Notification: ${notification.message}`); // Debugging
+  
+          notificationList.innerHTML += `
+            <li class="notification-item" data-id="${notification.id}">
+              ${notification.message}
+              <button class="notification-btn" onclick="viewNotificationDetails('Booking #${notification.id}')">View</button>
+            </li>
+          `;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }
+  
+
+  // Fetch notification count
+  async function fetchNotificationCount() {
+    try {
+      const response = await fetch(`${NOTIFICATIONS_URL}/count`);
+      if (!response.ok) throw new Error('Failed to fetch notification count');
+
+      const data = await response.json();
+      const count = data.count || 0;
+      notificationCount.textContent = `(${count})`;
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+    }
+  }
+
+  // Event delegation for marking notifications as read
+  notificationList.addEventListener('click', async (e) => {
+    const notificationItem = e.target.closest('.notification-item');
+    if (!notificationItem) return;
+
+    const notificationId = notificationItem.getAttribute('data-id');
+    try {
+      const response = await fetch(`${NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to mark notification as read');
+
+      notificationItem.remove(); // Remove from the list
+      const count = parseInt(notificationCount.textContent.replace(/[()]/g, ''), 10);
+      notificationCount.textContent = `(${Math.max(count - 1, 0)})`;
+
+      // Display "No new notifications" if list is empty
+      if (notificationList.children.length === 0) {
+        notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  });
+
+  // Fetch notifications and count on page load
+  fetchNotifications();
+  fetchNotificationCount();
+
+  // Placeholder function for the "View" button
+  window.viewNotificationDetails = (detail) => {
+    alert(`View details for: ${detail}`);
+  };
+});

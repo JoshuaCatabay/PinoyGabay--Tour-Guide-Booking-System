@@ -16,10 +16,6 @@ tabLinks.forEach(link => {
   });
 });
 
-
-
-
-
 const profilePicNav = document.getElementById('profile-pic-nav'); // Navbar profile picture
 const profilePicPanel = document.getElementById('profile-pic-panel'); // Profile panel picture
 const editPicBtn = document.getElementById('edit-pic-btn');
@@ -69,8 +65,8 @@ cropBtn.addEventListener('click', async () => {
     height: 150,
   });
 
-  // Convert the canvas to a blob and send it to the backend
-  canvas.toBlob(async (blob) => {
+// Convert the canvas to a blob and send it to the backend
+canvas.toBlob(async (blob) => {
     const formData = new FormData();
     formData.append('profile_picture', blob, 'profile.jpg');
 
@@ -111,20 +107,6 @@ closeCropperModal.addEventListener('click', () => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Review Cards Hide Function
 const toggleReviewsBtn = document.getElementById('toggle-reviews');
 const reviewsContainer = document.getElementById('reviews-container');
@@ -137,9 +119,6 @@ toggleReviewsBtn.addEventListener('click', () => {
   toggleReviewsBtn.innerHTML = 
     reviewsContainer.classList.contains('hidden') ? '&#128584;' : '&#128065;';
 });
-
-
-
 
 // Show Booking modal logic
 const bookingModal = document.getElementById('booking-modal');
@@ -154,14 +133,6 @@ function openBookingDetails(details) {
 closeBookingModal.addEventListener('click', () => {
   bookingModal.classList.remove('show');
 });
-
-
-
-
-
-
-
-
 
 // Change Password and Email
 const editEmailBtn = document.getElementById('edit-email-btn');
