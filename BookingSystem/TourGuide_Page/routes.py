@@ -737,6 +737,8 @@ def get_availability_for_tour_guide(tour_guide_id):
         print(f"Error fetching availability for Tour Guide ID {tour_guide_id}: {e}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
+
+
 @tourguide.route('/reset_availability', methods=['DELETE'])
 @login_required
 def reset_availability():

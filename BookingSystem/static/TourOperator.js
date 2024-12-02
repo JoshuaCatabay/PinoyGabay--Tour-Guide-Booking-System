@@ -907,58 +907,81 @@ function closeBookingDetailsModal() {
 
 
 
-
 // ALERT ACCOUNT CREATION
 // Ensure everything runs after DOM is fully loaded
-  window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded.');
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded.');
 
-    // --- Modal Logic for Adding a Tour Guide ---
-    const addTourGuideBtn = document.getElementById('add-tour-guide-btn');
-    const tourGuideModalWrapper = document.getElementById('tour-guide-modal');
-    const closeTourGuideModal = document.getElementById('close-tour-guide-modal');
-    const tourGuideModalOverlay = document.getElementById('tour-guide-overlay');
+  // --- Toast Notification Logic ---
+  const showToast = (message, type = 'success') => {
+      const toastWrapper = document.getElementById('toast-wrapper');
+      if (!toastWrapper) return;
 
-    // Open Modal
-    if (addTourGuideBtn && tourGuideModalWrapper) {
-        addTourGuideBtn.addEventListener('click', () => {
-            tourGuideModalWrapper.classList.add('show');
-        });
-    }
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = `custom-toast ${type}`;
+      toast.innerText = message;
 
-    // Close Modal
-    [closeTourGuideModal, tourGuideModalOverlay].forEach(element => {
-        if (element && tourGuideModalWrapper) {
-            element.addEventListener('click', () => {
-                tourGuideModalWrapper.classList.remove('show');
-            });
-        }
-    });
+      // Append toast to the wrapper
+      toastWrapper.appendChild(toast);
 
-    // --- Form Submission Logic ---
-    const tourGuideForm = document.getElementById('tour-guide-form');
+      // Auto-remove toast after 5 seconds
+      setTimeout(() => {
+          toast.remove();
+      }, 5000);
+  };
 
-    if (tourGuideForm) {
-        tourGuideForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Prevent default form submission for custom handling
+  // --- Modal Logic for Adding a Tour Guide ---
+  const addTourGuideBtn = document.getElementById('add-tour-guide-btn');
+  const tourGuideModalWrapper = document.getElementById('tour-guide-modal');
+  const closeTourGuideModal = document.getElementById('close-tour-guide-modal');
+  const tourGuideModalOverlay = document.getElementById('tour-guide-overlay');
 
-            // Fetch the tour guide's first and last names from the form inputs
-            const firstNameInput = tourGuideForm.querySelector('input[name="fname"]');
-            const lastNameInput = tourGuideForm.querySelector('input[name="lname"]');
-            const firstName = firstNameInput ? firstNameInput.value : "Tour";
-            const lastName = lastNameInput ? lastNameInput.value : "Guide";
+  // Open Modal
+  if (addTourGuideBtn && tourGuideModalWrapper) {
+      addTourGuideBtn.addEventListener('click', () => {
+          tourGuideModalWrapper.classList.add('show');
+      });
+  }
 
-            // Show success message with the tour guide's name
-            alert(`Tour Guide Account Created Successfully! Welcome, ${firstName} ${lastName}!`);
+  // Close Modal
+  [closeTourGuideModal, tourGuideModalOverlay].forEach(element => {
+      if (element && tourGuideModalWrapper) {
+          element.addEventListener('click', () => {
+              tourGuideModalWrapper.classList.remove('show');
+          });
+      }
+  });
 
-            // Close the modal
-            tourGuideModalWrapper.classList.remove('show');
+  
 
-            // Submit the form programmatically
-            tourGuideForm.submit();
-        });
-    }
+  // --- Form Submission Logic ---
+  const tourGuideForm = document.getElementById('tour-guide-form');
+
+  if (tourGuideForm) {
+      tourGuideForm.addEventListener('submit', (e) => {
+          e.preventDefault(); // Prevent default form submission for custom handling
+
+          // Fetch the tour guide's first and last names from the form inputs
+          const firstNameInput = tourGuideForm.querySelector('input[name="fname"]');
+          const lastNameInput = tourGuideForm.querySelector('input[name="lname"]');
+          const firstName = firstNameInput ? firstNameInput.value : "Tour";
+          const lastName = lastNameInput ? lastNameInput.value : "Guide";
+
+          // Show success toast message
+          showToast(`Tour Guide Account Created Successfully! Welcome, ${firstName} ${lastName}!`, 'success');
+
+          // Close the modal
+          tourGuideModalWrapper.classList.remove('show');
+
+          // Submit the form programmatically
+          tourGuideForm.submit();
+      });
+  }
 });
+
+
+
 
 
 

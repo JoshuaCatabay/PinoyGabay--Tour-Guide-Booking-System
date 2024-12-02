@@ -9,9 +9,57 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='TourOperator.js') }}" defer ></script>
+    <style>
+       #toast-wrapper {
+        position: fixed;
+        top: 55px;
+        right: 15px;
+        z-index: 1060;
+      }
+      .custom-toast {
+          background-color: #5cb85c; /* Default green */
+          color: white;
+          padding: 12px 18px;
+          border-radius: 6px;
+          margin-bottom: 12px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+          animation: slideIn 0.5s, fadeOut 0.5s 4.5s;
+      }
+      .custom-toast.success {
+          background-color: #5cb85c;
+      }
+      .custom-toast.error {
+          background-color: #d9534f;
+      }
+      .custom-toast.info {
+          background-color: #5bc0de;
+      }
+      @keyframes slideIn {
+          from {
+              opacity: 0;
+              transform: translateY(-20px);
+          }
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+      @keyframes fadeOut {
+          from {
+              opacity: 1;
+              transform: translateY(0);
+          }
+          to {
+              opacity: 0;
+              transform: translateY(-20px);
+          }
+      }
+    </style>
   </head>
 
   <body>
+
+    <div id="toast-wrapper"></div>
     <!-- Tour Operator Dashboard -->
     <div class="dashboard-container">
 
@@ -676,10 +724,6 @@
                       <p class="price">₱ {{ guide.price }}</p>
                       <p>Guide Pofile:{{ "Active" if guide.active else "Inactive" }}</p>
                       <p>Account:{{ "Active" if guide.account_status else "Inactive" }}</p>
-                      <form method="POST" action="{{ url_for('touroperator.toggle_tour_guide_status', id=guide.id) }}">
-                      <button class="status-btn {{ 'deactivate' if guide.active else '' }}">
-                      {{ 'Deactivate Profile' if guide.active else 'Activate Profile' }}
-                      </button>
                       </form>
                       <form method="POST" action="{{ url_for('touroperator.toggle_guide_account_status', id=guide.id) }}">
                         <button class="status-btn {{ 'deactivate' if guide.account_status else '' }}">

@@ -279,13 +279,11 @@ def create_tourguide():
             send_confirmation_email(new_tourguide_user)
 
             # Success message and redirect
-            flash('Tour Guide account created successfully!', 'success')
+            flash('Account Created! Check Email to Confirm Account', 'success')
             return redirect(url_for('touroperator.touroperator_dashboard'))
 
         except Exception as e:
-            # Rollback in case of error and log for debugging
             db.session.rollback()
-            # flash('An error occurred while creating the account. Please try again.', 'danger')
             print(f"Database error: {e}")  # Debugging information
 
     # Render the tour operator dashboard with the form

@@ -67,8 +67,49 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // --- Toast Notification Logic ---
+    const showToast = (message, type = 'success') => {
+        const toastWrapper = document.getElementById('toast-wrapper');
+        if (!toastWrapper) return;
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        toast.innerText = message;
+
+        // Append toast to the wrapper
+        toastWrapper.appendChild(toast);
+
+        // Auto-remove toast after 5 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    };
+
     // --- Form Submission Logic ---
-    const operatorForm = document.getElementById("operator-form");
+    const operatorForm = document.getElementById('operator-form');
+
+    if (operatorForm) {
+        operatorForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Prevent default form submission for custom handling
+
+            // Fetch the operator's name from the form input
+            const operatorNameInput = operatorForm.querySelector('input[name="name"]');
+            const operatorName = operatorNameInput ? operatorNameInput.value : "Tour Operator";
+
+            // Show success toast message with the operator's name
+            showToast(`Tour Operator Account Created Successfully! Welcome, ${operatorName}!`, 'success');
+
+            // Close the modal
+            operatorModalWrapper.classList.remove('show');
+
+            // Submit the form programmatically
+            setTimeout(() => {
+                operatorForm.submit(); // Delay the submission to mimic alert effect
+            }, 300); // Half-second delay to ensure toast is displayed
+        });
+    }
+    })
 
     if (operatorForm) {
         operatorForm.addEventListener("submit", (e) => {
@@ -119,4 +160,3 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 500); // Half-second delay to mimic alert effect
         });
     }
-});

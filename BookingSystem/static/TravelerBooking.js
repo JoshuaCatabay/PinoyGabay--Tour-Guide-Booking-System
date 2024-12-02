@@ -877,13 +877,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             },
             onChange: function (selectedDates, dateStr, instance) {
                 // Date selection validation
-                const selectedDateStrings = selectedDates.map(date => date.toISOString().split('T')[0]);
+                const selectedDateStrings = selectedDates.map(date => date.toISOString().split('T')[1]);
   
                 console.log("Selected Dates:", selectedDateStrings);
   
                 // Check if any selected date is already booked
                 const invalidDates = selectedDateStrings.filter(date => bookedDates.includes(date));
-                if (invalidDates.length > 0) {
+                if (invalidDates.length > 1) {
                     alert(`The following dates are already booked and cannot be selected: ${invalidDates.join(', ')}`);
                     instance.clear(); // Clear the selection
                     return;

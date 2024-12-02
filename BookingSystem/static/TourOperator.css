@@ -847,14 +847,11 @@ textarea:focus {
 
 /* Tour Guide List Container */
 .tour-guide-list {
-  /* display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); */
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Display 5 items per row */
   gap: 15px;
   margin-top: 20px;
-  align-items: center;
-  /* background: red; */
+  justify-items: center; /* Center the items */
 }
 
 /* Tour Guide Card Styling */
@@ -869,7 +866,6 @@ textarea:focus {
   padding: 15px;
   transition: transform 0.2s ease;
   max-width: 200px;
-  /* justify-content: center; */
 }
 
 .tour-guide-card:hover {
