@@ -1,10 +1,10 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DecimalField, FormField, FieldList, FileField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, NumberRange
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length, NumberRange, Regexp
 from BookingSystem.models import User
 from wtforms.fields import FileField, DecimalField
 from flask_wtf.file import FileField, FileAllowed
-
+import re
 # # Sub-form for Estimated Price
 # class EstimatedPriceForm(FlaskForm):
 #     description = StringField('Price Description', validators=[DataRequired(), Length(max=100)])
@@ -47,11 +47,10 @@ def SpecialCharacterValidator(form, field):
         raise ValidationError('Password must contain at least one special character.')
     
 
-
 class UserTourGuideForm(FlaskForm):
     fname = StringField('First Name', validators=[DataRequired()])
     lname = StringField('Last Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(min=6, max=300)])
+    email = StringField('Email', validators=[DataRequired(), Length(min=6, max=300), Email(message="Invalid email format. Please include '@' and a valid domain."),] )
     contact_number = StringField('Contact Number', validators=[DataRequired()])
     password = PasswordField('Password', validators=[
         DataRequired(),
@@ -65,7 +64,11 @@ class UserTourGuideForm(FlaskForm):
     submit_tour_guide = SubmitField('Create Account')
 
     def validate_email(self, email):
+        # Additional regex validation for the presence of "@" symbol
+        if '@' not in email.data:
+            raise ValidationError('Email must contain "@" symbol.')
         # Check if the email is already used by a tour guide
         tour_guide = User.query.filter_by(email=email.data).first()
         if tour_guide:
             raise ValidationError('That email is already in use. Please choose a different one.')
+

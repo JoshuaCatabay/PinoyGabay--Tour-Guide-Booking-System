@@ -19,12 +19,12 @@
 
 </head>
   <body>
-    <!-- Navbar -->
+    {% if user_role != 'touroperator' %}
          <!-- Navbar -->
          <nav class="navbar">
           <div class="navbar-container">
               <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
-                  <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay.</span>
+                  <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
               </a>
               <div class="navbar-links">
                 <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
@@ -63,7 +63,14 @@
               </div>
           </div>
         </nav>
-
+        {% else %}
+        <!-- Back Button -->
+        <div style="padding: 10px;">
+          <a href="{{ url_for('touroperator.touroperator_dashboard') }}" class="back-button" style="text-decoration: none; font-size: 18px;">
+            &larr; Back to Dashboard
+          </a>
+        </div>
+       {% endif %}
 
 
         
@@ -94,8 +101,6 @@
         </div>
         
         
-          
-
           <!-- About Me -->
           <div class="about-me">
             <h2>About Me</h2>
@@ -160,7 +165,6 @@
             </div>
           
 <!-- Pagination Controls -->
-<!-- Pagination Controls -->
 {% if profile.pagination.total_pages > 1 %}
 <div class="pagination-container">
   <!-- First Page -->
@@ -192,6 +196,7 @@
         
 
 
+        {% if user_role != 'touroperator' %}
       <!-- Right Section: Sticky Booking Form -->
       <div class="right-column">
         <div class="booking-form">
@@ -238,6 +243,32 @@
           </form>
         </div>
       </div>
+
+      {% else %}
+      <!-- Availability Tab Pane -->
+      <div class="tab-pane" id="calendar">
+        <div class="availability-container">
+          <h2>Calendar Availability</h2>
+
+          <!-- Legend -->
+          <div class="calendar-legend">
+
+          </div>
+
+          <!-- Calendar -->
+          <div id="availability-calendar"></div>
+          <div class="form-section">
+            <label for="date-picker"><strong>Availability Calendar</strong></label>
+            <input
+                type="text"
+                id="date-picker"
+                name="date"
+                placeholder="View Availability Calendar"
+                data-tour-guide-id="{{ tour_guide.id }}"
+                readonly
+            />
+        </div>
+    {% endif %}
    
     <!-- Sticky Footer Booking Button -->
     <div class="footer-booking-bar" id="footer-booking-bar">

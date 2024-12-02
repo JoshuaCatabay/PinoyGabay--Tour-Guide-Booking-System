@@ -94,6 +94,13 @@ def update_statuses():
     #     db.session.add(guide_notification)
 
     # Update 'Ongoing' to 'Completed'
+
+
+
+
+
+
+    
     # Only generate notifications for automatic completions if the status is ongoing
     ongoing_bookings = Booking.query.filter(
         Booking.status == BookingStatus.STATUS_ONGOING.value,

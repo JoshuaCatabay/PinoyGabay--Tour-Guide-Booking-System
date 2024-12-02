@@ -1,20 +1,21 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tour Guide Dashboard - PinoyGabay</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='TourGuide.css') }}">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" /> 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"defer></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Guide Dashboard - PinoyGabay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='TourGuide.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet" /> 
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ url_for('static', filename='TourGuide.js') }}"defer></script>
+  </head>
 
-</head>
   <body>
     <div class="dashboard-container">
       <!-- Hamburger Menu -->
@@ -22,7 +23,11 @@
 
       <!-- Sidebar Navigation -->
       <nav class="side-nav" id="side-nav">
-        <h1>Dashboard</h1>
+        
+        <h2 style="color: azure;" >Dashboard</h2>
+        <hr>
+        <br>
+
         <ul>
           <li><a href="#" class="nav-link active" data-tab="profile">Profile</a></li>
           <li><a href="#" class="nav-link" data-tab="dashboard">My Bookings</a></li>
@@ -32,240 +37,264 @@
         </ul>
       </nav>
 
+      <div id="tgDeactivationModal" class="tg-modal-wrapper" data-show-modal="{{ 'true' if show_tg_deactivation_modal else 'false' }}" onclick="closeTGModal(event)">
+        <div class="tg-modal-content" onclick="event.stopPropagation()">
+            <div class="tg-modal-header">Operator Account Deactivated</div>
+            <div class="tg-modal-body">
+                Your associated Tour Operator's account is deactivated. You cannot proceed until it is reactivated. Please contact your Tour Operator for assistance.
+            </div>
+            <button class="tg-modal-close-btn" onclick="closeTGModal(event)">Close</button>
+        </div>
+      </div>
+
+      <div id="tgAccountStatusModal" class="tg-modal-wrapper" data-show-account-status="{{ 'true' if show_tg_status_modal else 'false' }}" onclick="closeTGAccountStatusModal(event)">
+        <div class="tg-modal-content" onclick="event.stopPropagation()"> <!-- Prevent modal close when clicking inside -->
+          <div class="tg-modal-header">Account Deactivated</div>
+          <div class="tg-modal-body">
+            Account Deactivated! Contact your Tour Operator for assistance.
+          </div>
+          <button class="tg-modal-close-btn" onclick="closeTGAccountStatusModal(event)">Close</button>
+        </div>
+      </div>
+
      <!-- Tab Content -->
       <div class="tab-content">
 
         <div class="tab-pane active" id="profile">
           <h2>Edit Profile</h2>
+          
           <hr>
+          <br>
 
           <div class="profile-overview">
-            <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic" />
+            <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.png')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic" />
+            
             <div class="profile-details">
-                <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>, Your Friendly Tour Guide</h2>
-                <div class="profile-stats">
-                    <!-- Star Rating -->
-                    <span class="rating">
-                        <span class="star-icon">★</span>
-                        <span class="rating-value">{{ profile.average_rating or 0 }}</span>
-                        <span class="review-count">({{ profile.review_count or 0 }} reviews)</span>
-                    </span>
-                    <!-- Separator -->
-                    <span class="separator">|</span>
-                    <!-- Total Completed Tours -->
-                    <span class="total-tours">
-                        {{ profile.total_tours or 0 }} <span class="tours">Completed Tours</span>
-                    </span>
-                </div>
+              <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>, Your Friendly Tour Guide</h2>
+              
+              <div class="profile-stats">
+                <!-- Star Rating -->
+                <span class="rating">
+                  <span class="star-icon">★</span>
+                  <span class="rating-value">{{ profile.average_rating or 0 }}</span>
+                  <span class="review-count">({{ profile.review_count or 0 }} reviews)</span>
+                </span>
+                <!-- Separator -->
+                <span class="separator">|</span>
+                <!-- Total Completed Tours -->
+                <span class="total-tours">
+                  {{ profile.total_tours or 0 }} <span class="tours">Completed Tours</span>
+                </span>
+              
+              </div>
             </div>
-        </div>
-        
-        
-          
-            <!-- <div class="dashboard-stats">
-              <div class="stat">
-                  <h3>Average Rating</h3>
-                  <p>{{ average_rating }} ★</p>
-              </div>
-              <div class="stat">
-                  <h3>Total Reviews</h3>
-                  <p>{{ review_count }}</p>
-              </div>
-          </div> -->
-          
-       
 
+          </div>
+        
           <!-- About Me Section -->
-        <!-- About Me Section -->
-        <div class="about-me">
-          <h2>
-            About Me
-            <button class="edit-btn" id="edit-about-btn">&#9998;</button>
-            <button class="save-btn hidden" id="save-about-btn">&#10003;</button>
-          </h2>
-          <textarea id="about-text" disabled>{{ bio }}</textarea>
-        </div>
-
-        <!-- Characteristics and Skills Section -->
-        <section class="why-choose-me-row">
-
-          <!-- Characteristics Box -->
-          <div class="characteristics-box">
-            <h3>
-              Characteristics 
-              <button class="edit-btn" id="edit-char-btn">&#9998;</button>
-              <button class="save-btn hidden" id="save-char-btn">&#10003;</button>
-            </h3>
-            <ul class="checklist" id="characteristics-list">
-              {% for characteristic in characteristics %}
-                <li>
-                  <span class="checkmark">&#10003;</span>
-                  <span class="editable" contenteditable="false">{{ characteristic }}</span>
-                  <button class="remove-btn hidden">&#8722;</button>
-                </li>
-              {% else %}
-                <li>No characteristics available</li>
-              {% endfor %}
-            </ul>      
-            <button class="add-btn hidden" id="add-char-btn">Add Characteristic</button>
+          <div class="about-me">
+            <h2>
+              About Me
+              <button class="edit-btn" id="edit-about-btn">&#9998;</button>
+              <button class="save-btn hidden" id="save-about-btn">&#10003;</button>
+            </h2>
+            <textarea id="about-text" disabled rows="3">{{ bio }}</textarea>
           </div>
 
-          <!-- Skills Box -->
-          <div class="skills-box">
-            <h3>
-              Skills 
-              <button class="edit-btn" id="edit-skills-btn">&#9998;</button>
-              <button class="save-btn hidden" id="save-skills-btn">&#10003;</button>
-            </h3>
-            <ul class="checklist" id="skills-list">
-              {% for skill in skills %}
-                <li>
-                  <span class="checkmark">&#10003;</span>
-                  <span class="editable" contenteditable="false">{{ skill }}</span>
-                  <button class="remove-btn hidden">&#8722;</button>
-                </li>
-              {% else %}
-                <li>No skills available</li>
-              {% endfor %}
-            </ul>
-            <button class="add-btn hidden" id="add-skills-btn">Add Skill</button>
-          </div>
+          <!-- Characteristics and Skills Section -->
 
-        </section>
+          <section class="why-choose-me-row">
 
+            <!-- Characteristics Box -->
+            <div class="characteristics-box">
+              <h3>
+                Characteristics 
+                <button class="edit-btn" id="edit-char-btn">&#9998;</button>
+                <button class="save-btn hidden" id="save-char-btn">&#10003;</button>
+              </h3>
+              <ul class="checklist" id="characteristics-list">
+                {% for characteristic in characteristics %}
+                  <li>
+                    <span class="checkmark">&#10003;</span>
+                    <span class="editable" contenteditable="false">{{ characteristic }}</span>
+                    <button class="remove-btn hidden">&#8722;</button>
+                  </li>
+                {% else %}
+                  <li>No characteristics available</li>
+                {% endfor %}
+              </ul>      
+              <button class="add-btn hidden" id="add-char-btn">Add Characteristic</button>
+            </div>
 
+            <!-- Skills Box -->
+            <div class="skills-box">
+              <h3>
+                Skills 
+                <button class="edit-btn" id="edit-skills-btn">&#9998;</button>
+                <button class="save-btn hidden" id="save-skills-btn">&#10003;</button>
+              </h3>
+              <ul class="checklist" id="skills-list">
+                {% for skill in skills %}
+                  <li>
+                    <span class="checkmark">&#10003;</span>
+                    <span class="editable" contenteditable="false">{{ skill }}</span>
+                    <button class="remove-btn hidden">&#8722;</button>
+                  </li>
+                {% else %}
+                  <li>No skills available</li>
+                {% endfor %}
+              </ul>
+              <button class="add-btn hidden" id="add-skills-btn">Add Skill</button>
+            </div>
 
-        <div class="container">
-          <h2>
+          </section>
+
+          
+          <!-- Traveler Reviews -->
+          <div class="container">
+
+            <h2>
               Traveler Reviews 
               <span class="total-reviews">({{ profile.review_count or 0 }})</span>
-          </h2>
-      
-          <div class="traveler-reviews">
+            </h2>
+        
+            <hr>
+            
+            <!-- My Reviews Section -->
+            <div id="reviews-container" class="traveler-reviews-grid">
               {% if reviews %}
-                  {% for review in reviews %}
+                {% for review in reviews %}
                   <div class="review-card">
-                      <img src="{{ review.tour_image }}" alt="Tour Picture" class="tour-image" />
-                      <div class="review-content">
-                          <div class="traveler-info">
-                              <img src="{{ review.traveler_profile }}" alt="Traveler Picture" class="traveler-pic" />
-                              <div class="traveler-details">
-                                  <h3>{{ review.traveler_name }}</h3>
-                                  <p class="tour-name">Tour Package</p>
-                                  <div class="ratings"><p>{{ review.rating }} ★</p></div>
-                              </div>
-                          </div>
-                          <p class="review-text">{{ review.comment }}</p>
-                          <div class="review-footer">
-                              <p class="review-date">{{ review.review_date }}</p>
-                              <p class="toured-by">Toured by: <span class="tour-guide-name">{{ current_user.first_name }} {{ current_user.last_name }}</span></p>
-                          </div>
+                    <img src="{{ review.tour_image }}" alt="Tour Image" class="tour-image" />
+                    <div class="review-content">
+
+                      <!-- Traveler Info Section -->
+                      <div class="traveler-info">
+                        <img src="{{ review.traveler_profile_img }}" alt="Traveler Picture" class="traveler-pic" />
+                        <div class="traveler-details">
+                          <h3>{{ review.traveler_name }}</h3>
+                          <p class="review-tour-package"><strong>{{ review.tour_package_name }}</strong></p>
+                          <div class="ratings">{{ review.rating }} ★</div>
+                        </div>
                       </div>
+
+                      <!-- Review Text Section -->
+                      <div class="review-text-container">
+                        <span class="quote-icon">&ldquo;</span>
+                        <p class="review-text">{{ review.comment }}</p>
+                      </div>
+
+                      <!-- Review Footer Section -->
+                      <div class="review-footer">
+                        <p class="review-date">{{ review.review_date }}</p>
+                        <p class="toured-by">Toured by: <span class="tour-guide-name">{{ review.guide_name }}</span></p>
+                      </div>
+                    </div>
                   </div>
-                  {% endfor %}
+                {% endfor %}
               {% else %}
-                  <p>No reviews yet.</p>
+                <p>No reviews submitted yet.</p>
               {% endif %}
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if profile.pagination.total_pages > 1 %}
+              <div class="pagination-container">
+    
+                <!-- First Page -->
+                <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
+
+                <!-- Previous Page -->
+                <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
+
+                <!-- Page Numbers -->
+                {% for page in range(1, profile.pagination.total_pages + 1) %}
+                  {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
+                    <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
+                  {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
+                    <span class="pagination-ellipsis">...</span>
+                  {% endif %}
+                {% endfor %}
+
+                <!-- Next Page -->
+                <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
+
+                <!-- Last Page -->
+                <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
+              </div>
+            {% endif %}
+
           </div>
-      <!-- Pagination Controls -->
-<!-- Pagination Controls -->
-{% if profile.pagination.total_pages > 1 %}
-<div class="pagination-container">
-  <!-- First Page -->
-  <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
-
-  <!-- Previous Page -->
-  <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
-
-  <!-- Page Numbers -->
-  {% for page in range(1, profile.pagination.total_pages + 1) %}
-  {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
-    <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
-  {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
-    <span class="pagination-ellipsis">...</span>
-  {% endif %}
-  {% endfor %}
-
-  <!-- Next Page -->
-  <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
-
-  <!-- Last Page -->
-  <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
-</div>
-{% endif %}
-
-        </div>
         </div>
        
-      <!-- Bookings Tab -->
-      <div class="tab-pane" id="dashboard">
-        <h2>My Tours</h2>
 
-        <!-- Notification Panel -->
-        <div class="notification-panel">
-          <h3>
-            Notifications
-            <span id="notification-count" class="notification-count">(0)</span>
-          </h3>
-          <ul id="notification-list" class="notification-list">
-            <li class="notification-item">No new notifications</li>
-          </ul>
-        </div>
-     
-          <h2>My Bookings</h2>
+        <!-- Bookings Tab -->
+        <div class="tab-pane" id="dashboard">
+          <h2>My Tours</h2>
 
-          <!-- Toggle Buttons for Categories -->
-          <div class="tour-toggle-buttons">
-            <button class="toggle-btn active" data-status="all">
-              All <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="upcoming">
-              Upcoming <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="ongoing">
-              Ongoing <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="completed">
-              Completed <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="cancelled">
-              Cancelled <span class="count">(0)</span>
-            </button>
-          </div>
+          <hr>
+          <br>
+
+          <!-- Notification Panel -->
+          <div class="notification-panel">
+            <h3>
+              Notifications
+              <span id="notification-count" class="notification-count">(0)</span>
+            </h3>
           
-          <!-- Bookings Container -->
-          <div class="tours-container">
-            {% for booking in bookings %}
-            <div class="tour-card" data-status="{{ booking.status }}" data-id="{{ booking.id }}">
-              <div class="status-label {{ booking.status|lower }}">{{ booking.status.capitalize() }}</div>
-              <div class="tour-header">
-                <h3 class="tour-title">{{ booking.selected_package.name }}</h3>
-                <span class="tour-status {{ booking.status }}">{{ booking.status }}</span>
-              </div>
-              <p class="tour-date">
-                {{ booking.date_start.strftime('%B %d, %Y') }}
-                {% if booking.date_start != booking.date_end %} -
-                {{ booking.date_end.strftime('%B %d, %Y') }}
-                {% endif %}
-              </p>
-              <div class="tour-header">
-                <p class="tour-guide">Traveler: 
-                  <span class="guide-name">
-                    {{ booking.traveler.first_name }} {{ booking.traveler.last_name }}
-                  </span>
-                </p>
-                {% if booking.status == 'ongoing' %}
-                <button class="complete-booking-btn" data-id="{{ booking.id }}">Mark as Completed</button>
-                {% endif %}
-              </div>
-              <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
+            <ul id="notification-list" class="notification-list">
+              <li class="notification-item empty">No new notifications</li>
+            </ul>
+          </div>
+
+          <div class="tours-section">
+            <h2>My Bookings</h2>
+            <br>
+            <hr>
+            <br>
+            <div class="tour-toggle-buttons">
+              <button class="toggle-btn active" data-status="all">All <span class="count">(0)</span></button>
+              <button class="toggle-btn" data-status="upcoming">Upcoming <span class="count">(0)</span></button>
+              <button class="toggle-btn" data-status="ongoing">Ongoing <span class="count">(0)</span></button>
+              <button class="toggle-btn" data-status="completed">Completed <span class="count">(0)</span></button>
+              <button class="toggle-btn" data-status="cancelled">Cancelled <span class="count">(0)</span></button>
             </div>
-            {% else %}
-            <p>No bookings available.</p>
-            {% endfor %}
+          
+            <div class="tours-scrollable-container">
+              <ul class="tours-list">
+                {% for booking in bookings %}
+                <li class="tour-card" data-status="{{ booking.status }}" data-id="{{ booking.id }}">
+                  <!-- Status and Tour Info -->
+                  <div class="tour-header-row">
+                    <div class="tour-info">
+                      <div class="status-label {{ booking.status|lower }}">{{ booking.status.capitalize() }}</div>
+                      <h3 class="tour-title">{{ booking.selected_package.name }}</h3>
+                      <p class="tour-date">
+                        {{ booking.date_start.strftime('%B %d, %Y') }}
+                        {% if booking.date_start != booking.date_end %} - {{ booking.date_end.strftime('%B %d, %Y') }}{% endif %}
+                      </p>
+                      <p class="tour-traveler">Traveler: 
+                        <span class="guide-name">{{ booking.traveler.first_name }} {{ booking.traveler.last_name }}</span>
+                      </p>
+                    </div>
+                    <!-- Buttons Section -->
+                    <div class="tour-actions">
+                      {% if booking.status == 'ongoing' %}
+                      <button class="complete-booking-btn" data-id="{{ booking.id }}">Mark as Completed</button>
+                      {% endif %}
+                      <button class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</button>
+                    </div>
+                  </div>
+                </li>
+                {% else %}
+                <p>No bookings available.</p>
+                {% endfor %}
+              </ul>
+            </div>
           </div>
           
-          
+
+          <!-- Booking Details Modal -->
           <div id="booking-details-modal" class="modal hidden">
             <div class="modal-content">
               <!-- Loader -->
@@ -353,243 +382,286 @@
           </div>
           
           
+        </div>
+
+        <!-- Availability Tab Pane -->
+        <div class="tab-pane" id="calendar">
+          
+          <div class="availability-container">
+            <h2>Manage Availability</h2>
+
+            <!-- Legend -->
+            <div class="calendar-legend">
+              <h4>Legend:</h4>
+              <ul>
+                <li><span class="legend-available"></span> Available</li>
+                <li><span class="legend-unavailable"></span> Unavailable</li>
+                <li><span class="legend-booked"></span> Booked</li>
+              </ul>
+            </div>
+
+            <!-- Calendar -->
+            <div id="availability-calendar"></div>
+
+            <!-- Calendar Controls -->
+            <div class="calendar-controls">
+              <button id="edit-availability" class="edit-mode-btn">Edit Availability</button>
+              <button id="mark-available" class="available-btn hidden">Mark Available</button>
+              <button id="reset-calendar" class="reset-btn hidden">Reset Calendar</button>
+              <button id="mark-unavailable" class="unavailable-btn hidden">Mark Unavailable</button>
+              <button id="save-availability" class="save-mode-btn hidden">Save Availability</button>
+            </div>
           </div>
-
-<!-- Availability Tab Pane -->
-<div class="tab-pane" id="calendar">
-  <div class="availability-container">
-    <h2>Manage Availability</h2>
-
-    <!-- Legend -->
-    <div class="calendar-legend">
-      <h4>Legend:</h4>
-      <ul>
-        <li><span class="legend-available"></span> Available</li>
-        <li><span class="legend-unavailable"></span> Unavailable</li>
-        <li><span class="legend-booked"></span> Booked</li>
-      </ul>
-    </div>
-
-    <!-- Calendar -->
-    <div id="availability-calendar"></div>
-
-    <!-- Calendar Controls -->
-    <div class="calendar-controls">
-      <button id="edit-availability" class="primary-btn">Edit Availability</button>
-      <button id="mark-available" class="available-btn hidden">Mark Available</button>
-      <button id="reset-calendar" class="reset-btn hidden">Reset Calendar</button>
-      <button id="mark-unavailable" class="unavailable-btn hidden">Mark Unavailable</button>
-      <button id="save-availability" class="primary-btn hidden">Save Availability</button>
-    </div>
-  </div>
-</div>
+        </div>
 
 
         <!-- Account Tab -->
         <div class="tab-pane active" id="account">
             
           <div class="account-card">
-            <h2 class="account-header">Account</h2> 
+            <h2 style="text-align: left;"> Account </h2>
+            <hr>
+            <br>
 
-            <!-- Profile Picture Upload -->
-            <div class="profile-overview">
-              <!-- Dynamically load profile picture from the backend -->
-              <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic" />
-
+            <div class="profile-overview" id="tourguide-profile-overview">
+              <div class="profile-pic-container">
+                <img 
+                  src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" 
+                  alt="Profile Picture" 
+                  class="profile-pic" 
+                  id="profile-pic" 
+                />
+            
+                <!-- Pencil Icon for editing -->
+                <button class="edit-pic-btn" id="change-pic-btn">&#9998;</button>
+              </div>
             
               <!-- Hidden file input for image upload -->
               <input type="file" id="upload-pic" class="hidden" />
             
-              <!-- Buttons for changing and saving the profile picture -->
-              <button class="primary-btn" id="change-pic-btn">Change Profile Picture</button>
-              <button class="primary-btn hidden" id="save-pic-btn">Save</button>
-            
-              <!-- Cropper Modal for adjusting the profile picture -->
+              <!-- Cropper Modal for adjusting and saving the profile picture -->
               <div id="cropper-modal" class="modal hidden">
                 <div class="modal-content">
                   <h3>Adjust Your Picture</h3>
                   <div id="cropper-container"></div>
-                  <button class="primary-btn" id="crop-btn">Apply Crop</button>
-                  <button class="primary-btn" id="close-cropper-modal">Close</button>
+                  <div class="modal-button-container">
+                    <button class="modal-confirm-btn" id="crop-and-save-btn">Crop and Save</button>
+                    <button class="modal-cancel-btn" id="close-cropper-modal">Close</button>
+                  </div>
                 </div>
               </div>
             </div>
+            
+            <!-- Name Section -->
+              <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }} {{ current_user.last_name }}</span> </h1>
 
-              <!-- Name Section -->
-                <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }} {{ current_user.last_name }}</span> </h1>
-
-              <!-- Price Section -->
-              <div class="input-group price-group">
-                <label for="price">
-                  Price per Tour:
-                  <button class="edit-btn" id="edit-price-btn">&#9998;</button>
-                  <button class="save-btn hidden" id="save-price-btn">&#10003;</button>
-                </label>
+            <!-- Price Section -->
+            <div class="input-group price-group">
+              <label for="price">
+                Price per Tour:
+                <button class="edit-btn" id="edit-price-btn">&#9998;</button>
+                <button class="save-btn hidden" id="save-price-btn">&#10003;</button>
+              </label>
                 
-                <!-- Display the current price from current_user.tour_guide -->
-                <h2 class="price-display" id="tour-price" 
-                    data-original-price="{{ '{:,.2f}'.format(current_user.tour_guide.price) if current_user.tour_guide.price else '1200.00' }}" 
-                    style="text-align: left;">
-                  ₱{{ '{:,.2f}'.format(current_user.tour_guide.price) if current_user.tour_guide.price else '1,200.00' }}
-                </h2>
+              <!-- Display the current price from current_user.tour_guide -->
+              <h2 class="price-display" id="tour-price" 
+                data-original-price="{{ '{:,.2f}'.format(current_user.tour_guide.price) if current_user.tour_guide.price else '1500.00' }}" 
+                style="text-align: left;">
+                ₱{{ '{:,.2f}'.format(current_user.tour_guide.price) if current_user.tour_guide.price else '1,500.00' }}
+              </h2>
                 
-                <!-- Editable input field for price -->
-                <input type="number" id="price-input" class="editable hidden" placeholder="Enter price" min="0" />
-              </div>
+              <!-- Editable input field for price -->
+              <input type="number" id="price-input" class="editable hidden" placeholder="Enter price" min="0" />
+            </div>
               
+            <h2>Contact Information</h2>
 
-              <h2>Contact Information</h2>
+            <!-- Email Section -->
+            <div class="input-group">
+              <label for="email">
+                Email 
+                <button class="edit-btn" id="guide-edit-email-btn">&#9998;</button>
+              </label>
+              <input type="email" id="email" value="{{ current_user.email }}" disabled /> 
+            </div>
 
-              <!-- Email Section -->
-              <div class="input-group">
-                <label for="email">
-                  Email 
-                  <button class="edit-btn" id="guide-edit-email-btn">&#9998;</button>
-                </label>
-                <input type="email" id="email" value="{{ current_user.email }}" disabled /> 
-              </div>
-
-              <!-- Contact Number Section -->
-              <div class="input-group">
-                <label for="contact-number">
-                  Contact Number
-                  <button class="edit-btn" id="guide-edit-contact-btn">&#9998;</button>
-                </label>
-                <input type="text" id="contact-number" value="{{current_user.tour_guide.contact_num }}" readonly />
-              </div>
+            <!-- Contact Number Section -->
+            <div class="input-group">
+              <label for="contact-number">
+                Contact Number
+                <button class="edit-btn" id="guide-edit-contact-btn">&#9998;</button>
+              </label>
+              <input type="text" id="contact-number" value="{{current_user.tour_guide.contact_num }}" disabled />
+            </div>
                   
-              <!-- Password Section -->
-              <div class="input-group">
-                <label for="current-password">
-                  Current Password
-                  <button class="edit-btn" id="guide-edit-password-btn">&#9998;</button>
-                </label>
-                <input type="password" id="current-password" placeholder="•••••••••" disabled />
-              </div>
+            <!-- Password Section -->
+            <div class="input-group">
+              <label for="current-password">
+                Current Password
+                <button class="edit-btn" id="guide-edit-password-btn">&#9998;</button>
+              </label>
+              <input type="password" id="current-password" placeholder="•••••••••" disabled />
+            </div>
 
-
-
-              <!-- Password Confirmation Modal -->
-              <div id="guide-password-confirm-modal" class="modal hidden">
-                <div class="modal-content">
-                    <h3>Enter Password</h3>
-                    <input type="password" id="guide-confirm-password-input" placeholder="Enter your password" />
-                    <div class="modal-button-container">
-                        <button class="cancel-btn" id="guide-password-cancel-btn">Cancel</button>
-                        <button class="confirm-btn" id="guide-password-confirm-btn">Confirm</button>
-                    </div>
+            <!-- Password Confirmation Modal -->
+            <div id="guide-password-confirm-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Enter Password</h3>
+                <input type="password" id="guide-confirm-password-input" placeholder="Enter your password" />
+                <div class="modal-button-container">
+                  <button class="modal-cancel-btn" id="guide-password-cancel-btn">Cancel</button>
+                  <button class="modal-confirm-btn" id="guide-password-confirm-btn">Confirm</button>
                 </div>
+              </div>
             </div>
             
 
-              <!-- Change Email Modal -->
-              <div id="guide-change-email-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h3>Change Email</h3>
-                  <label for="guide-new-email-input">New Email:</label>
-                  <input type="email" id="guide-new-email-input" placeholder="Enter new email" />
-                  <div class="modal-button-container">
-                    <button class="cancel-btn" id="guide-cancel-email-btn">Cancel</button>
-                    <button class="confirm-btn" id="guide-save-email-btn">Save Email</button>
-                  </div>
+            <!-- Change Email Modal -->
+            <div id="guide-change-email-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Change Email</h3>
+                <label for="guide-new-email-input">New Email:</label>
+                <input type="email" id="guide-new-email-input" placeholder="Enter new email" />
+                <div class="modal-button-container">
+                  <button class="modal-cancel-btn" id="guide-cancel-email-btn">Cancel</button>
+                  <button class="modal-confirm-btn" id="guide-save-email-btn">Save Email</button>
                 </div>
               </div>
+            </div>
 
-              <!-- Change Password Modal -->
-              <div id="guide-change-password-modal" class="modal hidden">
-                  <div class="modal-content">
-                      <h3>Change Password</h3>
-                      <label for="guide-new-password">New Password:</label>
-                      <input type="password" id="guide-new-password" placeholder="Enter new password" />
-                      <label for="guide-confirm-new-password">Confirm New Password:</label>
-                      <input type="password" id="guide-confirm-new-password" placeholder="Confirm new password" />
-                      <div class="modal-button-container">
-                          <button class="cancel-btn" id="guide-cancel-password-btn">Cancel</button>
-                          <button class="confirm-btn" id="guide-save-password-btn">Save Password</button>
-                      </div>
-                  </div>
+            <!-- Change Password Modal -->
+            <div id="guide-change-password-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Change Password</h3>
+                <label for="guide-new-password">New Password:</label>
+                <input type="password" id="guide-new-password" placeholder="Enter new password" />
+                
+                <label for="guide-confirm-new-password">Confirm New Password:</label>
+                <input type="password" id="guide-confirm-new-password" placeholder="Confirm new password" />
+                
+                <div class="modal-button-container">
+                  <button class="modal-cancel-btn" id="guide-cancel-password-btn">Cancel</button>
+                  <button class="modal-confirm-btn" id="guide-save-password-btn">Save Password</button>
+                </div>
+
               </div>
+            </div>
 
-              <!-- Change Contact Modal -->
-              <div id="guide-change-contact-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h3>Change Contact Number</h3>
-                  <label for="guide-new-contact-input">New Contact Number:</label>
-                  <input type="text" id="guide-new-contact-input" placeholder="Enter new contact number" />
-                  <div class="modal-button-container">
-                    <button class="cancel-btn" id="guide-cancel-contact-btn">Cancel</button>
-                    <button class="confirm-btn" id="guide-save-contact-btn">Save Contact</button>
-                  </div>
+            <!-- Change Contact Modal -->
+            <div id="guide-change-contact-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Change Contact Number</h3>
+                <label for="guide-new-contact-input">New Contact Number:</label>
+                <input type="text" id="guide-new-contact-input" placeholder="Enter new contact number" />
+                <div class="modal-button-container">
+                  <button class="modal-cancel-btn" id="guide-cancel-contact-btn">Cancel</button>
+                  <button class="modal-confirm-btn" id="guide-save-contact-btn">Save Contact</button>
                 </div>
               </div>
+            </div>
                           
-              <!-- Profile Visibility Toggle -->
-              <div class="account-section">
-                <h3>Profile Visibility</h3>
-                <label class="toggle-container">
-                  <span class="toggle-label" id="toggle-status">Inactive</span>
-                  <div class="toggle-switch" id="profile-toggle"></div>
-                </label>
-              </div>
+            <!-- Profile Visibility Toggle -->
+            <div class="account-section">
+              <h3>Profile Visibility</h3>
+              <label class="toggle-container">
+                <span class="toggle-label" id="toggle-status">Inactive</span>
+                <div class="toggle-switch" id="profile-toggle"></div>
+              </label>
+            </div>
 
-              <!-- Profile Activation Confirmation Modal -->
-              <div id="activation-confirmation-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h2>Complete Your Profile</h2>
-                  <p>To activate your profile and make it visible to travelers, please ensure the following details are fully updated:</p>
-                  <ul class="checklist">
-                    <li><span class="checkmark">&#10003;</span> Profile Picture</li>
-                    <li><span class="checkmark">&#10003;</span> Contact Number</li>
-                    <li><span class="checkmark">&#10003;</span> Email and Password</li>
-                    <li><span class="checkmark">&#10003;</span> Price per Tour</li>
-                    <li><span class="checkmark">&#10003;</span> About Me</li>
-                    <li><span class="checkmark">&#10003;</span> Characteristics and Skills</li>
-                  </ul>
-                  <div class="modal-button-container">
-                    <button id="cancel-activation-btn" class="cancel-btn">Cancel</button>
-                    <button id="confirm-complete-btn" class="primary-btn">Yes, Profile is Complete</button>
-                  </div>
+            <!-- Profile Activation Confirmation Modal -->
+            <div id="activation-confirmation-modal" class="modal hidden">
+              <div class="modal-content">
+                <h2>Complete Your Profile</h2>
+                <p>To activate your profile and make it visible to travelers, please ensure the following details are fully updated:</p>
+                <ul class="checklist">
+                  <li><span class="checkmark">&#10003;</span> Profile Picture</li>
+                  <li><span class="checkmark">&#10003;</span> Contact Number</li>
+                  <li><span class="checkmark">&#10003;</span> Email and Password</li>
+                  <li><span class="checkmark">&#10003;</span> Price per Tour</li>
+                  <li><span class="checkmark">&#10003;</span> About Me</li>
+                  <li><span class="checkmark">&#10003;</span> Characteristics and Skills</li>
+                </ul>
+
+                <div class="modal-button-container">
+                  <button id="cancel-activation-btn" class="cancel-btn">Cancel</button>
+                  <button id="confirm-complete-btn" class="primary-btn">Yes, Profile is Complete</button>
                 </div>
               </div>
+            </div>
                           
 
-              <!-- Account Deletion -->
-              <div class="account-section">
-                <h3>Account Settings</h3>
-                <button class="primary-btn delete-btn">Delete Account</button>
-              </div>
+
+          </div>
+        </div>
+
+        <!-- Logout Confirmation Modal -->
+        <div id="logout-modal" class="logout-modal hidden">
+          <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to log out?</p>
+            <div class="logout-button-container">
+              <button id="cancel-logout-btn" class="cancel-btn">Cancel</button>
+              <a href="{{ url_for('main.logout') }}">
+                <button id="confirm-logout-btn" class="logout-btn">Log Out</button>
+              </a>
             </div>
           </div>
         </div>
-    
-      </div>
 
-      <!-- Logout Confirmation Modal -->
-      <div id="logout-modal" class="logout-modal hidden">
+
+
+      </div>
+      <!-- Toast Message -->
+      <div id="toast-container"></div>
+
+      <!-- Confirmation Modal -->
+      <div id="confirmation-modal" class="hidden">
         <div class="modal-content">
-          <h3>Confirm Logout</h3>
-          <p>Are you sure you want to log out?</p>
-          <div class="logout-button-container">
-            <button id="cancel-logout-btn" class="secondary-btn">Cancel</button>
-            <a href="{{ url_for('main.logout') }}">
-            <button id="confirm-logout-btn" class="primary-btn">Log Out</button>
-            </a>
+          <p id="confirmation-message">Are you sure you want to remove this item?</p>
+          <div class="modal-actions">
+            <button id="confirm-yes" class="yes-btn">Yes</button>
+            <button id="confirm-no" class="no-btn">No</button>
           </div>
         </div>
       </div>
 
-      
+
       <!-- Modal Overlay Background -->
       <div id="activation-overlay" class="modal-overlay hidden"></div>
+      
       <!-- Modal Overlay -->
       <div class="modal-overlay" id="logout-overlay"></div>
 
       <!-- Modal Overlay -->
       <div id="modal-overlay" class="modal-overlay hidden"></div>
-
     
+    </div>
+    
+    <script>
+      // Function to close the modal and redirect to the main page
+        function closeTGAccountStatusModal(event) {
+          event.preventDefault(); // Prevent default behavior of the click
 
-  
-    <script src="{{ url_for('static', filename='TourGuide.js') }}"defer></script>
+          // Hide the modal
+          document.getElementById("tgAccountStatusModal").style.display = "none";
+
+          // Redirect to the main page
+          window.location.href = "/"; // Replace "/" with the correct URL if needed
+        }
+
+        // Wait for the DOM to load before running the script
+        document.addEventListener("DOMContentLoaded", () => { 
+          // Check the data attribute to see if the modal should be shown
+          const accountStatusModal = document.getElementById("tgAccountStatusModal");
+          const showAccountStatus = accountStatusModal.getAttribute("data-show-account-status");
+
+          if (showAccountStatus === "true") {
+              accountStatusModal.style.display = "flex";
+          }
+        });
+
+    </script>
   </body>
+
 </html>

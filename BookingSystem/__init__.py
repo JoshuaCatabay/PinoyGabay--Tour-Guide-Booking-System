@@ -34,7 +34,7 @@ def create_app():
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['SESSION_PROTECTION'] = 'strong'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
-    app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # Limit file size to 2MB
+    app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limit file size to 2MB
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/profile_pics')
 
 

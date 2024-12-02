@@ -108,26 +108,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 // Selecting elements
-const changePicBtn = document.getElementById('change-pic-btn');
-const uploadPicInput = document.getElementById('upload-pic');
-const profilePicOperator = document.getElementById('profile-pic-operator');
-const cropperModal = document.getElementById('cropper-modal');
-const cropperContainer = document.getElementById('cropper-container');
-const cropBtn = document.getElementById('crop-btn');
-const closeCropperBtn = document.getElementById('close-cropper-modal');
-const savePicBtn = document.getElementById('save-pic-btn');
+const profilePicOperator = document.getElementById('profile-pic-operator'); // Profile picture element
+const changePicBtn = document.getElementById('change-pic-btn'); // Button to change the picture
+const uploadPicInput = document.getElementById('upload-pic'); // Hidden file input
+const cropperModal = document.getElementById('cropper-modal'); // Modal for cropping
+const cropperContainer = document.getElementById('cropper-container'); // Container for the cropper
+const cropBtn = document.getElementById('crop-btn'); // Button to apply crop
+const closeCropperModal = document.getElementById('close-cropper-modal'); // Button to close the cropper modal
+const savePicBtn = document.getElementById('save-pic-btn'); // Button to save the cropped picture
+
 let cropper;
 
-// Hide "Save" button by default on page load
+// Ensure "Save" button is hidden on page load
 savePicBtn.classList.add('hidden');
 
-// Open file input on button click
+// Open the file input when clicking "Change Profile Picture" button
 changePicBtn.addEventListener('click', () => {
-  uploadPicInput.value = "";  // Reset file input to allow re-selection
+  uploadPicInput.value = ""; // Reset file input to allow re-selection
   uploadPicInput.click();
 });
 
-// Show cropper modal on image selection
+// Display the cropper modal and initialize the cropper after selecting an image
 uploadPicInput.addEventListener('change', (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -136,14 +137,13 @@ uploadPicInput.addEventListener('change', (event) => {
       const img = document.createElement('img');
       img.src = e.target.result;
       img.id = 'crop-image';
-      cropperContainer.innerHTML = ''; // Clear previous image
+      cropperContainer.innerHTML = ''; // Clear previous cropper content
       cropperContainer.appendChild(img);
-      cropperModal.classList.add('show'); // Show the cropper modal
+      cropperModal.classList.remove('hidden'); // Show the modal
 
-      // Destroy previous cropper instance if it exists, and create a new one
+      // Destroy existing cropper instance if any, then create a new one
       if (cropper) {
         cropper.destroy();
-        cropper = null;  // Ensure cropper is set to null after destruction
       }
       cropper = new Cropper(img, {
         aspectRatio: 1,
@@ -158,70 +158,57 @@ uploadPicInput.addEventListener('change', (event) => {
   }
 });
 
-// Crop and update profile picture preview
+// Apply the crop and preview the cropped image
 cropBtn.addEventListener('click', () => {
-  const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
-  if (canvas) {
-    // Update profile picture preview
-    const newImageSrc = canvas.toDataURL();
-    profilePicOperator.src = newImageSrc;
-
-    cropperModal.classList.remove('show'); // Close modal
-    savePicBtn.classList.remove('hidden'); // Show save button only after cropping
-  } else {
-    console.error("Error: Cropping failed. Canvas is not generated.");
+  if (cropper) {
+    const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
+    if (canvas) {
+      const newImageSrc = canvas.toDataURL(); // Get the cropped image data URL
+      profilePicOperator.src = newImageSrc; // Update the profile picture preview
+      savePicBtn.classList.remove('hidden'); // Show the "Save" button
+      cropperModal.classList.add('hidden'); // Hide the modal
+    }
   }
 });
 
-// Close cropper modal and destroy cropper instance
-closeCropperBtn.addEventListener('click', () => {
+// Close the cropper modal and destroy the cropper instance
+closeCropperModal.addEventListener('click', () => {
   if (cropper) {
     cropper.destroy();
-    cropper = null;  // Set cropper to null to ensure clean reinitialization
+    cropper = null; // Reset cropper instance
   }
-  cropperModal.classList.remove('show');
+  cropperModal.classList.add('hidden'); // Hide the modal
 });
 
-// Save profile picture to backend
+// Save the cropped image to the backend
 savePicBtn.addEventListener('click', () => {
-  cropper.getCroppedCanvas({ width: 200, height: 200 }).toBlob((blob) => {
-    const formData = new FormData();
-    formData.append('profile_picture', blob);
+  if (cropper) {
+    cropper.getCroppedCanvas({ width: 200, height: 200 }).toBlob((blob) => {
+      const formData = new FormData();
+      formData.append('profile_picture', blob, 'profile.jpg');
 
-    console.log("Uploading profile picture...");
-
-    fetch('/tourguide/upload_profile_picture', {  // Updated URL for tour operator
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log("Server response:", data);
-
-      if (data.success) {
-        // Append a timestamp to prevent caching issues and update the profile picture in the UI
-        const newImageUrl = `${data.url}?t=${new Date().getTime()}`;
-        profilePicOperator.src = newImageUrl;
-
-        savePicBtn.classList.add('hidden'); // Hide save button after saving
-        alert('Profile picture saved successfully!');
-      } else {
-        alert('Failed to save profile picture.');
-      }
-    })
-    .catch(error => {
-      console.error('Error uploading image:', error);
-      alert('An error occurred while saving the picture.');
-    })
-    .finally(() => {
-      // Ensure the cropper instance is destroyed after saving
-      if (cropper) {
-        cropper.destroy();
-        cropper = null;
-      }
-      cropperModal.classList.remove('show');
+      fetch('/tourguide/upload_profile_picture', { // Update the endpoint as needed
+        method: 'POST',
+        body: formData,
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Prevent caching issues by appending a timestamp
+            const newImageUrl = `${data.url}?t=${new Date().getTime()}`;
+            profilePicOperator.src = newImageUrl;
+            savePicBtn.classList.add('hidden'); // Hide the save button
+            alert('Profile picture updated successfully!');
+          } else {
+            alert('Failed to save profile picture.');
+          }
+        })
+        .catch(error => {
+          console.error('Error uploading image:', error);
+          alert('An error occurred while saving the picture.');
+        });
     });
-  });
+  }
 });
 
 
@@ -449,78 +436,92 @@ document.addEventListener('DOMContentLoaded', function () {
   const guideSaveContactBtn = document.getElementById('guide-save-contact-btn');
   const guideCancelContactBtn = document.getElementById('guide-cancel-contact-btn');
   const modalOverlay = document.getElementById('modal-overlay');
-  
+
   let activeAction = ''; // Track the current action: 'email', 'contact', or 'password'
 
-  // Function to show the password confirmation modal with overlay
+  // Validation Functions
+  function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  function isValidPassword(password) {
+    if (password.length < 8) return 'Password must be at least 8 characters long.';
+    if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.';
+    if (!/[0-9]/.test(password)) return 'Password must contain at least one number.';
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return 'Password must contain at least one special character.';
+    return ''; // Valid password
+  }
+
+  function isValidContactNumber(contactNumber) {
+    const contactRegex = /^\d{11}$/;
+    return contactRegex.test(contactNumber);
+  }
+
+  // Open the password confirmation modal with overlay
   function openGuidePasswordModal(action) {
-      activeAction = action;
-      guidePasswordModal.classList.add('show');
-      modalOverlay.classList.add('show');
+    activeAction = action;
+    guidePasswordModal.classList.add('show');
+    modalOverlay.classList.add('show');
   }
 
-  // Function to close the password modal
+  // Close the password modal
   function closeGuidePasswordModal() {
-      guidePasswordModal.classList.remove('show');
-      modalOverlay.classList.remove('show');
-      verifyPasswordInput.value = ''; // Clear password input field
+    guidePasswordModal.classList.remove('show');
+    modalOverlay.classList.remove('show');
+    verifyPasswordInput.value = ''; // Clear password input field
   }
 
-  // Function to show the specific modal based on action
+  // Open the specific modal based on action
   function openActionModal() {
-      if (activeAction === 'email') {
-          guideChangeEmailModal.classList.add('show');
-      } else if (activeAction === 'contact') {
-          guideChangeContactModal.classList.add('show');
-      } else if (activeAction === 'password') {
-          guideChangePasswordModal.classList.add('show');
-      }
-      modalOverlay.classList.add('show');
+    if (activeAction === 'email') {
+      guideChangeEmailModal.classList.add('show');
+    } else if (activeAction === 'contact') {
+      guideChangeContactModal.classList.add('show');
+    } else if (activeAction === 'password') {
+      guideChangePasswordModal.classList.add('show');
+    }
+    modalOverlay.classList.add('show');
   }
 
-  // Function to close all action modals
+  // Close all action modals
   function closeActionModals() {
-      guideChangeEmailModal.classList.remove('show');
-      guideChangeContactModal.classList.remove('show');
-      guideChangePasswordModal.classList.remove('show');
-      modalOverlay.classList.remove('show');
-      newPasswordInput.value = '';
-      confirmNewPasswordInput.value = '';
+    guideChangeEmailModal.classList.remove('show');
+    guideChangeContactModal.classList.remove('show');
+    guideChangePasswordModal.classList.remove('show');
+    modalOverlay.classList.remove('show');
+    newPasswordInput.value = '';
+    confirmNewPasswordInput.value = '';
   }
 
-  // Open the password verification modal on edit email, contact, or password button click
+  // Open the password verification modal
   guideEditEmailBtn.addEventListener('click', () => openGuidePasswordModal('email'));
   guideEditContactBtn.addEventListener('click', () => openGuidePasswordModal('contact'));
   guideEditPasswordBtn.addEventListener('click', () => openGuidePasswordModal('password'));
 
-  // Close the password verification modal on cancel button click
+  // Close the password verification modal
   guidePasswordCancelBtn.addEventListener('click', closeGuidePasswordModal);
 
-  // Verify password and open the appropriate modal if successful
+  // Verify password and open the appropriate modal
   guidePasswordConfirmBtn.addEventListener('click', async () => {
     const password = verifyPasswordInput.value.trim();
 
     try {
-      // Send request to verify the password
       const response = await fetch('/tourguide/verify_password', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ password: password })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
       });
 
       const result = await response.json();
 
-      console.log("Password verification result:", result); // Debugging output
-
       if (result.success) {
-          // Password is verified, close password modal and open the respective modal
-          closeGuidePasswordModal();
-          alert("Password verified successfully!"); // Show verification success message
-          openActionModal(); // Only open the action modal if verification is successful
+        closeGuidePasswordModal();
+        alert('Password verified successfully!');
+        openActionModal();
       } else {
-          alert(result.message || 'Password verification failed. Please try again.');
+        alert(result.message || 'Password verification failed. Please try again.');
       }
     } catch (error) {
       console.error('Error verifying password:', error);
@@ -528,37 +529,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Close the email and contact modals on cancel buttons
-  guideCancelEmailBtn.addEventListener('click', closeActionModals);
-  guideCancelContactBtn.addEventListener('click', closeActionModals);
-  guideCancelPasswordBtn.addEventListener('click', closeActionModals);
-
-  // Save the updated email to the backend
+  // Save the updated email
   guideSaveEmailBtn.addEventListener('click', async () => {
     const newEmail = document.getElementById('guide-new-email-input').value.trim();
 
-    if (!newEmail || !newEmail.includes('@')) {
-        alert('Please enter a valid email address.');
-        return;
+    if (!isValidEmail(newEmail)) {
+      alert('Invalid email format. Please include "@" and a valid domain.');
+      return;
     }
 
     try {
       const response = await fetch('/tourguide/update_email', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email: newEmail })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newEmail }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-          emailInput.value = newEmail; // Update displayed email
-          closeActionModals();
-          alert('Email updated successfully!');
+        emailInput.value = newEmail;
+        closeActionModals();
+        alert('Email updated successfully!');
       } else {
-          alert(result.message || 'Failed to update email. Please try again.');
+        alert(result.message || 'Failed to update email.');
       }
     } catch (error) {
       console.error('Error updating email:', error);
@@ -566,32 +560,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Save the updated contact number to the backend
+  // Save the updated contact number
   guideSaveContactBtn.addEventListener('click', async () => {
-    const newContactNumber = guideNewContactInput.value.trim();
+    const newContact = guideNewContactInput.value.trim();
 
-    if (!newContactNumber || isNaN(newContactNumber) || newContactNumber.length < 11) {
-        alert('Please enter a valid contact number.');
-        return;
+    if (!isValidContactNumber(newContact)) {
+      alert('Contact number must be exactly 11 digits.');
+      return;
     }
 
     try {
       const response = await fetch('/touroperator/update_contact_number', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ contact_number: newContactNumber })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contact_number: newContact }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-          contactNumberInput.value = newContactNumber; // Update displayed contact number
-          closeActionModals();
-          alert('Contact number updated successfully!');
+        contactNumberInput.value = newContact;
+        closeActionModals();
+        alert('Contact number updated successfully!');
       } else {
-          alert(result.message || 'Failed to update contact number. Please try again.');
+        alert(result.message || 'Failed to update contact number.');
       }
     } catch (error) {
       console.error('Error updating contact number:', error);
@@ -599,40 +591,39 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Save the new password to the backend
+  // Save the new password
   guideSavePasswordBtn.addEventListener('click', async () => {
     const newPassword = newPasswordInput.value.trim();
     const confirmNewPassword = confirmNewPasswordInput.value.trim();
 
-    // Validate the new password inputs
     if (!newPassword || !confirmNewPassword) {
       alert('Please fill out all password fields.');
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      alert('New passwords do not match.');
+      alert('Passwords do not match.');
       return;
     }
-    if (newPassword.length < 8) {
-      alert('New password should be at least 8 characters long.');
+    const passwordError = isValidPassword(newPassword);
+    if (passwordError) {
+      alert(passwordError);
       return;
     }
 
     try {
-      // Send a request to update the password
       const response = await fetch('/tourguide/update_password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_password: newPassword })
+        body: JSON.stringify({ new_password: newPassword }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        alert('Password updated successfully!');
-        closeActionModals(); // Close the modal on success
+        alert('Password changed successfully!');
+        closeActionModals();
       } else {
-        alert(result.message || 'Failed to update password. Please try again.');
+        alert(result.message || 'Failed to update password.');
       }
     } catch (error) {
       console.error('Error updating password:', error);
@@ -640,6 +631,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+
 
 
 
@@ -1542,13 +1534,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-function redirectToProfile(guideId) {
-  window.location.href = `/tourguide/profile/${guideId}`;
-}
-
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
   const toggleButtons = document.querySelectorAll('.toggle-btn');
   const bookingRows = document.querySelectorAll('.booking-row');
@@ -1725,81 +1710,77 @@ packageData.itineraries.forEach(itinerary => {
 });
 
 
-
-
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
-  const NOTIFICATIONS_URL = '/notifications';
-  const notificationList = document.getElementById('notification-list');
-  const notificationCount = document.getElementById('notification-count');
+  const OPERATOR_NOTIFICATIONS_URL = '/notifications/operator';
+  const operatorNotificationList = document.getElementById('operator-notification-list');
+  const operatorNotificationCount = document.getElementById('operator-notification-count');
 
-  // Fetch notifications
-  async function fetchNotifications() {
+  // Fetch operator notifications
+  async function fetchOperatorNotifications() {
     try {
-      const response = await fetch(`${NOTIFICATIONS_URL}/`);
-      if (!response.ok) throw new Error('Failed to fetch notifications');
-  
+      const response = await fetch(OPERATOR_NOTIFICATIONS_URL);
+      if (!response.ok) throw new Error('Failed to fetch operator notifications');
+
       const data = await response.json();
-      console.log('Fetched Notifications:', data); // Debugging
-  
-      notificationList.innerHTML = ''; // Clear old notifications
-  
+      console.log('Fetched Operator Notifications:', data);
+
+      operatorNotificationList.innerHTML = ''; // Clear old notifications
+
       if (data.notifications.length === 0) {
-        notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+        operatorNotificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+        operatorNotificationCount.textContent = `(0)`; // Update count to 0
       } else {
+        operatorNotificationCount.textContent = `(${data.notifications.length})`; // Update count dynamically
         data.notifications.forEach(notification => {
-          console.log(`Processing Notification: ${notification.message}`); // Debugging
-  
-          notificationList.innerHTML += `
-            <li class="notification-item" data-id="${notification.id}">
-              ${notification.message}
-              <button class="notification-btn" onclick="viewNotificationDetails('Booking #${notification.id}')">View</button>
+          operatorNotificationList.innerHTML += `
+            <li class="notification-item clickable" data-id="${notification.id}">
+              <div>
+                ${notification.message} <span class="timestamp">${notification.created_at}</span>
+              </div>
             </li>
           `;
         });
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error fetching operator notifications:', error);
     }
   }
-  
 
   // Fetch notification count
-  async function fetchNotificationCount() {
+  async function fetchOperatorNotificationCount() {
     try {
-      const response = await fetch(`${NOTIFICATIONS_URL}/count`);
-      if (!response.ok) throw new Error('Failed to fetch notification count');
+      const response = await fetch(`${OPERATOR_NOTIFICATIONS_URL}/count`);
+      if (!response.ok) throw new Error('Failed to fetch operator notification count');
 
       const data = await response.json();
-      const count = data.count || 0;
-      notificationCount.textContent = `(${count})`;
+      operatorNotificationCount.textContent = `(${data.count || 0})`;
     } catch (error) {
-      console.error('Error fetching notification count:', error);
+      console.error('Error fetching operator notification count:', error);
     }
   }
 
-  // Event delegation for marking notifications as read
-  notificationList.addEventListener('click', async (e) => {
+  // Mark notification as read when clicking the notification
+  operatorNotificationList.addEventListener('click', async (e) => {
     const notificationItem = e.target.closest('.notification-item');
     if (!notificationItem) return;
 
     const notificationId = notificationItem.getAttribute('data-id');
     try {
-      const response = await fetch(`${NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
+      const response = await fetch(`${OPERATOR_NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
       if (!response.ok) throw new Error('Failed to mark notification as read');
 
-      notificationItem.remove(); // Remove from the list
-      const count = parseInt(notificationCount.textContent.replace(/[()]/g, ''), 10);
-      notificationCount.textContent = `(${Math.max(count - 1, 0)})`;
+      notificationItem.remove(); // Remove the notification from the list
 
-      // Display "No new notifications" if list is empty
-      if (notificationList.children.length === 0) {
-        notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+      // Update the count
+      const count = parseInt(operatorNotificationCount.textContent.replace(/[()]/g, ''), 10);
+      operatorNotificationCount.textContent = `(${Math.max(count - 1, 0)})`;
+
+      // Display "No new notifications" if the list is empty
+      if (operatorNotificationList.children.length === 0) {
+        operatorNotificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
       }
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -1807,11 +1788,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Fetch notifications and count on page load
-  fetchNotifications();
-  fetchNotificationCount();
+  fetchOperatorNotifications();
+  fetchOperatorNotificationCount();
+});
 
-  // Placeholder function for the "View" button
-  window.viewNotificationDetails = (detail) => {
-    alert(`View details for: ${detail}`);
-  };
+
+function redirectToProfile(guideId) {
+  if (guideId) {
+    window.location.href = `/tourguide/profile/${guideId}`;
+  } else {
+    console.error("Guide ID is missing.");
+  }
+}
+
+
+// Deactivated Account Modal
+// Function to close the modal and redirect to the main page
+function closeCustomModal(event) {
+  event.preventDefault(); // Prevent default behavior of the click
+
+  // Hide the modal
+  document.getElementById("deactivationCustomModal").style.display = "none";
+
+  // Redirect to the main page
+  window.location.href = "/"; // Replace "/" with the correct URL if needed
+}
+
+// Wait for the DOM to load before running the script
+document.addEventListener("DOMContentLoaded", () => {
+  // Check the data attribute to see if the modal should be shown
+  const modal = document.getElementById("deactivationCustomModal");
+  const showModal = modal.getAttribute("data-show-modal");
+
+  if (showModal === "true") {
+      modal.style.display = "flex";
+  }
 });

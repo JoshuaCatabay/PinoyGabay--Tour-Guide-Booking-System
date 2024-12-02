@@ -29,7 +29,7 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(15), nullable=False)  # admin, tour operator, tour guide
     last_name = db.Column(db.String(50))
     first_name = db.Column(db.String(50))
-    profile_img = db.Column(db.String(225), default='default.jpg')
+    profile_img = db.Column(db.String(225), default='static\profile_pics\default.png')
     nationality = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -135,6 +135,7 @@ class TourOperator(db.Model, UserMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id', ondelete='CASCADE'),unique=True, nullable=False)
     municipal = db.Column(db.String(100))
     contact_num = db.Column(db.String(15))
+    tp_active = db.Column(db.Boolean, default=True)
 
     # Relationships
     tour_guides = db.relationship('TourGuide', backref='tour_operator', cascade="all, delete-orphan")
@@ -203,6 +204,7 @@ class TourGuide(db.Model, UserMixin):
     specialization = db.Column(db.String(255))
     contact_num = db.Column(db.String(15))
     active = db.Column(db.Boolean, default=False)
+    account_status = db.Column(db.Boolean, default=True)
     
     # Relationships
     characteristics = db.relationship('Characteristic', backref='tour_guide', cascade="all, delete-orphan")
@@ -267,7 +269,7 @@ class Characteristic(db.Model):
         # {'schema': 'public'},
     )
     id = db.Column(db.Integer, primary_key=True)
-    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
+    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id', ondelete='CASCADE'), nullable=False)
     characteristic = db.Column(db.String(100))
 
 
@@ -278,7 +280,7 @@ class Skill(db.Model):
         # {'schema': 'public'},
     )
     id = db.Column(db.Integer, primary_key=True)
-    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
+    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id', ondelete='CASCADE'), nullable=False)
     skill = db.Column(db.String(100))
 
 
@@ -292,10 +294,13 @@ class Availability(db.Model):
     __table_args__ = (
         db.Index('idx_availability_tguide_id', 'tguide_id'),
         db.Index('idx_availability_date', 'availability_date'),
+        db.UniqueConstraint('tguide_id', 'availability_date', name='uq_tguide_date')
     )
 
+
     id = db.Column(db.Integer, primary_key=True)
-    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
+    booked_by = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=True)
+    tguide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id', ondelete='CASCADE'), nullable=False)
     availability_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False, default=AvailabilityStatus.AVAILABLE.value)
 
@@ -390,8 +395,8 @@ class Booking(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=True)
-    tour_guide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id'), nullable=False)
-    package_id = db.Column(db.Integer, db.ForeignKey('TourPackage.id'), nullable=False)
+    tour_guide_id = db.Column(db.Integer, db.ForeignKey('Tour_Guide.id', ondelete='CASCADE'), nullable=False)
+    package_id = db.Column(db.Integer, db.ForeignKey('TourPackage.id'), nullable=True)
     status = db.Column(db.String(15), nullable=False, default=BookingStatus.STATUS_UPCOMING.value)
     date_start = db.Column(db.Date)
     date_end = db.Column(db.Date)
@@ -421,8 +426,8 @@ class Notification(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)  # User receiving the notification
-    booking_id = db.Column(db.Integer, db.ForeignKey('Booking.id', ondelete="CASCADE"), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=True)  # User receiving the notification
+    booking_id = db.Column(db.Integer, db.ForeignKey('Booking.id', ondelete="CASCADE"), nullable=False)
     role = db.Column(db.String(15), nullable=False)  # Role of the user (traveler, guide, operator)
     message = db.Column(db.String(255), nullable=False)
     is_read = db.Column(db.Boolean, default=False)

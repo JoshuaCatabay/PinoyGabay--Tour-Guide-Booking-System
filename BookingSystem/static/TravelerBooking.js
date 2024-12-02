@@ -824,72 +824,91 @@ document.addEventListener('DOMContentLoaded', async function () {
 // });
 
 document.addEventListener('DOMContentLoaded', async function () {
-  const datePicker = document.getElementById('date-picker');
-
-  // Function to extract the tour guide ID from the URL
-  function getTourGuideIdFromPath() {
-      const pathParts = window.location.pathname.split('/');
-      return pathParts[pathParts.length - 1];
-  }
-
-  const tourGuideId = getTourGuideIdFromPath();
-
-  if (!tourGuideId) {
-      console.error("Tour Guide ID not found in URL path.");
-      return;
-  }
-
-  if (!datePicker) {
-      console.error("Date picker input element not found.");
-      return;
-  }
-
-  try {
-      // Fetch availability data from the server
-      const response = await fetch(`/tourguide/get_availability/${tourGuideId}`);
-      if (!response.ok) throw new Error(`Failed to fetch availability for Tour Guide ID: ${tourGuideId}`);
-      
-      const availabilityData = await response.json();
-      console.log("Availability Data:", availabilityData);
-
-      // Filter available dates from the response
-      const availableDates = availabilityData
-          .filter(entry => entry.status === 'available')
-          .map(entry => entry.date);
-
-      // Initialize the Flatpickr date picker with only the available dates enabled
-      flatpickr(datePicker, {
-          mode: "range", // Allows range selection
-          dateFormat: "Y-m-d", // Format for submission
-          altInput: true, // Enables an alternative display format
-          altFormat: "M. j, Y", // Readable format for users
-          minDate: "today", // Disable past dates
-          enable: availableDates, // Restrict selection to available dates
-          locale: {
-              rangeSeparator: " → ", // Separator between start and end dates
-          },
-          onChange: function (selectedDates, dateStr, instance) {
-              // Date selection validation
-              if (selectedDates.length === 2) {
-                  const startDate = selectedDates[0];
-                  const endDate = selectedDates[1];
-
-                  console.log("Start Date:", startDate);
-                  console.log("End Date:", endDate);
-
-                  if (startDate > endDate) {
-                      alert("Invalid date range. End date cannot be before start date.");
-                      instance.clear(); // Clear the selection
-                  }
-              } else if (selectedDates.length === 1) {
-                  console.log("Single-day booking selected:", selectedDates[0]);
-              }
-          }
-      });
-  } catch (error) {
-      console.error("Error fetching or processing availability data:", error);
-  }
-});
+    const datePicker = document.getElementById('date-picker');
+  
+    // Function to extract the tour guide ID from the URL
+    function getTourGuideIdFromPath() {
+        const pathParts = window.location.pathname.split('/');
+        return pathParts[pathParts.length - 1];
+    }
+  
+    const tourGuideId = getTourGuideIdFromPath();
+  
+    if (!tourGuideId) {
+        console.error("Tour Guide ID not found in URL path.");
+        return;
+    }
+  
+    if (!datePicker) {
+        console.error("Date picker input element not found.");
+        return;
+    }
+  
+    try {
+        // Fetch availability data from the server
+        const response = await fetch(`/tourguide/get_availability/${tourGuideId}`);
+        if (!response.ok) throw new Error(`Failed to fetch availability for Tour Guide ID: ${tourGuideId}`);
+        
+        const availabilityData = await response.json();
+        console.log("Availability Data:", availabilityData);
+  
+        // Filter available and booked dates from the response
+        const availableDates = availabilityData
+            .filter(entry => entry.status === 'available')
+            .map(entry => entry.date);
+  
+        const bookedDates = availabilityData
+            .filter(entry => entry.status === 'booked')
+            .map(entry => entry.date);
+  
+        console.log("Available Dates:", availableDates);
+        console.log("Booked Dates:", bookedDates);
+  
+        // Initialize the Flatpickr date picker
+        flatpickr(datePicker, {
+            mode: "range", // Allows range selection
+            dateFormat: "Y-m-d", // Format for submission
+            altInput: true, // Enables an alternative display format
+            altFormat: "M. j, Y", // Readable format for users
+            minDate: "today", // Disable past dates
+            enable: availableDates, // Restrict selection to only available dates
+            locale: {
+                rangeSeparator: " → ", // Separator between start and end dates
+            },
+            onChange: function (selectedDates, dateStr, instance) {
+                // Date selection validation
+                const selectedDateStrings = selectedDates.map(date => date.toISOString().split('T')[0]);
+  
+                console.log("Selected Dates:", selectedDateStrings);
+  
+                // Check if any selected date is already booked
+                const invalidDates = selectedDateStrings.filter(date => bookedDates.includes(date));
+                if (invalidDates.length > 0) {
+                    alert(`The following dates are already booked and cannot be selected: ${invalidDates.join(', ')}`);
+                    instance.clear(); // Clear the selection
+                    return;
+                }
+  
+                // Handle valid date range
+                if (selectedDates.length === 2) {
+                    const startDate = selectedDates[0];
+                    const endDate = selectedDates[1];
+  
+                    console.log("Start Date:", startDate);
+                    console.log("End Date:", endDate);
+  
+                    if (startDate > endDate) {
+                        alert("Invalid date range. End date cannot be before start date.");
+                        instance.clear(); // Clear the selection
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching or processing availability data:", error);
+    }
+  });
+  
 
 
 // document.addEventListener('DOMContentLoaded', () => {

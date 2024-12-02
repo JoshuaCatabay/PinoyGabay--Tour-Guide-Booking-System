@@ -32,7 +32,14 @@ def SpecialCharacterValidator(form, field):
 # Define the form
 class UserTourOperatorForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(min=6, max=300)])
+    email = StringField(
+        'Email',
+        validators=[
+            DataRequired(),
+            Email(message="Invalid email format. Please include '@' and a valid domain."),
+            Length(min=6, max=300)
+        ]
+    )
     password = PasswordField('Password', validators=[
         DataRequired(),
         Length(min=8, message='Password must be at least 8 characters long.'),
@@ -41,12 +48,19 @@ class UserTourOperatorForm(FlaskForm):
         DigitalValidator,
         SpecialCharacterValidator
     ])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message="Passwords must match.")])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(),
+        EqualTo('password', message="Passwords must match.")
+    ])
     contact_number = StringField('Contact Number', validators=[DataRequired()])
     municipal = StringField('Municipal', validators=[DataRequired()])
     submit = SubmitField('Create Account')
 
     def validate_email(self, email):
+        # Additional check for the presence of "@" symbol
+        if '@' not in email.data:
+            raise ValidationError('Email must contain "@" symbol.')
+        # Check if the email is already used by a tour operator
         tour_operator = User.query.filter_by(email=email.data).first()
         if tour_operator:
             raise ValidationError('That email is already in use. Please choose a different one.')

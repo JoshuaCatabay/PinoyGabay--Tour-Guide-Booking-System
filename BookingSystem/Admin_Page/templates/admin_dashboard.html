@@ -1,5 +1,5 @@
 
-
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +24,7 @@
             <h2>Admin Dashboard</h2>
             <ul>
               <li><a href="#" class="nav-link active" data-tab="overview">Overview</a></li>
-              <li><a href="#" class="nav-link" data-tab="tour-management">User management</a></li>
+              <li><a href="#" class="nav-link" data-tab="tour-management">User Management</a></li>
               <li><a href="#" class="nav-link" data-tab="admin-profile">Admin Profile</a></li>
               <li><a href="{{ url_for('main.logout') }}"  class="tab-link">Log Out</a></li>
             </ul>
@@ -37,6 +37,26 @@
             <div class="tab-pane active" id="overview">
               <h2>Overview</h2>
               <p>Quick snapshot of system metrics and activities.</p>
+              <br>
+                <div class="overview">
+                  <br>
+                  <div class="overview-card">
+                    <h3>Travelers</h3>
+                    <p>{{ travelers_count }}</p>
+                  </div>
+                  <div class="overview-card">
+                    <h3>Tour Operators</h3>
+                    <p>{{ tour_operators_count }}</p>
+                  </div>
+                  <div class="overview-card">
+                    <h3>Tour Guides</h3>
+                    <p>{{ tour_guides_count }}</p>
+                  </div>
+                  <div class="overview-card">
+                    <h3>Bookings</h3>
+                    <p>{{ gen_booking_count }}</p>
+                  </div>
+                </div>
             </div>
 
             <div class="tab-pane" id="tour-management">
@@ -58,6 +78,7 @@
             
                             <form method="POST" id="operator-form" action="{{ url_for('admin.create_operator') }}">
                               {{ form.hidden_tag() }}  <!-- CSRF token if using Flask-WTF -->
+                              <input type="hidden" name="active_tab" id="active-tab-input" value="tour-management" />
 
                               <div class="input-container">
                                 <label for="name">Name</label>
@@ -152,93 +173,116 @@
                             </form>
                             </div>
                         </div>
-                        <div class="container">
-                          <h1 class="page-title">Tour Operators</h1>
-                          <div class="tour-guide-list">
-                              {% for operator in tour_operators %}
-                                  <div class="tour-guide-card">
-                                    <div class="profile-picture">
-                                      <img src="Image/doonaaaaa.jpg" alt="Tour Guide Profile Picture">
-                                    </div>
-                                      <div class="guide-info">
-                                          <h3 class="guide-name">{{ operator.user.first_name }}</h3>
-                                          <h4 class="guide-name">{{ operator.municipal }}</h4>
-                                          <button class="view-btn" onclick="redirectToProfile()">View Profile</button>
-                                      </div>
-                                  </div>
-                              {% else %}
-                                  <p>No Tour Operators</p>
-                              {% endfor %}
                       </div>
-                        </div>
-                        <br>
-                        <hr>
+                      <div class="container">
+                        <h1 class="page-title">Tour Operators</h1>
+                        <div class="tour-guide-list">
+                          {% for operator in tour_operators %}
+                          <div class="tour-guide-card">
+                            <div class="profile-picture">
+                              <img src="{{ url_for('static', filename='profile_pics/' + (operator.user.profile_img or 'default.png')) }}" alt="Tour Guide Profile Picture" >
+                            </div>
+                            <div class="guide-info">
+                              <h3 class="guide-name">{{ operator.user.first_name }}</h3>
+                              <h4 class="guide-name">{{ operator.municipal }}</h4>
+                              <p> {{ 'Active' if operator.tp_active else 'Inactive' }}</p>
+                              <form method="POST" action="{{ url_for('admin.change_tour_operator_status', id=operator.id) }}">
+                                <button class="status-btn {{ 'deactivate' if operator.tp_active else '' }}">
+                                  {{ 'Deactivate' if operator.tp_active else 'Activate' }}
+                                </button>
+                              </form>                                
+                            </div>
+                          </div>
+                        {% else %}
+                          <p>No Tour Operators</p>
+                        {% endfor %}
+                    </div>
+                      </div>
+                      <br>
+                      <hr>
                         <br>
                         <h1 class="page-title">User Management</h1>
                         <div class="filter-container">
                           <form method="get" action="{{ url_for('admin.admin_dashboard') }}">
-                              <label for="role">Filter by Role:</label>
-                              <select name="role" id="role" onchange="this.form.submit()">
-                                  <option value="" {% if not role_filter %}selected{% endif %}>All</option>
-                                  <option value="touroperator" {% if role_filter == 'tour operator' %}selected{% endif %}>Tour Operators</option>
-                                  <option value="tourguide" {% if role_filter == 'tour guide' %}selected{% endif %}>Tour Guides</option>
-                                  <option value="traveler" {% if role_filter == 'traveler' %}selected{% endif %}>Travelers</option>
-                              </select>
-                          </form>
-                      </div>
-                  
-                      <table>
-                          <thead>
-                              <tr>
-                                  <th>Name</th>
-                                  <th>Email</th>
-                                  {% if role_filter == 'tourguide' %}
-                                  <th>Tour Operator</th>
-                                  <th>Active</th>
-                                  {% endif %}
-                                  {% if role_filter == 'touroperator' %}
-                                  <th>Municipal</th>
-                                  {% endif %}
-                                  {% if role_filter == 'traveler' %}
-                                  <th>Nationality</th>
-                                  {% endif %}
-                                  <th>Role</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              {% if users %}
-                                  {% for user in users %}
-                                  <tr>
-                                      {% if role_filter == 'tourguide' %}
-                                      <td>{{ user.guide_last_name }} {{ user.guide_first_name }}</td>
-                                      <td>{{ user.email }}</td>
-                                      <td>{{ user.operator_first_name }}</td>
-                                      <td>{{ user.active }}</td>
-                                      <td>Tour Guide</td>
-                                      {% elif role_filter == 'touroperator' %}
-                                      <td> {{ user[0].first_name }}</td>
-                                      <td>{{ user[0].email }}</td>
-                                      <td>{{ user[1] }}</td> <!-- Municipal -->
-                                      <td>Tour Operator</td>
-                                      {% elif role_filter == 'traveler' %}
-                                      <td>{{ user.last_name }} {{ user.first_name }}</td>
-                                      <td>{{ user.email }}</td>
-                                      <td>{{ user.nationality }}</td>  <!-- Display nationality if role is traveler -->
-                                      <td>Traveler</td>
-                                      {% else %}
-                                      <td>{{ user.last_name }} {{ user.first_name }}</td>
-                                      <td>{{ user.email }}</td>
-                                      <td>{{ user.role }}</td>
-                                      {% endif %}
-                                  </tr>
-                                  {% endfor %}
-                              {% else %}
-                                  <tr>
-                                      <td colspan="5" style="text-align: center; padding: 12px;">No Users found.</td>
-                                  </tr>
-                              {% endif %}
-                          </tbody>
-                      </table>
+                            <input type="hidden" name="active_tab" id="active-tab-input" value="tour-management" />
+                            <label for="role">Filter by Role:</label>
+                            <select name="role" id="role" onchange="this.form.submit()">
+                                <option value="" {% if not role_filter %}selected{% endif %}>All</option>
+                                <option value="touroperator" {% if role_filter == 'touroperator' %}selected{% endif %}>Tour Operators</option>
+                                <option value="tourguide" {% if role_filter == 'tourguide' %}selected{% endif %}>Tour Guides</option>
+                                <option value="traveler" {% if role_filter == 'traveler' %}selected{% endif %}>Travelers</option>
+                            </select>
+                            </form>
+                            
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        {% if role_filter == 'tourguide' %}
+                                        <th>Tour Operator</th>
+                                        <th>Active</th>
+                                        <th>Contact</th>
+                                        <th>Total Bookings</th>
+                                        {% endif %}
+                                        {% if role_filter == 'touroperator' %}
+                                        <th>Municipal</th>
+                                        <th>Tour Guides</th>
+                                        <th>Packages</th>
+                                        <th>Bookings</th>
+                                        {% endif %}
+                                        {% if role_filter == 'traveler' %}
+                                        <th>Nationality</th>
+                                        <th>Bookings</th>
+                                        {% endif %}
+                                        {% if not role_filter %}
+                                        <th>Role</th>  <!-- This column will only appear if no filter is selected -->
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if users %}
+                                        {% for user in users %}
+                                        <tr>
+                                            {% if role_filter == 'tourguide' %}
+                                                <td>{{ user.guide_last_name }} {{ user.guide_first_name }}</td>
+                                                <td>{{ user.email }}</td>
+                                                <td>{{ user.operator_first_name }}</td>
+                                                <td>{{ user.active }}</td>
+                                                <td>{{ user.contact_num }}</td>
+                                                <td>{{ user.total_bookings }}</td>
+                                            {% elif role_filter == 'touroperator' %}
+                                                <td>{{ user[0].first_name }}</td>
+                                                <td>{{ user[0].email }}</td>
+                                                <td>{{ user[1] }}</td> <!-- Municipal -->
+                                                <td>{{ user[2] }}</td> <!-- Total Tour Guides -->
+                                                <td>{{ user[3] }}</td> <!-- Total Packages -->
+                                                <td>{{ user[4] }}</td> <!-- Total Bookings -->
+                                            {% elif role_filter == 'traveler' %}
+                                                <td>{{ user[0].last_name }} {{ user[0].first_name }}</td>
+                                                <td>{{ user[0].email }}</td>
+                                                <td>{{ user[0].nationality }}</td>
+                                                <td>{{ user[1] }}</td> <!-- Total Bookings -->
+                                            {% else %}
+                                                <td>
+                                                    {% if user.role == 'touroperator' %}
+                                                        {{ user.first_name }}
+                                                    {% else %}
+                                                        {{ user.last_name }} {{ user.first_name }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ user.email }}</td>
+                                                <td>{{ user.role }}</td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 12px;">No Users found.</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
                       </div>
             <div class="tab-pane" id="admin-profile">
               <h2>Admin Profile</h2>
@@ -259,6 +303,82 @@
       
 
       <script src="{{ url_for('static', filename='admin.js') }}"></script>
+       <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const urlParams = new URLSearchParams(window.location.search);
+          const success = urlParams.get('success'); // Capture "success" query param
       
+          if (success === 'true') {
+            // Show the modal
+            const modal = document.getElementById('success-modal');
+            modal.style.display = 'block';
+      
+            // Close modal on button click
+            document.getElementById('close-modal').addEventListener('click', function () {
+              modal.style.display = 'none';
+            });
+      
+            // Optional: Close modal on outside click
+            window.onclick = function (event) {
+              if (event.target == modal) {
+                modal.style.display = 'none';
+              }
+            };
+          }
+        });
+      </script>
+            <script>
+              // Save the active tab state when a tab is clicked
+              document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', event => {
+                  const activeTab = event.target.dataset.tab;
+                  document.getElementById('active-tab-input').value = activeTab;
+                });
+              });
+            
+              // Activate the correct tab based on the URL parameter
+              window.addEventListener('DOMContentLoaded', () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const activeTab = urlParams.get('active_tab') || 'overview'; // Default to 'overview'
+                document.querySelectorAll('.tab-pane').forEach(tab => {
+                  tab.classList.remove('active');
+                });
+                document.getElementById(activeTab).classList.add('active');
+            
+                document.querySelectorAll('.nav-link').forEach(link => {
+                  link.classList.remove('active');
+                  if (link.dataset.tab === activeTab) {
+                    link.classList.add('active');
+                  }
+                });
+              });
+            </script>
+            <script>
+              // Save the active tab state when a tab is clicked
+              document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', event => {
+                  const activeTab = event.target.dataset.tab;
+                  document.getElementById('active-tab-input').value = activeTab;
+                });
+              });
+            
+              // Activate the correct tab based on the URL parameter or form submission
+              window.addEventListener('DOMContentLoaded', () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const activeTab = urlParams.get('active_tab') || 'overview'; // Default to 'overview'
+                document.querySelectorAll('.tab-pane').forEach(tab => {
+                  tab.classList.remove('active');
+                });
+                document.getElementById(activeTab).classList.add('active');
+            
+                document.querySelectorAll('.nav-link').forEach(link => {
+                  link.classList.remove('active');
+                  if (link.dataset.tab === activeTab) {
+                    link.classList.add('active');
+                  }
+                });
+              });
+            </script>
 </body>
 </html>
+{% endblock content %}

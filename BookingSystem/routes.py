@@ -97,7 +97,7 @@ def traveler_register():
             nationality=form.nationality.data,
             email=form.email_address.data,
             password=hashed_password,
-            profile_img='default.jpg',
+            profile_img='default.png',
             role='traveler',
         )
         db.session.add(new_traveler)
@@ -269,21 +269,29 @@ def account():
     # Prepare reviews data for rendering
     reviews_data = []
     for review in reviews:
+        booking = Booking.query.get(review.booking_id)
+        tour_package = TourPackage.query.get(booking.package_id) if booking else None
         tour_guide = TourGuide.query.get(review.tour_guide_id)
         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
 
+        traveler_profile_path = url_for('static', filename=f"profile_pics/{current_user.profile_img}") if current_user.profile_img else url_for('static', filename="default_traveler_image.jpg")
         tour_image_path = url_for('static', filename=f"review_pics/{review_image.img}") if review_image else url_for('static', filename="default_tour_image.jpg")
         guide_profile_path = url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}") if tour_guide and tour_guide.user.profile_img else url_for('static', filename="default_guide_image.jpg")
+        tour_package_name = tour_package.name if tour_package else "Unknown Package"
 
         reviews_data.append({
+            "traveler_name": f"{current_user.first_name} {current_user.last_name}",
+            "traveler_profile_img": traveler_profile_path,
             "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "Unknown Guide",
             "guide_profile_img": guide_profile_path,
+            "tour_package_name": tour_package_name,
             "tour_image": tour_image_path,
             "rating": review.rating,
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
         })
 
+        
     return render_template(
         'account.html',
         title='Account',

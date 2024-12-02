@@ -5,7 +5,7 @@ from . import booking
 from BookingSystem.TourOperator_Page.form import UserTourGuideForm
 from BookingSystem import bcrypt, db
 from werkzeug.security import check_password_hash, generate_password_hash
-from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, TourPackage, Booking
+from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, TourPackage, Booking, AvailabilityStatus
 # from .form import PasswordConfirmationForm
 from datetime import datetime
 from decimal import Decimal
@@ -231,6 +231,31 @@ def create_booking():
         if not tour_package:
             return jsonify({"error": "Tour package not found."}), 404
 
+        # Check availability for all requested dates
+        unavailable_dates = []
+        for single_date in (date_start + timedelta(days=i) for i in range(duration)):
+            availability = Availability.query.filter_by(
+                tguide_id=tour_guide_id,
+                availability_date=single_date
+            ).first()
+
+            if not availability or availability.status != AvailabilityStatus.AVAILABLE.value:
+                unavailable_dates.append(single_date.strftime('%Y-%m-%d'))
+
+        if unavailable_dates:
+            return jsonify({
+                "error": f"The following dates are unavailable or already booked: {', '.join(unavailable_dates)}"
+            }), 400
+
+        # Update availability status to "booked" for all requested dates
+        for single_date in (date_start + timedelta(days=i) for i in range(duration)):
+            availability = Availability.query.filter_by(
+                tguide_id=tour_guide_id,
+                availability_date=single_date
+            ).first()
+            availability.status = AvailabilityStatus.BOOKED.value
+            availability.booked_by = current_user.id
+
         # Create the booking
         booking = Booking(
             user_id=current_user.id,
@@ -241,16 +266,15 @@ def create_booking():
             traveler_quantity=int(traveler_quantity),
             special_notes=special_notes,
             price=Decimal(price),
-            status=BookingStatus.STATUS_UPCOMING.value,
-            duration=timedelta(days=duration),
-            time=datetime.strptime("00:00:00", "%H:%M:%S").time(),
-            is_reviewed=False
+            status=BookingStatus.STATUS_UPCOMING.value,  # Use Enum for status
+            duration=timedelta(days=duration),  # Store as timedelta
+            time=datetime.strptime("00:00:00", "%H:%M:%S").time(),  # Default to midnight
+            is_reviewed=False  # Ensure this is explicitly set during creation
         )
 
         db.session.add(booking)
-        db.session.commit()
 
-         # Add Notifications
+        # Add Notifications
         # Traveler Notification
         traveler_message = f"Your tour with {tour_guide.user.first_name} {tour_guide.user.last_name} has been successfully booked for {date_start}."
         traveler_notification = Notification(
@@ -273,7 +297,7 @@ def create_booking():
         )
         db.session.add(guide_notification)
 
-        # Add Tour Operator Notification
+        # Add Tour Operator Notification (if applicable)
         if tour_guide.tour_operator:
             operator_message = f"Your guide {tour_guide.user.first_name} {tour_guide.user.last_name} has been booked by {current_user.first_name} {current_user.last_name} for {date_start}."
             operator_notification = Notification(
@@ -284,7 +308,6 @@ def create_booking():
                 is_read=False
             )
             db.session.add(operator_notification)
-
 
         db.session.commit()
 
@@ -491,3 +514,7 @@ def complete_booking(booking_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+
+    

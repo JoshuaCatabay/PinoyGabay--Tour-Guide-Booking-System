@@ -86,22 +86,22 @@ def get_notification_count():
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
     
-
-
 @notification.route('/operator', methods=['GET'])
 @login_required
 def get_operator_notifications():
-    """Fetch unread notifications for the current operator."""
+    """Fetch notifications for the logged-in operator."""
     try:
-        # Ensure the user is an operator
-        if current_user.role != 'operator':
-            return jsonify({"error": "Unauthorized action"}), 403
+        # Debugging log
+        print(f"Fetching notifications for Operator ID: {current_user.id}")
 
-        # Fetch notifications for the operator
+        # Fetch notifications where the user's role is operator
         notifications = Notification.query.filter_by(
             user_id=current_user.id,
             is_read=False
         ).order_by(Notification.created_at.desc()).all()
+
+        if not notifications:
+            print("No notifications found for the operator.")  # Debugging log
 
         notifications_data = [
             {
@@ -114,5 +114,43 @@ def get_operator_notifications():
         ]
 
         return jsonify({"notifications": notifications_data}), 200
+    except Exception as e:
+        print(f"Error fetching operator notifications: {str(e)}")  # Debugging log
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+@notification.route('/operator/mark_as_read/<int:notification_id>', methods=['POST'])
+@login_required
+def mark_as_read_operator(notification_id):
+    """Mark a notification as read for the operator."""
+    try:
+        notification = Notification.query.get_or_404(notification_id)
+
+        if notification.user_id != current_user.id:
+            return jsonify({"error": "Unauthorized action"}), 403
+
+        notification.is_read = True
+        db.session.commit()
+
+        return jsonify({"message": "Notification marked as read."}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+@notification.route('/operator/count', methods=['GET'])
+@login_required
+def get_operator_notification_count():
+    """Fetch the count of unread notifications for the current operator."""
+    try:
+        # Ensure the user is an operator
+        if current_user.role != 'operator':
+            return jsonify({"error": "Unauthorized action"}), 403
+
+        # Count unread notifications for the operator
+        count = Notification.query.filter_by(
+            user_id=current_user.id,
+            is_read=False
+        ).count()
+
+        return jsonify({"count": count}), 200
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500

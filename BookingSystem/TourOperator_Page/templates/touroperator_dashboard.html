@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tour Operator Dashboard</title>
@@ -9,237 +9,284 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='TourOperator.js') }}" defer ></script>
+  </head>
 
-</head>
-<body>
+  <body>
     <!-- Tour Operator Dashboard -->
-<div class="dashboard-container">
-    <!-- Sidebar Navigation -->
-    <nav class="side-nav">
-      <h2>Operator Dashboard</h2>
-          <ul>
-            <li><a href="#" class="nav-link active" data-tab="tour-management">Tour Management</a></li>
-            <li><a href="#" class="nav-link" data-tab="manage-municipality">Manage Municipality</a></li>
-            <li><a href="#" class="nav-link" data-tab="tour-guide-management">Tour Guide Management</a></li>
-            <li><a href="#" class="nav-link" data-tab="account">Account</a></li>
-            <li><a href="{{ url_for('main.logout') }}"  class="tab-link">Log Out</a></li>
-          </ul>
-    </nav>
-  
-    <!-- Tab Content -->
-    <div class="tab-content">
-    <!-- Tour Management Tab -->
-      <div class="tab-pane active" id="tour-management">
+    <div class="dashboard-container">
+
+      <!-- Sidebar Navigation -->
+      <nav class="side-nav">
+        <h2>Operator Dashboard</h2>
+            
+        <ul>
+          <li><a href="#" class="nav-link active" data-tab="tour-management">Tour Management</a></li>
+          <li><a href="#" class="nav-link" data-tab="manage-municipality">Manage Municipality</a></li>
+          <li><a href="#" class="nav-link" data-tab="tour-guide-management">Tour Guide Management</a></li>
+          <li><a href="#" class="nav-link" data-tab="account">Account</a></li>
+          <li><a href="{{ url_for('main.logout') }}"  class="tab-link">Log Out</a></li>
+        </ul>
+
+      </nav>
+            <!-- Modal HTML with updated IDs and classes -->
+            <div id="deactivationCustomModal" class="custom-modal-container" data-show-modal="{{ 'true' if show_deactivation_modal else 'false' }}" onclick="closeCustomModal(event)">
+              <div class="custom-modal-box" onclick="event.stopPropagation()"> <!-- Prevent modal close when clicking inside -->
+                  <div class="custom-modal-title">Account Deactivated</div>
+                  <div class="custom-modal-message">Your account is currently deactivated. Please contact the admin for assistance.</div>
+                  <button class="custom-modal-close-btn" onclick="closeCustomModal(event)">Close</button>
+              </div>
+          </div>
+      <!-- Tab Content -->
+      <div class="tab-content">
+
+        <!-- Tour Management Tab -->
+        <div class="tab-pane active" id="tour-management">
           <h2>Tour Management Overview</h2>
 
-         <!-- Overview Section -->
-         <div class="overview-grid">
-           <div class="overview-card">
-             <div class="card-icon"><i class="fas fa-user-tie"></i></div>
-             <h3>Active Guides</h3>
-             <p>{{ tour_guides|length }}</p>
-           </div>
-           <div class="overview-card">
-             <div class="card-icon"><i class="fas fa-calendar-check"></i></div>
-             <h3>Upcoming Tours</h3>
-             <p>{{ booking_counts.upcoming }}</p>
-           </div>
-           <div class="overview-card">
-             <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
-             <h3>Ongoing Tours</h3>
-             <p>{{ booking_counts.ongoing }}</p>
-           </div>
-           <div class="overview-card">
-             <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-             <h3>Completed Tours</h3>
-             <p>{{ completed_tours }}</p>
-           </div>
-           <div class="overview-card">
-             <div class="card-icon"><i class="fas fa-star"></i></div>
-             <h3>Average Rating</h3>
-             <p>★ {{ average_rating }}</p>
-           </div>
-           <div class="overview-card">
-             <div class="card-icon"><i class="fas fa-comments"></i></div>
-             <h3>Total Reviews</h3>
-             <p>{{ total_reviews }}</p>
-           </div>
-         </div>
-                <div class="operator-notification-panel">
-          <h3>
-            Notifications <span id="operator-notification-count" class="operator-notification-count">(0)</span>
-          </h3>
-          <ul id="operator-notification-list" class="operator-notification-list">
-            <li class="notification-item">No new notifications</li>
-          </ul>
-        </div>
-        
-  
-        <h2>Bookings</h2>
+          <!-- Overview Section -->
+          <div class="overview-grid">
 
-        <!-- Toggle Buttons for Status -->
-        <div class="booking-toggle-buttons">
-          <button class="toggle-btn active" data-status="all">
-            All <span class="count">({{ booking_counts['all'] }})</span>
-          </button>
-          <button class="toggle-btn" data-status="upcoming">
-            Upcoming <span class="count">({{ booking_counts['upcoming'] }})</span>
-          </button>
-          <button class="toggle-btn" data-status="ongoing">
-            Ongoing <span class="count">({{ booking_counts['ongoing'] }})</span>
-          </button>
-          <button class="toggle-btn" data-status="completed">
-            Completed <span class="count">({{ booking_counts['completed'] }})</span>
-          </button>
-          <button class="toggle-btn" data-status="cancelled">
-            Cancelled <span class="count">({{ booking_counts['cancelled'] }})</span>
-          </button>
-        </div>
-
-
-
-        
-        
-        <!-- Table for Bookings -->
-        <table class="booking-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Guide</th>
-              <th>Traveler</th>
-              <th>Tour Type</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for booking in bookings %}
-            <tr class="booking-row" data-status="{{ booking.status }}">
-              <td>
-                {{ booking.date_start.strftime('%b %d, %Y') }}
-                {% if booking.date_start != booking.date_end %}
-                  - {{ booking.date_end.strftime('%b %d, %Y') }}
-                {% endif %}
-              </td>
-              <td>{{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</td>
-              <td>{{ booking.traveler.first_name }} {{ booking.traveler.last_name }}</td>
-              <td>{{ booking.selected_package.name }}</td>
-              <td>
-                <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        
-        <div id="booking-details-modal" class="modal hidden">
-          <div class="modal-content">
-            <!-- Loader -->
-            <div id="modal-loader" style="display: none;">Loading...</div>
-        
-            <!-- Booking Details -->
-            <div id="modal-details" class="hidden">
-              <!-- Traveler Information -->
-              <div class="container-section traveler-info expanded">
-                <h4 class="container-header">Traveler Information</h4>
-                <div class="status-box">
-                  <span class="status-circle" id="modal-status">Loading...</span>
-                </div>
-                <div class="info-item">
-                  <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
-                </div>
-                <div class="info-item">
-                  <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
-                </div>
-                <div class="info-item">
-                  <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
-                </div>
-                <div class="info-item">
-                  <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
-                </div>
-                <div class="info-item">
-                  <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
-                </div>
-                <div class="info-item">
-                  <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
-                </div>
-                <!-- Special Notes -->
-                <div class="notes-box">
-                  <h5>Special Notes</h5>
-                  <p id="modal-special-notes">Loading...</p>
-                </div>
-              </div>
-        
-              <!-- Tour Package Details -->
-              <div class="container-section tour-package-details expanded">
-                <h4 class="container-header">Tour Package Details</h4>
-                <div class="modal-header">
-                  <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
-                  <div class="header-text-overlay">
-                    <h3 id="modal-package-title">Loading...</h3>
-                    <p id="modal-package-location">
-                      <span class="location-icon">&#x1F4CD;</span> Loading location...
-                    </p>
-                  </div>
-                </div>
-                <p id="modal-package-description" class="description">Loading...</p>
-        
-                <!-- Estimated Prices -->
-                <div class="modal-section">
-                  <h4>Estimated Prices</h4>
-                  <ul id="modal-price-list" class="price-list"></ul>
-                </div>
-        
-                <!-- Inclusions -->
-                <div class="modal-section">
-                  <h4>Inclusions</h4>
-                  <ul id="modal-inclusions-list" class="checklist inclusions-list"></ul>
-                </div>
-        
-                <!-- Exclusions -->
-                <div class="modal-section">
-                  <h4>Exclusions</h4>
-                  <ul id="modal-exclusions-list" class="checklist exclusions-list"></ul>
-                </div>
-        
-                <!-- Itinerary -->
-                <div class="modal-section itinerary-section">
-                  <h4>Itinerary</h4>
-                  <ul id="modal-itinerary-list" class="timeline"></ul>
-                </div>
-              </div>
+            <div class="overview-card">
+              <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+              <h3>Active Guides</h3>
+              <p>{{ tour_guides|length }}</p>
             </div>
+
+            <div class="overview-card">
+              <div class="card-icon"><i class="fas fa-calendar-check"></i></div>
+              <h3>Upcoming Tours</h3>
+              <p>{{ booking_counts.upcoming }}</p>
+            </div>
+
+            <div class="overview-card">
+              <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <h3>Ongoing Tours</h3>
+              <p>{{ booking_counts.ongoing }}</p>
+            </div>
+
+            <div class="overview-card">
+              <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+              <h3>Completed Tours</h3>
+              <p>{{ completed_tours }}</p>
+            </div>
+
+            <div class="overview-card">
+              <div class="card-icon"><i class="fas fa-star"></i></div>
+              <h3>Average Rating</h3>
+              <p>★ {{ average_rating }}</p>
+            </div>
+
+            <div class="overview-card">
+              <div class="card-icon"><i class="fas fa-comments"></i></div>
+              <h3>Total Reviews</h3>
+              <p>{{ total_reviews }}</p>
+            </div>
+
+          </div>
+
+          <div class="operator-notification-panel">
+            <h3>
+              Notifications <span id="operator-notification-count" class="operator-notification-count">(0)</span>
+            </h3>
+            <ul id="operator-notification-list" class="operator-notification-list">
+              <li class="notification-item">No new notifications</li>
+            </ul>
+          </div>
+
+          <h2>Bookings</h2>
+
+          <!-- Toggle Buttons for Status -->
+          <div class="booking-toggle-buttons">
+
+            <button class="toggle-btn active" data-status="all">
+              All <span class="count">({{ booking_counts['all'] }})</span>
+            </button>
+
+            <button class="toggle-btn" data-status="upcoming">
+              Upcoming <span class="count">({{ booking_counts['upcoming'] }})</span>
+            </button>
+
+            <button class="toggle-btn" data-status="ongoing">
+              Ongoing <span class="count">({{ booking_counts['ongoing'] }})</span>
+            </button>
+
+            <button class="toggle-btn" data-status="completed">
+              Completed <span class="count">({{ booking_counts['completed'] }})</span>
+            </button>
+
+            <button class="toggle-btn" data-status="cancelled">
+              Cancelled <span class="count">({{ booking_counts['cancelled'] }})</span>
+            </button>
+
+          </div>
+
+          <!-- Table for Bookings -->
+          <table class="booking-table">
+
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Guide</th>
+                <th>Traveler</th>
+                <th>Tour Type</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for booking in bookings %}
+                <tr class="booking-row" data-status="{{ booking.status }}">
+                  <td>
+                    {{ booking.date_start.strftime('%b %d, %Y') }}
+                    {% if booking.date_start != booking.date_end %}
+                      - {{ booking.date_end.strftime('%b %d, %Y') }}
+                    {% endif %}
+                  </td>
+
+                  <td>{{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</td>
+                  <td>{{ booking.traveler.first_name }} {{ booking.traveler.last_name }}</td>
+                  <td>{{ booking.selected_package.name }}</td>
+
+                  <td>
+                    <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
         
-            <!-- Action Buttons -->
-            <div class="modal-footer">
-              <button id="modal-cancel-booking-btn" class="cancel-booking-btn hidden" data-id="">Cancel Booking</button>
-              <button id="close-booking-modal" class="primary-btn">Close</button>
+          <div id="booking-details-modal" class="modal hidden">
+            <div class="modal-content">
+
+              <!-- Loader -->
+              <div id="modal-loader" style="display: none;">Loading...</div>
+        
+              <!-- Booking Details -->
+              <div id="modal-details" class="hidden">
+
+                <!-- Traveler Information -->
+                <div class="container-section traveler-info expanded">
+
+                  <h4 class="container-header">Traveler Information</h4>
+
+                  <div class="status-box">
+                    <span class="status-circle" id="modal-status">Loading...</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
+                  </div>
+
+                  <!-- Special Notes -->
+                  <div class="notes-box">
+                    <h5>Special Notes</h5>
+                    <p id="modal-special-notes">Loading...</p>
+                  </div>
+
+                </div>
+        
+                <!-- Tour Package Details -->
+                <div class="container-section tour-package-details expanded">
+
+                  <h4 class="container-header">Tour Package Details</h4>
+                  <div class="modal-header">
+                    <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+                    <div class="header-text-overlay">
+                      <h3 id="modal-package-title">Loading...</h3>
+                      <p id="modal-package-location">
+                        <span class="location-icon">&#x1F4CD;</span> Loading location...
+                      </p>
+                    </div>
+                  </div>
+                  <p id="modal-package-description" class="description">Loading...</p>
+            
+                  <!-- Estimated Prices -->
+                  <div class="modal-section">
+                    <h4>Estimated Prices</h4>
+                    <ul id="modal-price-list" class="price-list"></ul>
+                  </div>
+            
+                  <!-- Inclusions -->
+                  <div class="modal-section">
+                    <h4>Inclusions</h4>
+                    <ul id="modal-inclusions-list" class="checklist inclusions-list"></ul>
+                  </div>
+            
+                  <!-- Exclusions -->
+                  <div class="modal-section">
+                    <h4>Exclusions</h4>
+                    <ul id="modal-exclusions-list" class="checklist exclusions-list"></ul>
+                  </div>
+            
+                  <!-- Itinerary -->
+                  <div class="modal-section itinerary-section">
+                    <h4>Itinerary</h4>
+                    <ul id="modal-itinerary-list" class="timeline"></ul>
+                  </div>
+
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="modal-footer">
+                  <button id="modal-cancel-booking-btn" class="cancel-booking-btn hidden" data-id="">Cancel Booking</button>
+                  <button id="close-booking-modal" class="primary-btn">Close</button>
+                </div>
+
+              </div>
+
             </div>
           </div>
-        </div>
 
-            <div class="traveler-reviews-container">
-              <h2>
-                Traveler Reviews 
-                <span class="total-reviews">({{ total_reviews }})</span>
-              </h2>
-              <div>
-                <label for="tour-guide-filter">Filter by Tour Guide:</label>
-                <select id="tour-guide-filter">
-                  <option value="">All Tour Guides</option>
-                  {% for guide in tour_guides %}
+          <!-- Reviews Container -->
+          <div class="traveler-reviews-container">
+            <h2>
+              Traveler Reviews 
+              <span class="total-reviews">({{ total_reviews }})</span>
+            </h2>
+
+            <div>
+              <label for="tour-guide-filter">Filter by Tour Guide:</label>
+              <select id="tour-guide-filter">
+                <option value="">All Tour Guides</option>
+
+                {% for guide in tour_guides %}
                   <option value="{{ guide.id }}" {% if guide.id == selected_tour_guide_id %}selected{% endif %}>
                     {{ guide.user.first_name }} {{ guide.user.last_name }}
                   </option>
-                  {% endfor %}
-                </select>
-              </div>
+                {% endfor %}
 
-              <div class="reviews-grid">
-                {% if total_reviews > 0 %}
-                  {% for review in reviews %}
+              </select>
+            </div>
+
+            <div class="reviews-grid">
+              {% if total_reviews > 0 %}
+                {% for review in reviews %}
+
                   <div class="review-card">
                     <img src="{{ review.tour_image }}" alt="Tour Image" class="tour-image" />
                     <div class="review-content">
+
                       <div class="traveler-info">
                         <img src="{{ review.traveler_profile }}" alt="Traveler Picture" class="traveler-pic" />
                         <div class="traveler-details">
@@ -248,64 +295,73 @@
                           <div class="ratings"><p>{{ review.rating }} ★</p></div>
                         </div>
                       </div>
+
                       <p class="review-text">{{ review.comment }}</p>
+
                       <div class="review-footer">
                         <p class="review-date">{{ review.review_date }}</p>
                         <p class="toured-by">Toured by: <span class="tour-guide-name">{{ review.tour_guide_name }}</span></p>
                       </div>
+
                     </div>
                   </div>
                   
-                  {% endfor %}
-                {% else %}
-                  <p>No reviews yet.</p>
-                {% endif %}
-              </div>
-            
-          <!-- Pagination Controls -->
-          <div class="pagination-container">
-            {% if pagination.total_pages > 1 %}
-              <!-- Previous Button -->
-              {% if pagination.has_prev %}
-              <a href="?tour_guide_id={{ selected_tour_guide_id }}&page={{ pagination.prev_page }}" class="pagination-btn previous-btn">
-                Previous
-              </a>
+                {% endfor %}
+
               {% else %}
-              <span class="pagination-btn disabled">Previous</span>
+                <p>No reviews yet.</p>
               {% endif %}
 
-              <!-- Page Numbers -->
-              {% for page in range(1, pagination.total_pages + 1) %}
-              <a href="?tour_guide_id={{ selected_tour_guide_id }}&page={{ page }}" 
-                class="pagination-btn {% if page == pagination.current_page %}active{% endif %}">
-                {{ page }}
-              </a>
-              {% endfor %}
-
-              <!-- Next Button -->
-              {% if pagination.has_next %}
-              <a href="?tour_guide_id={{ selected_tour_guide_id }}&page={{ pagination.next_page }}" class="pagination-btn next-btn">
-                Next
-              </a>
-              {% else %}
-              <span class="pagination-btn disabled">Next</span>
-              {% endif %}
-            {% endif %}
-          </div>
             </div>
+            
+            <!-- Pagination Controls -->
+            <div class="pagination-container">
+              {% if pagination.total_pages > 1 %}
+                <!-- Previous Button -->
+                {% if pagination.has_prev %}
+                  <a href="?tour_guide_id={{ selected_tour_guide_id }}&page={{ pagination.prev_page }}" class="pagination-btn previous-btn">
+                    Previous
+                  </a>
+                {% else %}
+                  <span class="pagination-btn disabled">Previous</span>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                {% for page in range(1, pagination.total_pages + 1) %}
+                  <a href="?tour_guide_id={{ selected_tour_guide_id }}&page={{ page }}" 
+                    class="pagination-btn {% if page == pagination.current_page %}active{% endif %}">
+                    {{ page }}
+                  </a>
+                {% endfor %}
+
+                <!-- Next Button -->
+                {% if pagination.has_next %}
+                  <a href="?tour_guide_id={{ selected_tour_guide_id }}&page={{ pagination.next_page }}" class="pagination-btn next-btn">
+                    Next
+                  </a>
+                {% else %}
+                  <span class="pagination-btn disabled">Next</span>
+                {% endif %}
+
+              {% endif %}
+            </div>
+          </div>
+        </div>
   
-      </div>
-  
-          <!-- Manage Municipality Tab -->
-          <div class="tab-pane" id="manage-municipality">
-            <h2>Manage Municipality</h2>
-            <!-- Button to Open Form Modal -->
-              <button id="open-form-btn" class="primary-btn">Add New Tour Package</button>
+        <!-- Manage Municipality Tab -->
+        <div class="tab-pane" id="manage-municipality">
+
+          <h2>Manage Municipality</h2>
+
+          <!-- Button to Open Form Modal -->
+          <button id="open-form-btn" class="primary-btn">Add New Tour Package</button>
 
           <!-- Add/Edit Package Modal -->
           <div id="form-modal" class="modal hidden">
             <div class="modal-content">
+
               <h3 id="form-modal-title">Create/Edit Tour Package</h3>
+
               <form id="tour-package-form" class="form-layout" method="POST" enctype="multipart/form-data" action="{{ url_for('touroperator.create_tour_package') }}">
                 {{ package_form.hidden_tag() }}
                 
@@ -396,51 +452,63 @@
                   <button type="submit" name="submit_tour_package" class="primary-btn">Create</button>
                   <button type="button" id="close-form-modal" class="secondary-btn">Cancel</button>
                 </div>
+
               </form>
             </div>
           </div>
           
+          <section id="tour-packages">
+            <h2><span style="color: #ff9f1c">Available Tour Packages/Itineraries</span></h2>
+              
+            <div class="package-container">
+              {% for package in packages %}
 
-            <section id="tour-packages">
-              <h2><span style="color: #ff9f1c">Available Tour Packages/Itineraries</span></h2>
-              <div class="package-container">
-                {% for package in packages %}
-                  <div class="card">
-                    <div class="card-content">
-                      <img src="{{ url_for('static', filename=package.package_img) if package.package_img else url_for('static', filename='default.jpg') }}" alt="Tour Image" class="modal-header-image">
-                      <div class="gradient-overlay"></div>
-                      <div class="card-details">
-                        <div class="title-rating">
-                          <h3>{{ package.name }}</h3>
-                          <div class="rating">
-                            <span style="padding-right: 20px;"></span>
-                          </div>
+                <div class="card">
+                  <div class="card-content">
+                    <img src="{{ url_for('static', filename=package.package_img) if package.package_img else url_for('static', filename='default.jpg') }}" alt="Tour Image" class="modal-header-image">
+                    <div class="gradient-overlay"></div>
+                    
+                    <div class="card-details">
+                        
+                      <div class="title-rating">
+                        <h3>{{ package.name }}</h3>
+                        <div class="rating">
+                          <span style="padding-right: 20px;"></span>
                         </div>
-                        <p>{{ package.description }}</p>
                       </div>
+
+                        <p>{{ package.description }}</p>
                     </div>
-                    <div class="card-overlay">
-                      <button class="view-package" data-package-id="{{ package.id }}">View Package</button>
-                    </div>
+
                   </div>
-                {% else %}
-                  <p>No Package Created.</p>
-                {% endfor %}
-              </div>
-            </section>
+
+                  <div class="card-overlay">
+                    <button class="view-package" data-package-id="{{ package.id }}">View Package</button>
+                  </div>
+
+                </div>
+
+              {% else %}
+
+                <p>No Package Created.</p>
+
+              {% endfor %}
+            </div>
+          </section>
            
 
 
           <!-- View Package Modal -->
           <div id="tour-details-modal" class="modal hidden">
             <div class="modal-content">
-          <!-- Modal Header -->
-          <div class="modal-header">
-            <img src="" alt="Tour Package Image" class="modal-header-image">
-            <h2 class="modal-title"></h2>
-            <p><strong>Location:</strong> <span class="location"></span></p> <!-- Added Location -->
-            <span id="close-modal" class="close-btn">&times;</span>
-          </div>
+
+              <!-- Modal Header -->
+              <div class="modal-header">
+                <img src="" alt="Tour Package Image" class="modal-header-image">
+                <h2 class="modal-title"></h2>
+                <p><strong>Location:</strong> <span class="location"></span></p> <!-- Added Location -->
+                <span id="close-modal" class="close-btn">&times;</span>
+              </div>
 
               <div class="modal-body">
                 <p class="description"></p>
@@ -461,34 +529,37 @@
                   <ul class="itinerary-list"></ul>
                 </div>
               </div>
+
               <div class="modal-footer">
                 <button id="delete-package" class="danger-btn" data-package-id="">Delete</button>
                 <button id="edit-package" data-package-id="" class="secondary-btn">Edit</button>
-
               </div>
+
             </div>
           </div>
-
 
           <!-- Display Cards for Existing Tour Packages -->
           <div id="tour-packages-display" class="card-container">
             <!-- Repeat for more tour cards as needed -->
           </div>
 
-
           <!-- Modal Overlay -->
           <div id="modal-overlay" class="modal-overlay hidden"></div>
+
         </div>
   
-          <!-- Tour Guide Management Tab -->
-          <div class="tab-pane" id="tour-guide-management">
-            <h2>Tour Guide Management</h2>
+
+        <!-- Tour Guide Management Tab -->
+        <div class="tab-pane" id="tour-guide-management">
+          <h2>Tour Guide Management</h2>
+
           <!-- Add Tour Guide Button -->
           <button class="primary-btn" id="add-tour-guide-btn">Add Tour Guide</button>
 
           <!-- Add Tour Guide Modal -->
           <div class="modal hidden" id="tour-guide-modal">
             <div class="modal-content">
+              
               <button class="close-btn" id="close-tour-guide-modal">&times;</button>
               <h1 class="modal-title">Create Tour Guide Account</h1>
               <p class="modal-subtitle">Fill in the required details to create a new tour guide account.</p>
@@ -497,136 +568,176 @@
                 {{ guide_form.hidden_tag() }}  <!-- CSRF token if using Flask-WTF -->
             
                 <div class="input-container">
-                    <label for="fname">First Name</label>
+                  <label for="fname">First Name</label>
                     {% if guide_form.fname.errors %}
-                    {{ guide_form.fname(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                            {% for error in guide_form.fname.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
+                      {{ guide_form.fname(class="form-control form-control-lg is-invalid") }}
+                      <div class="invalid-feedback">
+                        {% for error in guide_form.fname.errors %}
+                          <span>{{ error }}</span>
+                        {% endfor %}
+                      </div>
                     {% else %}
-                        {{ guide_form.fname(class="form-control" , placeholder="Enter Guide First Name" ) }}
+                      {{ guide_form.fname(class="form-control" , placeholder="Enter Guide First Name" ) }}
                     {% endif %}
                 </div>
             
                 <div class="input-container">
-                    <label for="lname">Last Name</label>
-                    {% if guide_form.lname.errors %}
+                  <label for="lname">Last Name</label>
+                  {% if guide_form.lname.errors %}
                     {{ guide_form.lname(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                            {% for error in guide_form.lname.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ guide_form.lname(class="form-control", placeholder="Enter Guide Last Name") }}
-                    {% endif %}
+                      {% for error in guide_form.lname.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ guide_form.lname(class="form-control", placeholder="Enter Guide Last Name") }}
+                  {% endif %}
                 </div>
             
                 <div class="input-container">
-                    <label for="email">Email</label>
-                    {% if guide_form.email.errors %}
+                  <label for="email">Email</label>
+                  {% if guide_form.email.errors %}
                     {{ guide_form.email(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                            {% for error in guide_form.email.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ guide_form.email(class="form-control", placeholder="Enter Email") }}
-                    {% endif %}
+                      {% for error in guide_form.email.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ guide_form.email(class="form-control", placeholder="Enter Email") }}
+                  {% endif %}
                 </div>
             
                 <div class="input-container">
-                    <label for="contact_number">Contact Number</label>
-                    {% if guide_form.contact_number.errors %}
+                  <label for="contact_number">Contact Number</label>
+                  {% if guide_form.contact_number.errors %}
                     {{ guide_form.contact_number(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                            {% for error in guide_form.contact_number.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ guide_form.contact_number(class="form-control", placeholder="Enter Contact Number") }}
-                    {% endif %}
+                      {% for error in guide_form.contact_number.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ guide_form.contact_number(class="form-control", placeholder="Enter Contact Number") }}
+                  {% endif %}
                 </div>
             
                 <div class="input-container">
-                    <label for="password">Password</label>
-                    {% if guide_form.password.errors %}
+                  <label for="password">Password</label>
+                  {% if guide_form.password.errors %}
                     {{ guide_form.password(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                            {% for error in guide_form.password.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ guide_form.password(class="form-control", placeholder="Enter Password") }}
-                    {% endif %}
+                      {% for error in guide_form.password.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ guide_form.password(class="form-control", placeholder="Enter Password") }}
+                  {% endif %}
                 </div>
             
                 <div class="input-container">
-                    <label for="confirm_password">Confirm Password</label>
-                    {% if guide_form.confirm_password.errors %}
+                  <label for="confirm_password">Confirm Password</label>
+                  {% if guide_form.confirm_password.errors %}
                     {{ guide_form.confirm_password(class="form-control form-control-lg is-invalid") }}
                     <div class="invalid-feedback">
-                            {% for error in guide_form.confirm_password.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ guide_form.confirm_password(class="form-control", placeholder="Confirm Password" ) }}
-                    {% endif %}
+                      {% for error in guide_form.confirm_password.errors %}
+                        <span>{{ error }}</span>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ guide_form.confirm_password(class="form-control", placeholder="Confirm Password" ) }}
+                  {% endif %}
                 </div>
             
                 <div class="button-container">
-                    <button type="submit" name="submit_tour_guide" class="primary-btn">Create Account</button>
+                  <button type="submit" name="submit_tour_guide" class="primary-btn">Create Account</button>
                 </div>
-            </form>
-            
-            
+
+              </form>
 
             </div>
           </div>
 
+          <!-- Tour Guide List -->
           <div class="container">
             <h1 class="page-title">My Tour Guides</h1>
             <div class="tour-guide-list">
-                {% for guide in tour_guides %}
-                    <div class="tour-guide-card">
-                      <div class="profile-picture">
-                        <img src="Image/doonaaaaa.jpg" alt="Tour Guide Profile Picture">
-                      </div>
-                        <div class="guide-info">
-                            <h3 class="guide-name">{{ guide.user.first_name }} {{ guide.user.last_name }}</h3>
-                            <p class="price">₱1,500 per tour</p>
-                            <div class="ratings">4.5 ★★★★☆</div>
-                            <p class="status active">Status: Active</p>
-                            <button class="view-btn" onclick="redirectToProfile()">View Profile</button>
-                        </div>
-                    </div>
-                {% else %}
-                    <p>No tour guides available.</p>
-                {% endfor %}
+              {% for guide in tour_guides %}
+              <div class="tour-guide-card">
+                <div class="profile-picture">
+                  <img src="{{ url_for('static', filename='profile_pics/' + (guide.user.profile_img or 'default.png')) }}" alt="Tour Guide Profile Picture" >
+                </div>
+                  <div class="guide-info">
+                      <h3 class="guide-name">{{ guide.user.first_name }} {{ guide.user.last_name }}</h3>
+                      <h2 class="guide-name">{{ guide.user.email }}</h2>
+                      <h3 class="guide-name">{{ guide.contact_num }}</h3>
+                      <p class="price">₱ {{ guide.price }}</p>
+                      <p>Guide Pofile:{{ "Active" if guide.active else "Inactive" }}</p>
+                      <p>Account:{{ "Active" if guide.account_status else "Inactive" }}</p>
+                      <form method="POST" action="{{ url_for('touroperator.toggle_tour_guide_status', id=guide.id) }}">
+                      <button class="status-btn {{ 'deactivate' if guide.active else '' }}">
+                      {{ 'Deactivate Profile' if guide.active else 'Activate Profile' }}
+                      </button>
+                      </form>
+                      <form method="POST" action="{{ url_for('touroperator.toggle_guide_account_status', id=guide.id) }}">
+                        <button class="status-btn {{ 'deactivate' if guide.account_status else '' }}">
+                        {{ 'Deactivate Account' if guide.account_status else 'Activate Account' }}
+                        </button>
+                        </form>
+                        <button class="view-btn" onclick="redirectToProfile('{{ guide.id }}')">View Profile</button>
+                  </div>
+                </div>
+              {% else %}
+                <p>No tour guides available.</p>
+              {% endfor %}
             </div>
+            <hr>
+            <br>
+            <h2 class="page-title">Available Tour Guides for TODAY</h2>
+            <br>
+              <table class="table table-bordered">
+                  <thead>
+                      <tr>
+                          <th>Tour Guide Name</th>
+                          <th>Contact Number</th>
+                          <th>Price</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for tour_guide, user in available_guides %}
+                      <tr>
+                          <td>{{ user.first_name }} {{ user.last_name }}</td> <!-- Full name -->
+                          <td>{{ tour_guide.contact_num }}</td>
+                          <td>{{ tour_guide.price }}</td>
+                      </tr>
+                      {% else %}
+                      <tr>
+                          <td colspan="3">No available tour guides for today.</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+              </table>
+
+          </div>
+
+
+
+
         </div>
 
-
-
-
-            </div>
-
   
-            <!-- Account Tab -->
-            <div class="tab-pane active" id="account">
-                <div class="account-card">
-                <h2 class="account-header">Account</h2> 
+        <!-- Account Tab -->
+        <div class="tab-pane active" id="account">
+          <div class="account-card">
+            <h2 class="account-header">Account</h2> 
             
             <!-- Profile Picture Upload -->
             <div class="profile-overview">
+              
               <!-- Dynamically load profile picture from the backend -->
-              <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic-operator" />
+              <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.png')) }}" alt="Profile Picture" class="profile-pic" id="profile-pic-operator" />
 
             
               <!-- Hidden file input for image upload -->
@@ -645,20 +756,22 @@
                   <button class="primary-btn" id="close-cropper-modal">Close</button>
                 </div>
               </div>
-              </div>
+
+            </div>
             
     
-              <div class="boxx">
+            <div class="boxx">
               <!-- Name Section -->
               <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }}</span> </h1>
               <h2 class="h2-guide-name" > <span id="full-name">{{ current_user.tour_operator.municipal }}</span> </h2>
 
-                    
+                      
               <div class="contact-touroperator-info">
                 <h3>Contact Information</h3>
               </div>
-               <!-- Email Section -->
-               <div class="input-group">
+
+              <!-- Email Section -->
+              <div class="input-group">
                 <label for="email">
                   Email 
                   <button class="edit-btn" id="guide-edit-email-btn">&#9998;</button>
@@ -669,12 +782,12 @@
               <!-- Contact Number Section -->
               <div class="input-group">
                 <label for="contact-number">
-                  Contact Number
+                  <h3 class="contact-info">Contact Information</h3>
                   <button class="edit-btn" id="guide-edit-contact-btn">&#9998;</button>
                 </label>
                 <input type="text" id="contact-number" value="{{current_user.tour_operator.contact_num }}" disabled />
               </div>
-                  
+                    
               <!-- Password Section -->
               <div class="input-group">
                 <label for="current-password">
@@ -683,75 +796,82 @@
                 </label>
                 <input type="password" id="current-password" placeholder="••••••••" disabled />
               </div>
+
             </div>
           </div>
 
-                  <!-- Modal Overlay -->
-      <div id="modal-overlay" class="modal-overlay hidden"></div>
+          <!-- Modal Overlay -->
+          <div id="modal-overlay" class="modal-overlay hidden"></div>
           
-              <!-- Password Confirmation Modal -->
-              <div id="guide-password-confirm-modal" class="modal hidden">
-                <div class="modal-content">
-                    <h3>Enter Password</h3>
-                    <input type="password" id="guide-confirm-password-input" placeholder="Enter your password" />
-                    <div class="modal-button-container">
-                        <button class="cancel-btn" id="guide-password-cancel-btn">Cancel</button>
-                        <button class="confirm-btn" id="guide-password-confirm-btn">Confirm</button>
-                    </div>
-                </div>
+          <!-- Password Confirmation Modal -->
+          <div id="guide-password-confirm-modal" class="modal hidden">
+            <div class="modal-content">
+              <h3>Enter Password</h3>
+              <input type="password" id="guide-confirm-password-input" placeholder="Enter your password" />
+              <div class="modal-button-container">
+                <button class="cancel-btn" id="guide-password-cancel-btn">Cancel</button>
+                <button class="confirm-btn" id="guide-password-confirm-btn">Confirm</button>
+              </div>
             </div>
+          </div>
             
 
-              <!-- Change Email Modal -->
-              <div id="guide-change-email-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h3>Change Email</h3>
-                  <label for="guide-new-email-input">New Email:</label>
-                  <input type="email" id="guide-new-email-input" placeholder="Enter new email" />
-                  <div class="modal-button-container">
-                    <button class="cancel-btn" id="guide-cancel-email-btn">Cancel</button>
-                    <button class="confirm-btn" id="guide-save-email-btn">Save Email</button>
-                  </div>
-                </div>
+          <!-- Change Email Modal -->
+          <div id="guide-change-email-modal" class="modal hidden">
+            <div class="modal-content">
+              <h3>Change Email</h3>
+              <label for="guide-new-email-input">New Email:</label>
+              <input type="email" id="guide-new-email-input" placeholder="Enter new email" />
+              <div class="modal-button-container">
+                <button class="cancel-btn" id="guide-cancel-email-btn">Cancel</button>
+                <button class="confirm-btn" id="guide-save-email-btn">Save Email</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Password Modal -->
+          <div id="guide-change-password-modal" class="modal hidden">
+            <div class="modal-content">
+              <h3>Change Password</h3>
+              <label for="guide-new-password">New Password:</label>
+              <input type="password" id="guide-new-password" placeholder="Enter new password" />
+              <label for="guide-confirm-new-password">Confirm New Password:</label>
+              <input type="password" id="guide-confirm-new-password" placeholder="Confirm new password" />
+
+              <div class="modal-button-container">
+                <button class="cancel-btn" id="guide-cancel-password-btn">Cancel</button>
+                <button class="confirm-btn" id="guide-save-password-btn">Save Password</button>
               </div>
 
-              <!-- Change Password Modal -->
-              <div id="guide-change-password-modal" class="modal hidden">
-                  <div class="modal-content">
-                      <h3>Change Password</h3>
-                      <label for="guide-new-password">New Password:</label>
-                      <input type="password" id="guide-new-password" placeholder="Enter new password" />
-                      <label for="guide-confirm-new-password">Confirm New Password:</label>
-                      <input type="password" id="guide-confirm-new-password" placeholder="Confirm new password" />
-                      <div class="modal-button-container">
-                          <button class="cancel-btn" id="guide-cancel-password-btn">Cancel</button>
-                          <button class="confirm-btn" id="guide-save-password-btn">Save Password</button>
-                      </div>
-                  </div>
+            </div>
+          </div>
+
+          <!-- Change Contact Modal -->
+          <div id="guide-change-contact-modal" class="modal hidden">
+            <div class="modal-content">
+              <h3>Change Contact Number</h3>
+              <label for="guide-new-contact-input">New Contact Number:</label>
+              <input type="text" id="guide-new-contact-input" placeholder="Enter new contact number" />
+              
+              <div class="modal-button-container">
+                <button class="cancel-btn" id="guide-cancel-contact-btn">Cancel</button>
+                <button class="confirm-btn" id="guide-save-contact-btn">Save Contact</button>
               </div>
 
-              <!-- Change Contact Modal -->
-              <div id="guide-change-contact-modal" class="modal hidden">
-                <div class="modal-content">
-                  <h3>Change Contact Number</h3>
-                  <label for="guide-new-contact-input">New Contact Number:</label>
-                  <input type="text" id="guide-new-contact-input" placeholder="Enter new contact number" />
-                  <div class="modal-button-container">
-                    <button class="cancel-btn" id="guide-cancel-contact-btn">Cancel</button>
-                    <button class="confirm-btn" id="guide-save-contact-btn">Save Contact</button>
-                  </div>
-                </div>
-              </div>            
+            </div>
+          </div>            
         </div>
   
-      <!-- Logout Confirmation Modal -->
-      <div id="logout-modal" class="modal hidden">
-        <div class="modal-content">
-          <h3>Confirm Logout</h3>
-          <button class="primary-btn" id="confirm-logout">Logout</button>
-          <button class="primary-btn" id="cancel-logout">Cancel</button>
+        <!-- Logout Confirmation Modal -->
+        <div id="logout-modal" class="modal hidden">
+          <div class="modal-content">
+            <h3>Confirm Logout</h3>
+            <button class="primary-btn" id="confirm-logout">Logout</button>
+            <button class="primary-btn" id="cancel-logout">Cancel</button>
+          </div>
         </div>
-      </div>
 
+      </div> 
+    </div>
   </body>
 </html>

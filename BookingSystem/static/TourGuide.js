@@ -123,32 +123,36 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   loadInitialData();
 
-  // Toggle About Me Edit Mode
-  editAboutBtn.addEventListener('click', () => toggleEdit(aboutText, editAboutBtn, saveAboutBtn));
-  saveAboutBtn.addEventListener('click', async () => {
-    const updatedBio = aboutText.value;
-    if (!updatedBio.trim()) {
-      alert("Please enter text for 'About Me'");
-      return;
+// Toggle About Me Edit Mode
+editAboutBtn.addEventListener('click', () => toggleEdit(aboutText, editAboutBtn, saveAboutBtn));
+
+saveAboutBtn.addEventListener('click', async () => {
+  const updatedBio = aboutText.value;
+  if (!updatedBio.trim()) {
+    showToast('Please enter text for "About Me"', 'error'); // Error toast
+    return;
+  }
+  try {
+    const response = await fetch('/tourguide/update_about_me', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bio: updatedBio })
+    });
+    const result = await response.json();
+    if (result.success) {
+      showToast('About Me updated successfully!', 'success'); // Success toast
+    } else {
+      showToast('Failed to update About Me.', 'error'); // Error toast
     }
-    try {
-      const response = await fetch('/tourguide/update_about_me', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bio: updatedBio })
-      });
-      const result = await response.json();
-      if (result.success) {
-        alert('About Me updated successfully!');
-      } else {
-        alert('Failed to update About Me.');
-      }
-    } catch (error) {
-      console.error('Error saving About Me:', error);
-      alert('An error occurred. Please try again.');
-    }
-    toggleEdit(aboutText, editAboutBtn, saveAboutBtn, false);
-  });
+  } catch (error) {
+    console.error('Error saving About Me:', error);
+    showToast('An error occurred. Please try again.', 'error'); // Error toast
+  }
+  toggleEdit(aboutText, editAboutBtn, saveAboutBtn, false);
+});
+
+
+
 
   function toggleEdit(input, editBtn, saveBtn, isEditing = true) {
     input.disabled = !isEditing;
@@ -172,6 +176,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
   }
 
+  // Usage in createEditableListItem
   function createEditableListItem(text = 'New Item') {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -180,9 +185,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       <button class="remove-btn">&#8722;</button>
     `;
     li.querySelector('.remove-btn').addEventListener('click', () => {
-      if (confirm("Are you sure you want to remove this item?")) {
+      showConfirmationModal("Are you sure you want to remove this item?", () => {
         li.remove();
-      }
+      });
     });
     return li;
   }
@@ -198,11 +203,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     editBtn.classList.toggle('hidden', isEditing);
     saveBtn.classList.toggle('hidden', !isEditing);
   }
-
   async function saveCharacteristics() {
     const characteristics = Array.from(document.querySelectorAll('#characteristics-list .editable')).map(item => item.textContent.trim());
     if (characteristics.some(item => !item)) {
-      alert("Please ensure all characteristics have content.");
+      showToast("Please ensure all characteristics have content.", 'error'); // Error toast
       return;
     }
     try {
@@ -213,21 +217,21 @@ document.addEventListener('DOMContentLoaded', async function () {
       });
       const result = await response.json();
       if (result.success) {
-        alert('Characteristics updated successfully!');
+        showToast('Characteristics updated successfully!', 'success'); // Success toast
         updateDisplayList(document.getElementById('characteristics-list'), characteristics);
       } else {
-        alert('Failed to update Characteristics. Please try again.');
+        showToast('Failed to update Characteristics. Please try again.', 'error'); // Error toast
       }
     } catch (error) {
       console.error('Error saving Characteristics:', error);
-      alert('An error occurred. Please try again.');
+      showToast('An error occurred. Please try again.', 'error'); // Error toast
     }
   }
-
+  
   async function saveSkills() {
     const skills = Array.from(document.querySelectorAll('#skills-list .editable')).map(item => item.textContent.trim());
     if (skills.some(item => !item)) {
-      alert("Please ensure all skills have content.");
+      showToast("Please ensure all skills have content.", 'error'); // Error toast
       return;
     }
     try {
@@ -238,16 +242,17 @@ document.addEventListener('DOMContentLoaded', async function () {
       });
       const result = await response.json();
       if (result.success) {
-        alert('Skills updated successfully!');
+        showToast('Skills updated successfully!', 'success'); // Success toast
         updateDisplayList(document.getElementById('skills-list'), skills);
       } else {
-        alert('Failed to update Skills. Please try again.');
+        showToast('Failed to update Skills. Please try again.', 'error'); // Error toast
       }
     } catch (error) {
       console.error('Error saving Skills:', error);
-      alert('An error occurred. Please try again.');
+      showToast('An error occurred. Please try again.', 'error'); // Error toast
     }
   }
+  
 
   function updateDisplayList(listElement, items) {
     listElement.innerHTML = '';
@@ -477,104 +482,83 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
 
-
-
-
 // Profile Picture Cropper Modal Logic
-const changePicBtn = document.getElementById('change-pic-btn');
-const uploadPicInput = document.getElementById('upload-pic');
-const profilePic = document.getElementById('profile-pic');
-const cropperModal = document.getElementById('cropper-modal');
-const cropperContainer = document.getElementById('cropper-container');
-const cropBtn = document.getElementById('crop-btn');
-const closeCropperBtn = document.getElementById('close-cropper-modal');
-const savePicBtn = document.getElementById('save-pic-btn');
-let cropper;
+const profileOverview = document.getElementById('tourguide-profile-overview');
+if (profileOverview) {
+  const changePicBtn = profileOverview.querySelector('#change-pic-btn');
+  const uploadPicInput = profileOverview.querySelector('#upload-pic');
+  const profilePic = profileOverview.querySelector('#profile-pic');
+  const cropperModal = profileOverview.querySelector('#cropper-modal');
+  const cropperContainer = profileOverview.querySelector('#cropper-container');
+  const cropAndSaveBtn = profileOverview.querySelector('#crop-and-save-btn');
+  const closeCropperBtn = profileOverview.querySelector('#close-cropper-modal');
+  let cropper;
 
-// Open file input on button click
-changePicBtn.addEventListener('click', () => uploadPicInput.click());
+  // Open file input on button click
+  changePicBtn.addEventListener('click', () => uploadPicInput.click());
 
-// Show cropper modal on image selection
-uploadPicInput.addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      img.id = 'crop-image';
-      cropperContainer.innerHTML = ''; // Clear previous image
-      cropperContainer.appendChild(img);
-      cropperModal.classList.add('show'); // Show the cropper modal
+  // Show cropper modal on image selection
+  uploadPicInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.id = 'crop-image';
+        cropperContainer.innerHTML = ''; // Clear previous image
+        cropperContainer.appendChild(img);
+        cropperModal.classList.add('show'); // Show the cropper modal
 
-      // Destroy previous cropper instance if it exists and create a new one
-      if (cropper) cropper.destroy();
-      cropper = new Cropper(img, {
-        aspectRatio: 1,
-        viewMode: 1,
-        movable: true,
-        zoomable: true,
-        scalable: true,
-        cropBoxResizable: true,
+        // Destroy previous cropper instance if it exists and create a new one
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(img, {
+          aspectRatio: 1,
+          viewMode: 1,
+          movable: true,
+          zoomable: true,
+          scalable: true,
+          cropBoxResizable: true,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Crop and save profile picture
+  cropAndSaveBtn.addEventListener('click', () => {
+    cropper.getCroppedCanvas({ width: 200, height: 200 }).toBlob((blob) => {
+      const formData = new FormData();
+      formData.append('profile_picture', blob);
+
+      console.log("Uploading cropped profile picture...");
+
+      fetch('/tourguide/upload_profile_picture', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          profilePic.src = `${data.url}?t=${new Date().getTime()}`;
+          cropperModal.classList.remove('show');
+          showToast('Profile picture saved successfully!', 'success'); // Replace console log
+        } else {
+          showToast('Failed to save profile picture.', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error uploading image:', error);
+        showToast('An error occurred while saving the picture.', 'error');
       });
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-// Crop and update profile picture preview
-cropBtn.addEventListener('click', () => {
-  const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
-  if (canvas) {
-    profilePic.src = canvas.toDataURL(); // Update the profile picture preview
-    cropperModal.classList.remove('show'); // Close modal
-    savePicBtn.classList.remove('hidden'); // Show save button
-  } else {
-    console.error("Error: Cropping failed. Canvas is not generated.");
-  }
-});
-
-// Close cropper modal
-closeCropperBtn.addEventListener('click', () => {
-  cropperModal.classList.remove('show');
-});
-
-// Save profile picture to backend
-savePicBtn.addEventListener('click', () => {
-  cropper.getCroppedCanvas({ width: 200, height: 200 }).toBlob((blob) => {
-    const formData = new FormData();
-    formData.append('profile_picture', blob);
-
-    console.log("Uploading profile picture...");
-
-    fetch('/tourguide/upload_profile_picture', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log("Server response:", data);
-
-      if (data.success) {
-        // Append a timestamp to prevent caching issues and update the profile picture in the UI
-        const newImageUrl = `${data.url}?t=${new Date().getTime()}`;
-        profilePic.src = newImageUrl;
-        
-        savePicBtn.classList.add('hidden');
-        alert('Profile picture saved successfully!');
-      } else {
-        alert('Failed to save profile picture.');
-      }
-    })
-    .catch(error => {
-      console.error('Error uploading image:', error);
-      alert('An error occurred while saving the picture.');
     });
   });
-});
 
-
-
+  // Close cropper modal
+  closeCropperBtn.addEventListener('click', () => {
+    cropperModal.classList.remove('show');
+  });
+}
 
 
 
@@ -612,471 +596,6 @@ closeBookingModal.addEventListener('click', () => {
   bookingModal.classList.remove('show');
 });
 
-
-
-
-
-
-
-
-
-// //CALENDAR
-// document.addEventListener('DOMContentLoaded', function () {
-//   const calendarEl = document.getElementById('availability-calendar');
-//   const editAvailabilityBtn = document.getElementById('edit-availability');
-//   const markAvailableBtn = document.getElementById('mark-available');
-//   const markUnavailableBtn = document.getElementById('mark-unavailable');
-//   const resetCalendarBtn = document.getElementById('reset-calendar');
-//   const saveAvailabilityBtn = document.getElementById('save-availability');
-
-//   let isEditing = false;
-//   let selectedDate = null;
-
-//   // Initialize FullCalendar for tour guide's availability management
-//   const calendar = new FullCalendar.Calendar(calendarEl, {
-//     initialView: 'dayGridMonth',
-//     selectable: true,
-//     selectOverlap: false,
-//     headerToolbar: {
-//       left: 'prev,next today',
-//       center: 'title',
-//       right: 'dayGridMonth,timeGridWeek,timeGridDay',
-//     },
-//     events: [],
-//     select: function (info) {
-//       if (isEditing) {
-//         const existingEvent = findEventByDate(info.startStr);
-//         if (!existingEvent) selectedDate = info.startStr;
-//         else alert('This date already has a status.');
-//         calendar.unselect();
-//       } else {
-//         alert('Enable edit mode to mark availability.');
-//       }
-//     },
-//     eventClick: function (info) {
-//       if (isEditing && info.event.extendedProps.status !== 'booked') {
-//         info.event.remove();
-//       } else if (info.event.extendedProps.status === 'booked') {
-//         alert('This date is booked and cannot be changed.');
-//       }
-//     },
-//   });
-
-//   calendar.render();
-
-//   // Load availability and set FullCalendar
-//   async function loadAvailability() {
-//     const tourGuideId = currentUserId; // Use the actual tour guide's ID
-//  // Update this as necessary to dynamically retrieve the ID
-//     try {
-//         console.log(`Fetching availability data from URL: /tourguide/get_availability/${tourGuideId}`);
-        
-//         const response = await fetch(`/tourguide/get_availability/${tourGuideId}`);
-        
-//         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-//         const availability = await response.json();
-//         console.log("Fetched availability data:", availability);
-
-//         if (!calendar) {
-//             throw new Error("Calendar instance is not defined.");
-//         }
-
-//         // Clear current events to avoid duplication
-//         calendar.getEvents().forEach(event => event.remove());
-
-//         // Populate FullCalendar with fetched availability data
-//         availability.forEach(entry => {
-//             const color = entry.status === 'available' ? '#4ecdc4' : '#e63946';
-//             const title = entry.status === 'available' ? 'Available' : 'Unavailable';
-//             calendar.addEvent({
-//                 title: title,
-//                 start: entry.date,
-//                 allDay: true,
-//                 backgroundColor: color,
-//                 textColor: 'white',
-//                 extendedProps: { status: entry.status },
-//             });
-//         });
-//     } catch (error) {
-//         console.error("Error loading availability:", error);
-//     }
-//   }
-
-//   loadAvailability(); // Call to load availability on page load
-
-//   // Helper function to find if an event exists by date
-//   function findEventByDate(date) {
-//     return calendar.getEvents().find(event => event.startStr === date);
-//   }
-
-//   // Toggle edit mode and show/hide controls
-//   editAvailabilityBtn.addEventListener('click', () => {
-//     isEditing = !isEditing;
-//     toggleEditButtons(isEditing);
-//   });
-
-//   function toggleEditButtons(isEditing) {
-//     markAvailableBtn.classList.toggle('hidden', !isEditing);
-//     markUnavailableBtn.classList.toggle('hidden', !isEditing);
-//     resetCalendarBtn.classList.toggle('hidden', !isEditing);
-//     saveAvailabilityBtn.classList.toggle('hidden', !isEditing);
-//     editAvailabilityBtn.textContent = isEditing ? 'Exit Edit Mode' : 'Edit Availability';
-//   }
-
-//   // Mark selected date as available
-//   markAvailableBtn.addEventListener('click', () => {
-//     if (selectedDate) {
-//       addEvent('Available', selectedDate, '#4ecdc4', 'available');
-//       selectedDate = null;
-//     }
-//   });
-
-//   // Mark selected date as unavailable
-//   markUnavailableBtn.addEventListener('click', () => {
-//     if (selectedDate) {
-//       addEvent('Unavailable', selectedDate, '#e63946', 'unavailable');
-//       selectedDate = null;
-//     }
-//   });
-
-//   // Add event to the calendar with title, color, and status
-//   function addEvent(title, date, color, status) {
-//     if (!findEventByDate(date)) {
-//       calendar.addEvent({
-//         title: title,
-//         start: date,
-//         allDay: true,
-//         backgroundColor: color,
-//         textColor: 'white',
-//         extendedProps: { status: status },
-//       });
-//     } else {
-//       alert('This date already has a status.');
-//     }
-//   }
-
-//   // Reset calendar events, excluding booked ones
-//   resetCalendarBtn.addEventListener('click', () => {
-//     calendar.getEvents().forEach(event => {
-//       if (event.extendedProps.status !== 'booked') event.remove();
-//     });
-//   });
-
-//   // Save availability data to backend
-//   saveAvailabilityBtn.addEventListener('click', async () => {
-//     const savedAvailability = calendar.getEvents().map(event => ({
-//       title: event.title,
-//       start: event.startStr,
-//       status: event.extendedProps.status,
-//     }));
-
-//     console.log("Saving availability data:", savedAvailability);
-
-//     try {
-//       const response = await fetch('/tourguide/set_availability', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(savedAvailability),
-//       });
-
-//       if (response.ok) {
-//         alert('Availability saved successfully!');
-//         loadAvailability(); // Reload availability after saving to refresh the calendar
-//       } else {
-//         alert('Failed to save availability.');
-//       }
-//     } catch (error) {
-//       console.error('Error saving availability:', error);
-//     }
-//   });
-// });
-
-
-// document.addEventListener('DOMContentLoaded', function () {
-//   const calendarEl = document.getElementById('availability-calendar');
-//   const editAvailabilityBtn = document.getElementById('edit-availability');
-//   const markAvailableBtn = document.getElementById('mark-available');
-//   const markUnavailableBtn = document.getElementById('mark-unavailable');
-//   const resetCalendarBtn = document.getElementById('reset-calendar');
-//   const saveAvailabilityBtn = document.getElementById('save-availability');
-
-//   let isEditing = false;
-
-//   // Initialize FullCalendar
-//   const calendar = new FullCalendar.Calendar(calendarEl, {
-//     initialView: 'dayGridMonth',
-//     selectable: true,
-//     selectOverlap: false,
-//     headerToolbar: {
-//       left: 'prev,next today',
-//       center: 'title',
-//       right: 'dayGridMonth,timeGridWeek,timeGridDay',
-//     },
-//     events: [], // Fetched dynamically
-//     select: function (info) {
-//       if (isEditing) {
-//         toggleEventStatus(info.startStr);
-//       } else {
-//         alert('Enable edit mode to mark availability.');
-//       }
-//       calendar.unselect();
-//     },
-//     eventClick: function (info) {
-//       if (isEditing && info.event.extendedProps.status !== 'booked') {
-//         info.event.remove();
-//       } else if (info.event.extendedProps.status === 'booked') {
-//         alert('This date is booked and cannot be changed.');
-//       }
-//     },
-//   });
-
-//   calendar.render();
-
-//   // Helper: Toggle between available/unavailable
-//   function toggleEventStatus(date) {
-//     const event = calendar.getEvents().find(event => event.startStr === date);
-//     if (event) {
-//       event.remove();
-//     } else {
-//       calendar.addEvent({
-//         title: 'Available',
-//         start: date,
-//         allDay: true,
-//         backgroundColor: '#4ecdc4',
-//         textColor: 'white',
-//         extendedProps: { status: 'available' },
-//       });
-//     }
-//   }
-
-//   // Load availability from the server
-//   async function loadAvailability() {
-//     try {
-//       const response = await fetch('/tourguide/get_availability');
-//       if (!response.ok) throw new Error('Failed to load availability.');
-//       const data = await response.json();
-//       calendar.getEvents().forEach(event => event.remove());
-//       data.forEach(entry => {
-//         calendar.addEvent({
-//           title: entry.status === 'available' ? 'Available' : 'Unavailable',
-//           start: entry.date,
-//           allDay: true,
-//           backgroundColor: entry.status === 'available' ? '#4ecdc4' : '#e63946',
-//           textColor: 'white',
-//           extendedProps: { status: entry.status },
-//         });
-//       });
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-
-//   // Save availability to the server
-//   async function saveAvailability() {
-//     try {
-//       const events = calendar.getEvents().map(event => ({
-//         date: event.startStr,
-//         status: event.extendedProps.status,
-//       }));
-//       const response = await fetch('/tourguide/set_availability', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(events),
-//       });
-//       if (!response.ok) throw new Error('Failed to save availability.');
-//       alert('Availability saved successfully.');
-//       loadAvailability();
-//     } catch (error) {
-//       console.error(error);
-//       alert('Failed to save availability.');
-//     }
-//   }
-
-//   // Attach event listeners
-//   editAvailabilityBtn.addEventListener('click', () => {
-//     isEditing = !isEditing;
-//     [markAvailableBtn, markUnavailableBtn, resetCalendarBtn, saveAvailabilityBtn].forEach(button =>
-//       button.classList.toggle('hidden', !isEditing)
-//     );
-//     editAvailabilityBtn.textContent = isEditing ? 'Exit Edit Mode' : 'Edit Availability';
-//   });
-
-//   markAvailableBtn.addEventListener('click', () => {
-//     const selectedDate = prompt('Enter a date to mark as available (YYYY-MM-DD):');
-//     if (selectedDate) toggleEventStatus(selectedDate);
-//   });
-
-//   markUnavailableBtn.addEventListener('click', () => {
-//     const selectedDate = prompt('Enter a date to mark as unavailable (YYYY-MM-DD):');
-//     if (selectedDate) toggleEventStatus(selectedDate);
-//   });
-
-//   resetCalendarBtn.addEventListener('click', () => {
-//     calendar.getEvents().forEach(event => {
-//       if (event.extendedProps.status !== 'booked') event.remove();
-//     });
-//   });
-
-//   saveAvailabilityBtn.addEventListener('click', saveAvailability);
-
-//   // Initial load
-//   loadAvailability();
-// });
-
-
-
-
-
-
-// document.addEventListener('DOMContentLoaded', function () {
-//   const calendarEl = document.getElementById('availability-calendar');
-//   const editAvailabilityBtn = document.getElementById('edit-availability');
-//   const markAvailableBtn = document.getElementById('mark-available');
-//   const markUnavailableBtn = document.getElementById('mark-unavailable');
-//   const resetCalendarBtn = document.getElementById('reset-calendar');
-//   const saveAvailabilityBtn = document.getElementById('save-availability');
-
-//   let isEditing = false;
-//   let activeStatus = null; // "available" or "unavailable"
-
-//   // Initialize FullCalendar
-//   const calendar = new FullCalendar.Calendar(calendarEl, {
-//     initialView: 'dayGridMonth',
-//     selectable: true,
-//     selectOverlap: false,
-//     headerToolbar: {
-//       left: 'prev,next today',
-//       center: 'title',
-//       right: 'dayGridMonth,timeGridWeek,timeGridDay',
-//     },
-//     events: [], // Fetched dynamically
-//     select: function (info) {
-//       if (isEditing) {
-//         if (activeStatus) {
-//           toggleEventStatus(info.startStr, activeStatus);
-//         } else {
-//           alert('Please select "Mark Available" or "Mark Unavailable" first.');
-//         }
-//       } else {
-//         alert('Enable edit mode to mark availability.');
-//       }
-//       calendar.unselect();
-//     },
-//     eventClick: function (info) {
-//       if (isEditing && info.event.extendedProps.status !== 'booked') {
-//         info.event.remove();
-//       } else if (info.event.extendedProps.status === 'booked') {
-//         alert('This date is booked and cannot be changed.');
-//       }
-//     },
-//   });
-
-//   calendar.render();
-
-//   // Helper: Toggle between available/unavailable
-//   function toggleEventStatus(date, status) {
-//     const event = calendar.getEvents().find(event => event.startStr === date);
-//     if (event) {
-//       if (event.extendedProps.status !== 'booked') {
-//         event.remove();
-//       }
-//     } else {
-//       const title = status === 'available' ? 'Available' : 'Unavailable';
-//       const color = status === 'available' ? '#4ecdc4' : '#e63946';
-//       calendar.addEvent({
-//         title: title,
-//         start: date,
-//         allDay: true,
-//         backgroundColor: color,
-//         textColor: 'white',
-//         extendedProps: { status: status },
-//       });
-//     }
-//   }
-
-//   // Load availability from the server
-//   async function loadAvailability() {
-//     try {
-//       const response = await fetch('/tourguide/get_availability');
-//       if (!response.ok) throw new Error('Failed to load availability.');
-//       const data = await response.json();
-//       calendar.getEvents().forEach(event => event.remove());
-//       data.forEach(entry => {
-//         calendar.addEvent({
-//           title: entry.status === 'available' ? 'Available' : 'Unavailable',
-//           start: entry.date,
-//           allDay: true,
-//           backgroundColor: entry.status === 'available' ? '#4ecdc4' : '#e63946',
-//           textColor: 'white',
-//           extendedProps: { status: entry.status },
-//         });
-//       });
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   }
-
-//   // Save availability to the server
-//   async function saveAvailability() {
-//     try {
-//       const events = calendar.getEvents().map(event => ({
-//         date: event.startStr,
-//         status: event.extendedProps.status,
-//       }));
-//       const response = await fetch('/tourguide/set_availability', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(events),
-//       });
-//       if (!response.ok) throw new Error('Failed to save availability.');
-//       alert('Availability saved successfully.');
-//       loadAvailability();
-//     } catch (error) {
-//       console.error(error);
-//       alert('Failed to save availability.');
-//     }
-//   }
-
-//   // Attach event listeners
-//   editAvailabilityBtn.addEventListener('click', () => {
-//     isEditing = !isEditing;
-//     toggleEditButtons(isEditing);
-//   });
-
-//   function toggleEditButtons(isEditing) {
-//     markAvailableBtn.classList.toggle('hidden', !isEditing);
-//     markUnavailableBtn.classList.toggle('hidden', !isEditing);
-//     resetCalendarBtn.classList.toggle('hidden', !isEditing);
-//     saveAvailabilityBtn.classList.toggle('hidden', !isEditing);
-//     editAvailabilityBtn.textContent = isEditing ? 'Exit Edit Mode' : 'Edit Availability';
-//     activeStatus = null; // Reset active status when exiting edit mode
-//   }
-
-//   // Set active status to "available"
-//   markAvailableBtn.addEventListener('click', () => {
-//     activeStatus = 'available';
-//     alert('Click on dates to mark them as available.');
-//   });
-
-//   // Set active status to "unavailable"
-//   markUnavailableBtn.addEventListener('click', () => {
-//     activeStatus = 'unavailable';
-//     alert('Click on dates to mark them as unavailable.');
-//   });
-
-//   // Reset calendar events, excluding booked ones
-//   resetCalendarBtn.addEventListener('click', () => {
-//     calendar.getEvents().forEach(event => {
-//       if (event.extendedProps.status !== 'booked') event.remove();
-//     });
-//   });
-
-//   saveAvailabilityBtn.addEventListener('click', saveAvailability);
-
-//   // Initial load
-//   loadAvailability();
-// });
 
 
 
@@ -1148,26 +667,25 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Load availability from the server
-  async function loadAvailability() {
-    try {
-      const response = await fetch('/tourguide/get_availability');
-      if (!response.ok) throw new Error('Failed to load availability.');
-      const data = await response.json();
-      calendar.getEvents().forEach(event => event.remove());
-      data.forEach(entry => {
-        calendar.addEvent({
-          title: entry.status === 'available' ? 'Available' : 'Unavailable',
-          start: entry.date,
-          allDay: true,
-          backgroundColor: entry.status === 'available' ? '#4ecdc4' : '#e63946',
-          textColor: 'white',
-          extendedProps: { status: entry.status },
-        });
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  function loadAvailability() {
+    fetch('/tourguide/get_availability')
+        .then(response => response.json())
+        .then(data => {
+            calendar.getEvents().forEach(event => event.remove());
+            data.forEach(entry => {
+                calendar.addEvent({
+                    title: entry.status === 'available' ? 'Available' : entry.status === 'booked' ? 'Booked' : 'Unavailable',
+                    start: entry.date,
+                    allDay: true,
+                    backgroundColor: entry.status === 'available' ? '#4ecdc4' : entry.status === 'booked' ? '#1a535c' : '#e63946',
+                    textColor: 'white',
+                    extendedProps: { status: entry.status },
+                });
+            });
+        })
+        .catch(error => console.error('Error loading availability:', error));
+}
+
 
   // Save availability to the server
   async function saveAvailability() {
@@ -1248,6 +766,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+
 // Elements
 // Elements EMAIL and Contact number and PASSWORD
 document.addEventListener('DOMContentLoaded', function () {
@@ -1274,197 +793,204 @@ document.addEventListener('DOMContentLoaded', function () {
   const guideSaveContactBtn = document.getElementById('guide-save-contact-btn');
   const guideCancelContactBtn = document.getElementById('guide-cancel-contact-btn');
   const modalOverlay = document.getElementById('modal-overlay');
-  
+
   let activeAction = ''; // Track the current action: 'email', 'contact', or 'password'
 
-  // Function to show the password confirmation modal with overlay
-  function openGuidePasswordModal(action) {
-      activeAction = action;
-      guidePasswordModal.classList.add('show');
-      modalOverlay.classList.add('show');
+  // Function to validate email
+  function isValidEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return 'Invalid email format. Please include "@" and a valid domain.';
+    }
+    return ''; // Valid email
   }
 
-  // Function to close the password modal
-  function closeGuidePasswordModal() {
-      guidePasswordModal.classList.remove('show');
-      modalOverlay.classList.remove('show');
-      verifyPasswordInput.value = ''; // Clear password input field
+  // Function to validate password
+  function isValidPassword(password) {
+    if (password.length < 8) return 'Password must be at least 8 characters long.';
+    if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
+    if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.';
+    if (!/[0-9]/.test(password)) return 'Password must contain at least one number.';
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return 'Password must contain at least one special character.';
+    return ''; // Valid password
   }
 
-  // Function to show the specific modal based on action
-  function openActionModal() {
-      if (activeAction === 'email') {
-          guideChangeEmailModal.classList.add('show');
-      } else if (activeAction === 'contact') {
-          guideChangeContactModal.classList.add('show');
-      } else if (activeAction === 'password') {
-          guideChangePasswordModal.classList.add('show');
-      }
-      modalOverlay.classList.add('show');
-  }
-
-  // Function to close all action modals
-  function closeActionModals() {
-      guideChangeEmailModal.classList.remove('show');
-      guideChangeContactModal.classList.remove('show');
-      guideChangePasswordModal.classList.remove('show');
-      modalOverlay.classList.remove('show');
-      newPasswordInput.value = '';
-      confirmNewPasswordInput.value = '';
-  }
-
-  // Open the password verification modal on edit email, contact, or password button click
+  // Open the password verification modal
   guideEditEmailBtn.addEventListener('click', () => openGuidePasswordModal('email'));
   guideEditContactBtn.addEventListener('click', () => openGuidePasswordModal('contact'));
   guideEditPasswordBtn.addEventListener('click', () => openGuidePasswordModal('password'));
 
-  // Close the password verification modal on cancel button click
-  guidePasswordCancelBtn.addEventListener('click', closeGuidePasswordModal);
-
-  // Verify password and open the appropriate modal if successful
+  // Verify password and open the appropriate modal
   guidePasswordConfirmBtn.addEventListener('click', async () => {
     const password = verifyPasswordInput.value.trim();
 
     try {
-      // Send request to verify the password
       const response = await fetch('/tourguide/verify_password', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ password: password })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
       });
 
       const result = await response.json();
 
-      console.log("Password verification result:", result); // Debugging output
-
       if (result.success) {
-          // Password is verified, close password modal and open the respective modal
-          closeGuidePasswordModal();
-          alert("Password verified successfully!"); // Show verification success message
-          openActionModal(); // Only open the action modal if verification is successful
+        closeGuidePasswordModal();
+        openActionModal(); // Open the modal for the intended action
       } else {
-          alert(result.message || 'Password verification failed. Please try again.');
+        alert(result.message || 'Password verification failed. Please try again.');
       }
     } catch (error) {
       console.error('Error verifying password:', error);
-      alert('There was an error verifying your password. Please try again.');
+      alert('An error occurred while verifying the password. Please try again.');
     }
   });
 
-  // Close the email and contact modals on cancel buttons
-  guideCancelEmailBtn.addEventListener('click', closeActionModals);
-  guideCancelContactBtn.addEventListener('click', closeActionModals);
-  guideCancelPasswordBtn.addEventListener('click', closeActionModals);
+// Save the updated email to the backend
+guideSaveEmailBtn.addEventListener('click', async () => {
+  const newEmail = document.getElementById('guide-new-email-input').value.trim();
 
-  // Save the updated email to the backend
-  guideSaveEmailBtn.addEventListener('click', async () => {
-    const newEmail = document.getElementById('guide-new-email-input').value.trim();
+  // Validate the email before making the fetch request
+  const emailValidationError = isValidEmail(newEmail);
+  if (emailValidationError) {
+    showToast(emailValidationError, 'error'); // Show error toast
+    return;
+  }
 
-    if (!newEmail || !newEmail.includes('@')) {
-        alert('Please enter a valid email address.');
-        return;
+  try {
+    guideSaveEmailBtn.disabled = true; // Prevent multiple submissions
+    const response = await fetch('/tourguide/update_email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newEmail }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      emailInput.value = newEmail; // Update displayed email
+      closeActionModals(); // Close modal
+      showToast('New email saved successfully!', 'success'); // Show success toast
+    } else {
+      showToast(result.message || 'Failed to update email. Please try again.', 'error'); // Show error toast
     }
-
-    try {
-      const response = await fetch('/tourguide/update_email', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email: newEmail })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-          emailInput.value = newEmail; // Update displayed email
-          closeActionModals();
-          alert('Email updated successfully!');
-      } else {
-          alert(result.message || 'Failed to update email. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error updating email:', error);
-      alert('There was an error processing your request. Please try again.');
-    }
-  });
-
-  // Save the updated contact number to the backend
-  guideSaveContactBtn.addEventListener('click', async () => {
-    const newContactNumber = guideNewContactInput.value.trim();
-
-    if (!newContactNumber || isNaN(newContactNumber) || newContactNumber.length < 7) {
-        alert('Please enter a valid contact number.');
-        return;
-    }
-
-    try {
-      const response = await fetch('/tourguide/update_contact_number', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ contact_number: newContactNumber })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-          contactNumberInput.value = newContactNumber; // Update displayed contact number
-          closeActionModals();
-          alert('Contact number updated successfully!');
-      } else {
-          alert(result.message || 'Failed to update contact number. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error updating contact number:', error);
-      alert('There was an error processing your request. Please try again.');
-    }
-  });
-
-  // Save the new password to the backend
-  guideSavePasswordBtn.addEventListener('click', async () => {
-    const newPassword = newPasswordInput.value.trim();
-    const confirmNewPassword = confirmNewPasswordInput.value.trim();
-
-    // Validate the new password inputs
-    if (!newPassword || !confirmNewPassword) {
-      alert('Please fill out all password fields.');
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      alert('New passwords do not match.');
-      return;
-    }
-    if (newPassword.length < 8) {
-      alert('New password should be at least 8 characters long.');
-      return;
-    }
-
-    try {
-      // Send a request to update the password
-      const response = await fetch('/tourguide/update_password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new_password: newPassword })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert('Password updated successfully!');
-        closeActionModals(); // Close the modal on success
-      } else {
-        alert(result.message || 'Failed to update password. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error updating password:', error);
-      alert('There was an error processing your request. Please try again.');
-    }
-  });
+  } catch (error) {
+    console.error('Error updating email:', error);
+    showToast('There was an error processing your request. Please try again.', 'error'); // Show error toast
+  } finally {
+    guideSaveEmailBtn.disabled = false;
+  }
 });
+
+
+// Save the updated contact number to the backend
+guideSaveContactBtn.addEventListener('click', async () => {
+  const newContactNumber = guideNewContactInput.value.trim();
+
+  // Validate the contact number
+  if (!newContactNumber || !/^\d{11}$/.test(newContactNumber)) {
+    showToast('Contact number must be exactly 11 digits.', 'error'); // Show error toast
+    return; // Stop further execution
+  }
+
+  try {
+    const response = await fetch('/tourguide/update_contact_number', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact_number: newContactNumber }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      contactNumberInput.value = newContactNumber; // Update displayed contact number
+      closeActionModals(); // Close any open modal or UI
+      showToast('Contact number updated successfully!', 'success'); // Show success toast
+    } else {
+      showToast(result.message || 'Failed to update contact number. Please try again.', 'error'); // Show error toast
+    }
+  } catch (error) {
+    console.error('Error updating contact number:', error);
+    showToast('There was an error processing your request. Please try again.', 'error'); // Show error toast
+  }
+});
+
+
+// Save the new password to the backend
+guideSavePasswordBtn.addEventListener('click', async () => {
+  const newPassword = newPasswordInput.value.trim();
+  const confirmNewPassword = confirmNewPasswordInput.value.trim();
+
+  // Validate input fields
+  if (!newPassword || !confirmNewPassword) {
+    showToast('Please fill out all password fields.', 'error'); // Show error toast
+    return;
+  }
+  if (newPassword !== confirmNewPassword) {
+    showToast('New passwords do not match.', 'error'); // Show error toast
+    return;
+  }
+
+  // Validate password strength
+  const passwordValidationError = isValidPassword(newPassword);
+  if (passwordValidationError) {
+    showToast(passwordValidationError, 'error'); // Show error toast
+    return;
+  }
+
+  try {
+    const response = await fetch('/tourguide/update_password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: newPassword }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showToast('Password updated successfully!', 'success'); // Show success toast
+      closeActionModals(); // Close any open modal or UI
+    } else {
+      showToast(result.message || 'Failed to update password. Please try again.', 'error'); // Show error toast
+    }
+  } catch (error) {
+    showToast('There was an error processing your request. Please try again.', 'error'); // Show error toast
+  }
+});
+
+
+  // Helper functions
+  function openGuidePasswordModal(action) {
+    activeAction = action;
+    guidePasswordModal.classList.add('show');
+    modalOverlay.classList.add('show');
+  }
+
+  function closeGuidePasswordModal() {
+    guidePasswordModal.classList.remove('show');
+    modalOverlay.classList.remove('show');
+    verifyPasswordInput.value = '';
+  }
+
+  function openActionModal() {
+    if (activeAction === 'email') {
+      guideChangeEmailModal.classList.add('show');
+    } else if (activeAction === 'contact') {
+      guideChangeContactModal.classList.add('show');
+    } else if (activeAction === 'password') {
+      guideChangePasswordModal.classList.add('show');
+    }
+    modalOverlay.classList.add('show');
+  }
+
+  function closeActionModals() {
+    guideChangeEmailModal.classList.remove('show');
+    guideChangeContactModal.classList.remove('show');
+    guideChangePasswordModal.classList.remove('show');
+    modalOverlay.classList.remove('show');
+  }
+}); 
+
+
 
 
 
@@ -1549,79 +1075,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-// Save new email
-document.addEventListener('DOMContentLoaded', function () {
-  // Select the guideSaveEmailBtn element
-  const guideSaveEmailBtn = document.getElementById('guide-save-email-btn');
-  const guideNewEmailInput = document.getElementById('guide-new-email-input');
+// // Save new email
+// document.addEventListener('DOMContentLoaded', function () {
+//   // Select the guideSaveEmailBtn element
+//   const guideSaveEmailBtn = document.getElementById('guide-save-email-btn');
+//   const guideNewEmailInput = document.getElementById('guide-new-email-input');
   
-  if (!guideSaveEmailBtn || !guideNewEmailInput) {
-      console.error('Element not found in the DOM.');
-      return;
-  }
+//   if (!guideSaveEmailBtn || !guideNewEmailInput) {
+//       console.error('Element not found in the DOM.');
+//       return;
+//   }
 
-  // Add event listener for the save button
-  guideSaveEmailBtn.addEventListener('click', () => {
-      const newEmail = guideNewEmailInput.value;
-      alert(`New email saved: ${newEmail}`);
-      closeGuideModal(); // Ensure this function is defined
-  });
-});
+//   // Add event listener for the save button
+//   guideSaveEmailBtn.addEventListener('click', () => {
+//       const newEmail = guideNewEmailInput.value;
+//       alert(`New email saved: ${newEmail}`);
+//       closeGuideModal(); // Ensure this function is defined
+//   });
+// });
 
-// Example function to close the modal (make sure this function is defined in your script)
-function closeGuideModal() {
-  const modal = document.getElementById('guide-change-email-modal');
-  if (modal) {
-      modal.classList.add('hidden');
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Save new password
-document.addEventListener('DOMContentLoaded', function () {
-  // Select the elements
-  const guideSavePasswordBtn = document.getElementById('guide-save-password-btn');
-  const newPasswordInput = document.getElementById('guide-new-password');
-  const confirmNewPasswordInput = document.getElementById('guide-confirm-new-password');
-
-  // Check if elements exist before adding event listeners
-  if (!guideSavePasswordBtn || !newPasswordInput || !confirmNewPasswordInput) {
-      console.error('One or more elements not found in the DOM.');
-      return;
-  }
-
-  // Add event listener for the save password button
-  guideSavePasswordBtn.addEventListener('click', () => {
-      const newPassword = newPasswordInput.value;
-      const confirmPassword = confirmNewPasswordInput.value;
-
-      if (newPassword === confirmPassword) {
-          alert('Password changed successfully!');
-          closeGuideModal(); // Ensure this function is defined
-      } else {
-          alert('Passwords do not match.');
-      }
-  });
-});
-
-// Example function to close the modal (make sure this function is defined in your script)
-function closeGuideModal() {
-  const modal = document.getElementById('guide-change-password-modal');
-  if (modal) {
-      modal.classList.add('hidden');
-  }
-}
+// // Example function to close the modal (make sure this function is defined in your script)
+// function closeGuideModal() {
+//   const modal = document.getElementById('guide-change-email-modal');
+//   if (modal) {
+//       modal.classList.add('hidden');
+//   }
+// }
 
 
 
@@ -1635,8 +1114,55 @@ function closeGuideModal() {
 
 
 
+// // Save new password
+// document.addEventListener('DOMContentLoaded', function () {
+//   // Select the elements
+//   const guideSavePasswordBtn = document.getElementById('guide-save-password-btn');
+//   const newPasswordInput = document.getElementById('guide-new-password');
+//   const confirmNewPasswordInput = document.getElementById('guide-confirm-new-password');
 
-// Save new contact number
+//   // Check if elements exist before adding event listeners
+//   if (!guideSavePasswordBtn || !newPasswordInput || !confirmNewPasswordInput) {
+//       console.error('One or more elements not found in the DOM.');
+//       return;
+//   }
+
+//   // Add event listener for the save password button
+//   guideSavePasswordBtn.addEventListener('click', () => {
+//       const newPassword = newPasswordInput.value;
+//       const confirmPassword = confirmNewPasswordInput.value;
+
+//       if (newPassword === confirmPassword) {
+//           alert('Password changed successfully!');
+//           closeGuideModal(); // Ensure this function is defined
+//       } else {
+//           alert('Passwords do not match.');
+//       }
+//   });
+// });
+
+// // Example function to close the modal (make sure this function is defined in your script)
+// function closeGuideModal() {
+//   const modal = document.getElementById('guide-change-password-modal');
+//   if (modal) {
+//       modal.classList.add('hidden');
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // Save new contact number
 
 
 
@@ -1793,8 +1319,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initial Load
   loadReviews(currentPage);
 });
-
-
 
 // DOM Elements
 const toggleButtons = document.querySelectorAll('.toggle-btn');
@@ -2167,3 +1691,72 @@ document.addEventListener('DOMContentLoaded', () => {
     alert(`View details for: ${detail}`);
   };
 });
+
+// Account Message Modal
+// Function to close the modal and redirect to the main page
+function closeTGModal(event) {
+  event.preventDefault();
+  // Hide the modal
+  document.getElementById('tgDeactivationModal').style.display = 'none';
+  // Redirect to the main page
+  window.location.href = "/"; // Replace "/" with the correct URL if needed
+}
+// Wait for the DOM to load before running the script
+document.addEventListener("DOMContentLoaded", () => {
+  // Check the data attribute to see if the modal should be shown
+  const modal = document.getElementById("tgDeactivationModal");
+  const showModal = modal.getAttribute("data-show-modal");
+  if (showModal === "true") {
+      modal.style.display = "flex";
+  }
+});
+
+
+
+
+
+function showToast(message, type = 'success') {
+  const toastContainer = document.getElementById('toast-container');
+  
+  // Create a new toast element
+  const toast = document.createElement('div');
+  toast.classList.add('toast', type);
+  toast.textContent = message;
+
+  // Append the toast to the container
+  toastContainer.appendChild(toast);
+
+  // Remove the toast after a few seconds
+  setTimeout(() => {
+    toast.remove();
+  }, 4000); 
+}
+
+
+function showConfirmationModal(message, onConfirm) {
+  const modal = document.getElementById('confirmation-modal');
+  const confirmMessage = document.getElementById('confirmation-message');
+  const confirmYes = document.getElementById('confirm-yes');
+  const confirmNo = document.getElementById('confirm-no');
+
+  // Set the confirmation message
+  confirmMessage.textContent = message;
+
+  // Show the modal
+  modal.classList.remove('hidden');
+
+  // Add event listeners
+  const handleConfirm = () => {
+    onConfirm();
+    closeModal();
+  };
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+    confirmYes.removeEventListener('click', handleConfirm);
+    confirmNo.removeEventListener('click', closeModal);
+  };
+
+  confirmYes.addEventListener('click', handleConfirm);
+  confirmNo.addEventListener('click', closeModal);
+}

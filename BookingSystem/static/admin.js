@@ -1,13 +1,13 @@
-console.log('TourOperator.js loaded successfully!');
+console.log('Admin Dashboard Loaded Successfully!');
 
 // Ensure everything runs after DOM is fully loaded
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded.');
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM fully loaded.");
 
     // --- Sidebar Toggle Logic ---
     const sidebarToggle = document.querySelector('.btn-sidebar-toggle');
     const sideNav = document.querySelector('.side-nav');
-    
+
     if (sidebarToggle && sideNav) {
         sidebarToggle.addEventListener('click', () => {
             sideNav.classList.toggle('active');
@@ -68,26 +68,55 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Form Submission Logic ---
-    const operatorForm = document.getElementById('operator-form');
+    const operatorForm = document.getElementById("operator-form");
 
     if (operatorForm) {
-        operatorForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Prevent default form submission for custom handling
+        operatorForm.addEventListener("submit", (e) => {
+            e.preventDefault(); // Prevent default form submission
 
-            // Fetch the operator's name from the form input
+            // Fetch password and confirm password inputs
+            const passwordInput = operatorForm.querySelector('input[name="password"]');
+            const confirmPasswordInput = operatorForm.querySelector('input[name="confirm_password"]');
             const operatorNameInput = operatorForm.querySelector('input[name="name"]');
-            const operatorName = operatorNameInput ? operatorNameInput.value : "Tour Operator";
 
-            // Show success message with the operator's name
+            const password = passwordInput ? passwordInput.value.trim() : "";
+            const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : "";
+            const operatorName = operatorNameInput ? operatorNameInput.value.trim() : "Tour Operator";
+
+            // Validate the form
+            let errorMessage = "";
+
+            // Password validation rules
+            if (!password || !confirmPassword) {
+                errorMessage = "Password and Confirm Password fields cannot be empty.";
+            } else if (password !== confirmPassword) {
+                errorMessage = "Passwords do not match. Please try again.";
+            } else if (password.length < 8) {
+                errorMessage = "Password must be at least 8 characters long.";
+            } else if (!/[A-Z]/.test(password)) {
+                errorMessage = "Password must contain at least one uppercase letter.";
+            } else if (!/[a-z]/.test(password)) {
+                errorMessage = "Password must contain at least one lowercase letter.";
+            } else if (!/[0-9]/.test(password)) {
+                errorMessage = "Password must contain at least one number.";
+            }
+
+            if (errorMessage) {
+                alert(errorMessage);
+                if (passwordInput) passwordInput.focus();
+                return; // Stop further execution if validation fails
+            }
+
+            // If validation passes, show success alert
             alert(`Tour Operator Account Created Successfully! Welcome, ${operatorName}!`);
 
             // Close the modal
-            operatorModalWrapper.classList.remove('show');
+            operatorModalWrapper.classList.remove("show");
 
-            // Submit the form programmatically
+            // Programmatically submit the form after a short delay
             setTimeout(() => {
-                operatorForm.submit(); // Delay the submission to mimic alert effect
-            }, 500); // Half-second delay to ensure alert is processed
+                operatorForm.submit();
+            }, 500); // Half-second delay to mimic alert effect
         });
     }
 });

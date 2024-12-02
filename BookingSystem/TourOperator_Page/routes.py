@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, session, jsonify,current_app
+from flask import abort,render_template, redirect, url_for, flash, request, session, jsonify,current_app
 from flask_login import login_required, current_user, logout_user
 from . import touroperator  
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,10 +8,11 @@ from BookingSystem.models import User, TourOperator, TourGuide , send_confirmati
 from werkzeug.utils import secure_filename
 import os
 from flask import jsonify
-from BookingSystem.models import ReviewsRating, ReviewImages
+from BookingSystem.models import ReviewsRating, ReviewImages, Availability, AvailabilityStatus
 from sqlalchemy import func  #!!!!!
 from BookingSystem.models import BookingStatus
 from BookingSystem.utils import update_statuses
+from datetime import date
 
 @touroperator.route('/create_tour_package', methods=['GET', 'POST'])
 @login_required
@@ -244,7 +245,8 @@ def create_tourguide():
             first_name=guide_form.fname.data,
             last_name=guide_form.lname.data,
             email=guide_form.email.data,
-            role='tourguide'
+            role='tourguide',
+            profile_img='default.png'
         )
         new_tourguide_user.set_password(guide_form.password.data)  # Use the set_password method to hash the password
 
@@ -269,6 +271,8 @@ def create_tourguide():
                 user_id=new_tourguide_user.id,
                 toperator_id=tour_operator.id,
                 contact_num=guide_form.contact_number.data,
+                active=False,
+                account_status=True
             )
             db.session.add(new_tourguide_record)
             db.session.commit()  # Commit both the User and TourGuide entries
@@ -287,6 +291,44 @@ def create_tourguide():
     # Render the tour operator dashboard with the form
     return render_template('touroperator_dashboard.html', guide_form=guide_form)
 
+
+@touroperator.route('/toggle_guide_status/<int:id>', methods=['POST'])
+def toggle_tour_guide_status(id):
+    tour_guide = TourGuide.query.get_or_404(id)
+
+    # Toggle the active status
+    tour_guide.active = not tour_guide.active
+
+    # Flash a message based on the new status
+    if tour_guide.active:
+        flash(f"{tour_guide.user.first_name} has been activated.", "success")
+    else:
+        flash(f"{tour_guide.user.first_name} has been deactivated.", "success")
+
+    # Commit the change to the database
+    db.session.commit()
+
+    # Redirect back to the Tour Operator page
+    return redirect(url_for('touroperator.touroperator_dashboard'))
+
+@touroperator.route('/toggle_account_status/<int:id>', methods=['POST'])
+def toggle_guide_account_status(id):
+    tour_guide = TourGuide.query.get_or_404(id)
+
+    # Toggle the active status
+    tour_guide.account_status = not tour_guide.account_status
+
+    # Flash a message based on the new status
+    if tour_guide.account_status:
+        flash(f"{tour_guide.user.first_name} has been activated.", "success")
+    else:
+        flash(f"{tour_guide.user.first_name} has been deactivated.", "success")
+
+    # Commit the change to the database
+    db.session.commit()
+
+    # Redirect back to the Tour Operator page
+    return redirect(url_for('touroperator.touroperator_dashboard'))
 
 
 
@@ -395,13 +437,25 @@ def touroperator_dashboard():
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('main.home'))
 
+    operator = TourOperator.query.filter_by(user_id=current_user.id).first()
     guide_form = UserTourGuideForm()  # Instantiate the form for the dashboard
     package_form = TourPackageForm()
     operator = TourOperator.query.filter_by(user_id=current_user.id).first()
     packages = TourPackage.query.filter_by(toperator_id=current_user.tour_operator.id).all()
-
-    # Fetch all tour guides under the current operator
     tour_guides = TourGuide.query.filter_by(toperator_id=operator.id).all()
+    booking_counts = TourGuide.query.filter_by(toperator_id=operator.id).all()
+    
+    today = date.today()
+    # Query to get available Tour Guides for today
+    available_guides = []
+    for guide in tour_guides:
+        availability = Availability.query.filter_by(tguide_id=guide.id, availability_date=today, status=AvailabilityStatus.AVAILABLE.value).first()
+        if availability:
+            available_guides.append((guide, guide.user))
+
+    show_deactivation_modal = not current_user.tour_operator.tp_active
+        # Pass a flag to the front end for displaying the modal
+
     guide_ids = [guide.id for guide in tour_guides]
 
         # Fetch bookings for all guides under this operator
@@ -515,7 +569,10 @@ def touroperator_dashboard():
         selected_tour_guide_id=tour_guide_id,  # Pass the selected guide ID for dropdown selection
         bookings=bookings,
         booking_counts=booking_counts,
-        BookingStatus=BookingStatus
+        BookingStatus=BookingStatus,
+        show_deactivation_modal=show_deactivation_modal,
+        available_guides=available_guides,
+        today=today
     )
 
 
@@ -559,11 +616,14 @@ def update_contact_number():
     # Validate that a contact number is provided and is in the correct format
     if not new_contact_number:
         return jsonify({'success': False, 'error': 'Contact number is required.'}), 400
-    if not new_contact_number.isdigit() or len(new_contact_number) < 7:
-        return jsonify({'success': False, 'error': 'Invalid contact number format. Please enter a valid number.'}), 400
+    if not new_contact_number.isdigit() or len(new_contact_number) != 11:
+        return jsonify({'success': False, 'error': 'Invalid contact number format. Please enter an 11-digit number.'}), 400
 
     try:
-        # Assuming the `TourOperator` model is related to the `User` model with `tour_operator` relationship
+        # Ensure the user has the correct role and relationship
+        if current_user.role != 'touroperator':
+            return jsonify({'success': False, 'error': 'Unauthorized access.'}), 403
+
         tour_operator = current_user.tour_operator
         if not tour_operator:
             return jsonify({'success': False, 'error': 'Tour operator profile not found.'}), 404
@@ -575,5 +635,5 @@ def update_contact_number():
 
     except Exception as e:
         db.session.rollback()  # Rollback in case of an error
-        print(f"Error updating contact number: {e}")  # Log error for debugging
+        print(f"Error updating contact number: {str(e)}")  # Log error for debugging
         return jsonify({'success': False, 'error': 'An error occurred while updating the contact number. Please try again later.'}), 500

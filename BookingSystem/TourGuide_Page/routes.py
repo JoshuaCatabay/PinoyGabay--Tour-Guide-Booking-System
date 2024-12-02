@@ -22,7 +22,7 @@ from . import tourguide
 from BookingSystem.TourOperator_Page.form import UserTourGuideForm
 from BookingSystem import bcrypt, db
 from werkzeug.security import check_password_hash, generate_password_hash
-from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, TourPackage, Booking
+from BookingSystem.models import User, Characteristic, Skill, Availability, TourGuide, TourPackage, Booking, TourOperator
 from .form import PasswordConfirmationForm
 from datetime import datetime
 from decimal import Decimal
@@ -171,6 +171,11 @@ def tourguide_dashboard():
     if not tour_guide:
         flash("Tour guide profile not found.", "error")
         return redirect(url_for('main.home'))  # Redirect if no profile exists
+    # Check if the associated tour operator's account is deactivated
+    associated_tour_operator = TourOperator.query.get(tour_guide.toperator_id)
+    show_tg_deactivation_modal = associated_tour_operator and not associated_tour_operator.tp_active
+        # Check the account_status
+    show_tg_status_modal = not tour_guide.account_status
 
     # Subqueries for reviews and completed tours
     subquery_reviews = db.session.query(
@@ -201,7 +206,7 @@ def tourguide_dashboard():
 
     # Paginate the reviews
     page = request.args.get('page', 1, type=int)
-    per_page = 4  # Number of reviews per page
+    per_page = 6  # Number of reviews per page
 
     paginated_reviews = ReviewsRating.query.filter_by(tour_guide_id=tour_guide.id) \
                                            .order_by(ReviewsRating.datetime.desc()) \
@@ -210,11 +215,25 @@ def tourguide_dashboard():
     # Prepare reviews for rendering
     reviews_data = []
     for review in paginated_reviews.items:
+        booking = Booking.query.get(review.booking_id)
+        tour_package = TourPackage.query.get(booking.package_id) if booking else None
+        tour_guide = TourGuide.query.get(review.tour_guide_id)
         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
+
+        traveler_profile_path = url_for('static', filename=f"profile_pics/{current_user.profile_img}") if current_user.profile_img else url_for('static', filename="default_traveler_image.jpg")
         tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
+        guide_profile_path = url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}") if tour_guide and tour_guide.user.profile_img else url_for('static', filename="default_guide_image.jpg")
+        tour_package_name = tour_package.name if tour_package else "Unknown Package"
+
+
+
         reviews_data.append({
             "traveler_name": f"{review.user.first_name} {review.user.last_name}",
-            "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
+            "traveler_profile_img": traveler_profile_path,
+            "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "Unknown Guide",
+            "guide_profile_img": guide_profile_path,
+            "tour_package_name": tour_package_name,
+            "tour_image": tour_image_path,
             "rating": review.rating,
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
@@ -270,6 +289,9 @@ def tourguide_dashboard():
         reviews=reviews_data,
         BookingStatus=BookingStatus,
         bookings=bookings,  # Include bookings data here
+        show_tg_deactivation_modal=show_tg_deactivation_modal,
+        show_tg_status_modal=show_tg_status_modal
+        
         
     )
 
@@ -527,6 +549,7 @@ def get_profile_status():
 
 @tourguide.route('/profile/<int:tour_guide_id>')
 def profile(tour_guide_id):
+    user_role = current_user.role
     page = request.args.get('page', 1, type=int)
     per_page = 4  # Number of reviews per page
 
@@ -612,7 +635,7 @@ def profile(tour_guide_id):
         ]  # Include tour packages for the dropdown
     }
 
-    return render_template('tourguide_form.html', profile=profile_data, tour_guide=tour_guide)
+    return render_template('tourguide_form.html', profile=profile_data, tour_guide=tour_guide, user_role=user_role)
 
 
 @tourguide.route('/active_tourguides', methods=['GET'])

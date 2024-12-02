@@ -90,3 +90,16 @@ class UpdateAccountForm(FlaskForm):
             if traveler:
                 raise ValidationError('That username is taken. Please Choose a different one.')
         
+    class UpdatePasswordForm(FlaskForm):
+        password = PasswordField(
+            'New Password',
+            validators=[
+                DataRequired(),
+                Length(min=8, message="Password must be at least 8 characters long."),
+                UppercaseValidator,
+                LowercaseValidator,
+                DigitalValidator,
+                SpecialCharacterValidator
+            ]
+        )
+        submit = SubmitField('Update Password')
