@@ -510,7 +510,7 @@ def touroperator_dashboard():
 
     # Set pagination variables
     page = request.args.get('page', 1, type=int)
-    per_page = 8  # Number of reviews per page
+    per_page = 6  # Number of reviews per page
 
     # Base query for reviews
     reviews_query = ReviewsRating.query.join(TourGuide).filter(
@@ -529,8 +529,15 @@ def touroperator_dashboard():
     # Prepare reviews data for rendering
     reviews_data = []
     for review in paginated_reviews.items:
+        booking = Booking.query.get(review.booking_id)
         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
         tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
+        tour_package = TourPackage.query.get(booking.package_id) if booking else None
+
+        tour_package_name = tour_package.name if tour_package else "Unknown Package"
+
+
+
         reviews_data.append({
             "traveler_name": f"{review.user.first_name} {review.user.last_name}",
             "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
@@ -538,7 +545,8 @@ def touroperator_dashboard():
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
             "tour_guide_name": f"{review.tour_guide.user.first_name} {review.tour_guide.user.last_name}",
-            "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
+            "tour_image": url_for('static', filename=tour_image_path),  # Ensure correct image path
+            "tour_package_name": tour_package_name
         })
 
     # Prepare pagination data

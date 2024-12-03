@@ -33,6 +33,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import func  #!!!!!
 from BookingSystem.models import ReviewsRating, ReviewImages   #!!!!!
 from BookingSystem.models import BookingStatus
+from BookingSystem.models import AvailabilityStatus
+
 
 
 
@@ -738,7 +740,6 @@ def get_availability_for_tour_guide(tour_guide_id):
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
-
 @tourguide.route('/reset_availability', methods=['DELETE'])
 @login_required
 def reset_availability():
@@ -746,12 +747,16 @@ def reset_availability():
         tour_guide = TourGuide.query.filter_by(user_id=current_user.id).first()
         if not tour_guide:
             return jsonify({"error": "Tour guide profile not found"}), 404
-        
-        # Delete all availability records for the tour guide
-        Availability.query.filter_by(tguide_id=tour_guide.id).delete()
-        db.session.commit()
 
+        # Reset availability by deleting "available" and "unavailable" statuses, but keep "booked"
+        Availability.query.filter(
+            Availability.tguide_id == tour_guide.id,
+            Availability.status.in_([AvailabilityStatus.AVAILABLE.value, AvailabilityStatus.UNAVAILABLE.value])
+        ).delete()
+
+        db.session.commit()
         return jsonify({"success": True, "message": "Availability reset successfully."}), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500

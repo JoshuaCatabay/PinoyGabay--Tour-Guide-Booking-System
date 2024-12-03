@@ -1847,3 +1847,25 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.style.display = "flex";
   }
 });
+
+
+
+// Guide Vertical MEnu
+function toggleDropdownMenu(iconElement) {
+  const dropdown = iconElement.closest('.dropdown');
+  dropdown.classList.toggle('show');
+}
+
+// Close dropdown if clicked outside
+document.addEventListener('click', (event) => {
+  const dropdowns = document.querySelectorAll('.dropdown.show');
+  dropdowns.forEach((dropdown) => {
+    if (!dropdown.contains(event.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
+});
+
+
+
+

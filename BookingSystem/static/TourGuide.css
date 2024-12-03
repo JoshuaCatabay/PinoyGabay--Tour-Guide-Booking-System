@@ -82,10 +82,6 @@ h3 {
   display: none;
 }
 
-
-
-
-
 /* Consistent Button Styling */
 button {
   padding: 10px 20px; /* Same padding for all buttons */
@@ -230,6 +226,7 @@ button {
     background: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
     z-index: 1000;
     display: none; /* Hidden by default */
+    backdrop-filter: blur(.5px); /* Blurring effect */
   }
 
 
@@ -972,7 +969,7 @@ textarea:disabled {
     gap: 15px;
     align-items: start;
     padding: 15px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 3px solid #e0e0e0;
     transition: background-color 0.3s ease;
     position: relative; /* Needed for positioning child elements */
     min-height: 120px; /* Ensure sufficient height for buttons */
@@ -1033,9 +1030,10 @@ textarea:disabled {
     color: #555;
   }
 
-  .guide-name {
+  .traveler-name {
     font-weight: bold;
-    color: #4ecdc4;
+    color: #e68a00;
+    text-transform: capitalize;
   }
 
   /* Tour Actions */
@@ -1316,7 +1314,7 @@ textarea:disabled {
     align-self: start;
   }
 
-  /* My Reviews Section */
+
 
 
   /* Input Fields */
@@ -1563,7 +1561,7 @@ textarea:disabled {
   top: 12%; /* Adjust this value to move the container lower */
   left: 55%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: 2000;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1603,7 +1601,7 @@ textarea:disabled {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  z-index: 1500;
   text-align: center;
 }
 

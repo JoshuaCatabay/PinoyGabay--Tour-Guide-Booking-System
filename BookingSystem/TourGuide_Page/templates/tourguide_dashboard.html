@@ -274,7 +274,7 @@
                         {% if booking.date_start != booking.date_end %} - {{ booking.date_end.strftime('%B %d, %Y') }}{% endif %}
                       </p>
                       <p class="tour-traveler">Traveler: 
-                        <span class="guide-name">{{ booking.traveler.first_name }} {{ booking.traveler.last_name }}</span>
+                        <span class="traveler-name">{{ booking.traveler.first_name }} {{ booking.traveler.last_name }}</span>
                       </p>
                     </div>
                     <!-- Buttons Section -->
@@ -453,7 +453,7 @@
             </div>
             
             <!-- Name Section -->
-              <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }} {{ current_user.last_name }}</span> </h1>
+            <h1 class="h2-guide-name" > <span id="full-name">{{ current_user.first_name }} {{ current_user.last_name }}</span> </h1>
 
             <!-- Price Section -->
             <div class="input-group price-group">
@@ -506,7 +506,7 @@
             <!-- Password Confirmation Modal -->
             <div id="guide-password-confirm-modal" class="modal hidden">
               <div class="modal-content">
-                <h3>Enter Password</h3>
+                <h3>Password Verification</h3>
                 <input type="password" id="guide-confirm-password-input" placeholder="Enter your password" />
                 <div class="modal-button-container">
                   <button class="modal-cancel-btn" id="guide-password-cancel-btn">Cancel</button>
@@ -612,16 +612,18 @@
 
 
       </div>
+
+      
       <!-- Toast Message -->
       <div id="toast-container"></div>
 
       <!-- Confirmation Modal -->
       <div id="confirmation-modal" class="hidden">
         <div class="modal-content">
-          <p id="confirmation-message">Are you sure you want to remove this item?</p>
+          <p id="confirmation-message">Are you sure you want to perform this action?</p>
           <div class="modal-actions">
-            <button id="confirm-yes" class="yes-btn">Yes</button>
             <button id="confirm-no" class="no-btn">No</button>
+            <button id="confirm-yes" class="yes-btn">Yes</button>
           </div>
         </div>
       </div>
@@ -638,30 +640,7 @@
     
     </div>
     
-    <script>
-      // Function to close the modal and redirect to the main page
-        function closeTGAccountStatusModal(event) {
-          event.preventDefault(); // Prevent default behavior of the click
 
-          // Hide the modal
-          document.getElementById("tgAccountStatusModal").style.display = "none";
-
-          // Redirect to the main page
-          window.location.href = "/"; // Replace "/" with the correct URL if needed
-        }
-
-        // Wait for the DOM to load before running the script
-        document.addEventListener("DOMContentLoaded", () => { 
-          // Check the data attribute to see if the modal should be shown
-          const accountStatusModal = document.getElementById("tgAccountStatusModal");
-          const showAccountStatus = accountStatusModal.getAttribute("data-show-account-status");
-
-          if (showAccountStatus === "true") {
-              accountStatusModal.style.display = "flex";
-          }
-        });
-
-    </script>
   </body>
 
 </html>
