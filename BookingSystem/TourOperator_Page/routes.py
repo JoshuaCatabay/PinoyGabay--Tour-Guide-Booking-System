@@ -231,42 +231,112 @@ def edit_tour_package(package_id):
 
 
 
+
+
+# @touroperator.route('/create_tourguide', methods=['GET', 'POST'])
+# @login_required
+# def create_tourguide():
+#     guide_form = UserTourGuideForm()
+
+#     if guide_form.validate_on_submit():
+#         # Create a new User instance for the tour guide
+        
+#         hashed_password = bcrypt.generate_password_hash(guide_form.password.data).decode('utf-8')
+        
+#         new_tourguide_user = User(
+#             first_name=guide_form.fname.data,
+#             last_name=guide_form.lname.data,
+#             email=guide_form.email.data,
+#             role='tourguide',
+#             profile_img='default.png'
+#         )
+#         new_tourguide_user.set_password(guide_form.password.data)  # Use the set_password method to hash the password
+
+#         try:
+#             # Add the new tour guide user to the database
+#             db.session.add(new_tourguide_user)
+#             db.session.flush()
+#             # Flush to generate the new user's ID without committing yet
+
+#             # Retrieve the TourOperator associated with the current user
+#             tour_operator = TourOperator.query.filter_by(user_id=current_user.id).first()
+#             if not tour_operator:
+#                 flash("Error: Current user is not a valid tour operator.", 'danger')
+#                 db.session.rollback()  # Rollback any pending changes
+#                 return redirect(url_for('touroperator.touroperator_dashboard'))
+
+#             # Debugging: Check if the tour operator is retrieved correctly
+#             print(f"Tour Operator ID: {tour_operator.id}")
+
+#             # Create the TourGuide entry associated with the new User and TourOperator
+#             new_tourguide_record = TourGuide(
+#                 user_id=new_tourguide_user.id,
+#                 toperator_id=tour_operator.id,
+#                 contact_num=guide_form.contact_number.data,
+#                 active=False,
+#                 account_status=True
+#             )
+#             db.session.add(new_tourguide_record)
+#             db.session.commit()  # Commit both the User and TourGuide entries
+#             send_confirmation_email(new_tourguide_user)
+
+#             # Success message and redirect
+#             flash('Account Created! Check Email to Confirm Account', 'success')
+#             return redirect(url_for('touroperator.touroperator_dashboard'))
+
+#         except Exception as e:
+#             db.session.rollback()
+#             print(f"Database error: {e}")  # Debugging information
+
+#     # Render the tour operator dashboard with the form
+#     return render_template('touroperator_dashboard.html', guide_form=guide_form)
+
 @touroperator.route('/create_tourguide', methods=['GET', 'POST'])
 @login_required
 def create_tourguide():
     guide_form = UserTourGuideForm()
 
+    # Handle AJAX request for email uniqueness check
+    if request.method == 'GET' and request.args.get('email'):
+        email = request.args.get('email', '')
+        if not email:
+            return jsonify({"isUnique": False}), 400
+
+        is_unique = not User.query.filter_by(email=email).first()
+        return jsonify({"isUnique": is_unique}), 200
+
     if guide_form.validate_on_submit():
-        # Create a new User instance for the tour guide
-        
-        hashed_password = bcrypt.generate_password_hash(guide_form.password.data).decode('utf-8')
-        
-        new_tourguide_user = User(
-            first_name=guide_form.fname.data,
-            last_name=guide_form.lname.data,
-            email=guide_form.email.data,
-            role='tourguide',
-            profile_img='default.png'
-        )
-        new_tourguide_user.set_password(guide_form.password.data)  # Use the set_password method to hash the password
-
         try:
-            # Add the new tour guide user to the database
-            db.session.add(new_tourguide_user)
-            db.session.flush()
-            # Flush to generate the new user's ID without committing yet
+            # Validate contact number length and format (additional server-side validation)
+            if len(guide_form.contact_number.data) != 11 or not guide_form.contact_number.data.isdigit():
+                flash('Invalid contact number. Must be 11 digits.', 'danger')
+                return redirect(url_for('touroperator.touroperator_dashboard'))
 
-            # Retrieve the TourOperator associated with the current user
+            # Hash the password
+            hashed_password = bcrypt.generate_password_hash(guide_form.password.data).decode('utf-8')
+
+            # Create new User instance
+            new_tourguide_user = User(
+                first_name=guide_form.fname.data,
+                last_name=guide_form.lname.data,
+                email=guide_form.email.data,
+                role='tourguide',
+                profile_img='default.png'
+            )
+            new_tourguide_user.set_password(guide_form.password.data)
+
+            # Add user to the database
+            db.session.add(new_tourguide_user)
+            db.session.flush()  # Generate user ID without committing
+
+            # Retrieve the current operator
             tour_operator = TourOperator.query.filter_by(user_id=current_user.id).first()
             if not tour_operator:
                 flash("Error: Current user is not a valid tour operator.", 'danger')
-                db.session.rollback()  # Rollback any pending changes
+                db.session.rollback()
                 return redirect(url_for('touroperator.touroperator_dashboard'))
 
-            # Debugging: Check if the tour operator is retrieved correctly
-            print(f"Tour Operator ID: {tour_operator.id}")
-
-            # Create the TourGuide entry associated with the new User and TourOperator
+            # Create the TourGuide record
             new_tourguide_record = TourGuide(
                 user_id=new_tourguide_user.id,
                 toperator_id=tour_operator.id,
@@ -275,39 +345,45 @@ def create_tourguide():
                 account_status=True
             )
             db.session.add(new_tourguide_record)
-            db.session.commit()  # Commit both the User and TourGuide entries
+            db.session.commit()  # Commit the transaction
+
+            # Send confirmation email
             send_confirmation_email(new_tourguide_user)
 
-            # Success message and redirect
             flash('Account Created! Check Email to Confirm Account', 'success')
             return redirect(url_for('touroperator.touroperator_dashboard'))
 
         except Exception as e:
             db.session.rollback()
             print(f"Database error: {e}")  # Debugging information
+            flash('An error occurred while creating the account. Please try again.', 'danger')
 
-    # Render the tour operator dashboard with the form
-    return render_template('touroperator_dashboard.html', guide_form=guide_form)
+    # If form is invalid or not submitted yet, render the dashboard
+    return render_template(
+        'touroperator_dashboard.html',
+        guide_form=guide_form
+    )
 
 
-@touroperator.route('/toggle_guide_status/<int:id>', methods=['POST'])
-def toggle_tour_guide_status(id):
-    tour_guide = TourGuide.query.get_or_404(id)
 
-    # Toggle the active status
-    tour_guide.active = not tour_guide.active
+# @touroperator.route('/toggle_guide_status/<int:id>', methods=['POST'])
+# def toggle_tour_guide_status(id):
+#     tour_guide = TourGuide.query.get_or_404(id)
 
-    # Flash a message based on the new status
-    if tour_guide.active:
-        flash(f"{tour_guide.user.first_name} has been activated.", "success")
-    else:
-        flash(f"{tour_guide.user.first_name} has been deactivated.", "success")
+#     # Toggle the active status
+#     tour_guide.active = not tour_guide.active
 
-    # Commit the change to the database
-    db.session.commit()
+#     # Flash a message based on the new status
+#     if tour_guide.active:
+#         flash(f"{tour_guide.user.first_name} has been activated.", "success")
+#     else:
+#         flash(f"{tour_guide.user.first_name} has been deactivated.", "success")
 
-    # Redirect back to the Tour Operator page
-    return redirect(url_for('touroperator.touroperator_dashboard'))
+#     # Commit the change to the database
+#     db.session.commit()
+
+#     # Redirect back to the Tour Operator page
+#     return redirect(url_for('touroperator.touroperator_dashboard'))
 
 @touroperator.route('/toggle_account_status/<int:id>', methods=['POST'])
 def toggle_guide_account_status(id):
@@ -316,18 +392,14 @@ def toggle_guide_account_status(id):
     # Toggle the active status
     tour_guide.account_status = not tour_guide.account_status
 
-    # Flash a message based on the new status
-    if tour_guide.account_status:
-        flash(f"{tour_guide.user.first_name} has been activated.", "success")
-    else:
-        flash(f"{tour_guide.user.first_name} has been deactivated.", "success")
-
     # Commit the change to the database
     db.session.commit()
 
-    # Redirect back to the Tour Operator page
-    return redirect(url_for('touroperator.touroperator_dashboard'))
-
+    # Return JSON response
+    return jsonify({
+        "success": True,
+        "message": f"{tour_guide.user.first_name}'s account has been {'activated' if tour_guide.account_status else 'deactivated'}."
+    })
 
 
 # @touroperator.route('/dashboard')
@@ -444,12 +516,35 @@ def touroperator_dashboard():
     booking_counts = TourGuide.query.filter_by(toperator_id=operator.id).all()
     
     today = date.today()
+
     # Query to get available Tour Guides for today
     available_guides = []
+    total_available_guides = 0  # Initialize a counter
+
     for guide in tour_guides:
-        availability = Availability.query.filter_by(tguide_id=guide.id, availability_date=today, status=AvailabilityStatus.AVAILABLE.value).first()
-        if availability:
-            available_guides.append((guide, guide.user))
+        availability = Availability.query.filter_by(
+            tguide_id=guide.id,
+            availability_date=today,
+            status=AvailabilityStatus.AVAILABLE.value
+        ).first()
+        guide.is_available_today = bool(availability)
+
+    # Sort guides based on the new priority rules
+    tour_guides = sorted(
+        tour_guides,
+        key=lambda guide: (
+            not guide.is_available_today,  # Available today comes first
+            not guide.account_status,      # Active account comes after that
+            not guide.active,              # Active profile comes next
+            
+        )
+    )
+
+    # Count total available tour guides for today
+    total_available_guides = Availability.query.filter_by(
+        availability_date=today,
+        status=AvailabilityStatus.AVAILABLE.value
+    ).distinct(Availability.tguide_id).count()
 
     show_deactivation_modal = not current_user.tour_operator.tp_active
         # Pass a flag to the front end for displaying the modal
@@ -578,7 +673,8 @@ def touroperator_dashboard():
         BookingStatus=BookingStatus,
         show_deactivation_modal=show_deactivation_modal,
         available_guides=available_guides,
-        today=today
+        today=today,
+        total_available_guides=total_available_guides
     )
 
 

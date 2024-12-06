@@ -315,7 +315,38 @@ def booking():
 
 @main.route('/tourguide_form')
 def tourguideform():
-    return render_template('tourguide_form.html')
+    try:
+        # If the user is not authenticated, redirect to signup page
+        if not current_user.is_authenticated:
+            flash("Please sign up or log in to book your tour guide.", "warning")
+            return redirect(url_for('signup'))  # Redirect unauthenticated users to signup
+        
+        # Query the current user's profile
+        profile = TourGuide.query.filter_by(user_id=current_user.id).first()
+        if not profile:
+            # Handle cases where no profile exists for the user
+            profile = TourGuide(user_id=current_user.id, profile_picture='default.jpg')
+            db.session.add(profile)
+            db.session.commit()
+
+        # Render the tour guide form interface
+        return render_template('tourguide_form.html', profile=profile)
+
+    except Exception as e:
+        print(f"Error in tourguideform route: {e}")  # Log the error
+        flash("An error occurred. Please try again.", "danger")
+        return redirect(url_for('main.home'))  # Redirect to home in case of an error
+    
+@main.route('/check-login-status')
+def check_login_status():
+    return jsonify({'logged_in': current_user.is_authenticated})
+
+@main.route('/redirect_booking')
+def redirect_booking():
+    if current_user.is_authenticated:  # Check if the user is logged in
+        return redirect(url_for('main.booking'))  # Redirect to booking page
+    else:
+        return redirect(url_for('signup'))  # Redirect to signup page 
 
 @main.route('/traveler_dashboard')
 def traveler_dashboard():

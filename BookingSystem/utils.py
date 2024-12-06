@@ -41,7 +41,6 @@ def update_statuses():
         print(f"Updating booking {booking.id} to '{BookingStatus.STATUS_ONGOING.value}'")
         booking.status = BookingStatus.STATUS_ONGOING.value
 
-        # Add notifications for both the traveler and the guide for today's tours
         # Traveler reminder notification
         traveler_message = f"Reminder: Your tour with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} starts today ({booking.date_start})."
         traveler_notification = Notification(
@@ -64,44 +63,19 @@ def update_statuses():
         )
         db.session.add(guide_notification)
 
-    # # Add reminders for tours happening tomorrow
-    # tomorrow_bookings = Booking.query.filter(
-    #     Booking.status == BookingStatus.STATUS_UPCOMING.value,
-    #     Booking.date_start == tomorrow
-    # ).all()
+        # Operator reminder notification
+        if booking.assigned_guide.tour_operator:
+            operator_message_reminder = f"Reminder: The tour by {booking.traveler.first_name} {booking.traveler.last_name} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} starts today ({booking.date_start})."
+            operator_notification_reminder = Notification(
+                user_id=booking.assigned_guide.tour_operator.user_id,
+                booking_id=booking.id,
+                role='operator',
+                message=operator_message_reminder,
+                is_read=False
+            )
+            db.session.add(operator_notification_reminder)
 
-    # for booking in tomorrow_bookings:
-    #     # Traveler tomorrow reminder notification
-    #     traveler_message = f"Reminder: Your tour with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} is scheduled for tomorrow ({booking.date_start})."
-    #     traveler_notification = Notification(
-    #         user_id=booking.user_id,
-    #         booking_id=booking.id,
-    #         role='traveler',
-    #         message=traveler_message,
-    #         is_read=False
-    #     )
-    #     db.session.add(traveler_notification)
-
-    #     # Tour guide tomorrow reminder notification
-    #     guide_message = f"Reminder: Your tour with {booking.traveler.first_name} {booking.traveler.last_name} is scheduled for tomorrow ({booking.date_start})."
-    #     guide_notification = Notification(
-    #         user_id=booking.assigned_guide.user_id,
-    #         booking_id=booking.id,
-    #         role='guide',
-    #         message=guide_message,
-    #         is_read=False
-    #     )
-    #     db.session.add(guide_notification)
-
-    # Update 'Ongoing' to 'Completed'
-
-
-
-
-
-
-    
-    # Only generate notifications for automatic completions if the status is ongoing
+    # Automatically complete ongoing bookings after the end date
     ongoing_bookings = Booking.query.filter(
         Booking.status == BookingStatus.STATUS_ONGOING.value,
         Booking.date_end < today
@@ -137,4 +111,50 @@ def update_statuses():
             )
             db.session.add(guide_notification)
 
+            # Operator notification
+            if booking.assigned_guide.tour_operator:
+                operator_message_complete = f"The tour with {booking.traveler.first_name} {booking.traveler.last_name} conducted by {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} has been completed."
+                operator_notification_complete = Notification(
+                    user_id=booking.assigned_guide.tour_operator.user_id,
+                    booking_id=booking.id,
+                    role='operator',
+                    message=operator_message_complete,
+                    is_read=False
+                )
+                db.session.add(operator_notification_complete)
+
     db.session.commit()
+
+
+    # # Add reminders for tours happening tomorrow
+    # tomorrow_bookings = Booking.query.filter(
+    #     Booking.status == BookingStatus.STATUS_UPCOMING.value,
+    #     Booking.date_start == tomorrow
+    # ).all()
+
+    # for booking in tomorrow_bookings:
+    #     # Traveler tomorrow reminder notification
+    #     traveler_message = f"Reminder: Your tour with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} is scheduled for tomorrow ({booking.date_start})."
+    #     traveler_notification = Notification(
+    #         user_id=booking.user_id,
+    #         booking_id=booking.id,
+    #         role='traveler',
+    #         message=traveler_message,
+    #         is_read=False
+    #     )
+    #     db.session.add(traveler_notification)
+
+    #     # Tour guide tomorrow reminder notification
+    #     guide_message = f"Reminder: Your tour with {booking.traveler.first_name} {booking.traveler.last_name} is scheduled for tomorrow ({booking.date_start})."
+    #     guide_notification = Notification(
+    #         user_id=booking.assigned_guide.user_id,
+    #         booking_id=booking.id,
+    #         role='guide',
+    #         message=guide_message,
+    #         is_read=False
+    #     )
+    #     db.session.add(guide_notification)
+
+    # Update 'Ongoing' to 'Completed'
+
+

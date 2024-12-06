@@ -27,6 +27,9 @@
       <!-- Sidebar Navigation -->
       <nav class="side-nav">
         <h2 style="color: azure;" >Operator Dashboard</h2>
+
+        <hr>
+        <br>
             
         <ul>
           <li><a href="#" class="nav-link active" data-tab="tour-management">Tour Management</a></li>
@@ -98,6 +101,12 @@
                 <div class="card-icon"><i class="fas fa-comments"></i></div>
                 <h3>Total Reviews</h3>
                 <p>{{ total_reviews }}</p>
+              </div>
+
+              <div class="overview-card">
+                <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+                <h3>Available Guides Today</h3>
+                <p>{{ total_available_guides }}</p>
               </div>
             </div>
           </div>
@@ -387,7 +396,7 @@
             <div class="modal-content">
 
               <h3 id="form-modal-title">Create/Edit Tour Package</h3>
-
+    
               <form id="tour-package-form" class="form-layout" method="POST" enctype="multipart/form-data" action="{{ url_for('touroperator.create_tour_package') }}">
                 {{ package_form.hidden_tag() }}
                 
@@ -599,9 +608,12 @@
                 <img src="{{ url_for('static', filename='profile_pics/' + (guide.user.profile_img or 'default.png')) }}" alt="Tour Guide Profile Picture">
               </div>
               
-                <!-- Availability Status -->
-                <div class="availability-status available">Available Today</div>
-                <!-- Add "not-available" class for "Not Available Today" styling -->
+              <!-- Availability Status -->
+              {% if guide.is_available_today %}
+              <div class="availability-status available">Available Today</div>
+              {% else %}
+              <div class="availability-status not-available">Unavailable Today</div>
+              {% endif %}
 
               <!-- Guide Info -->
               <div class="guide-info">
@@ -631,164 +643,86 @@
                 <div class="dropdown">
                   <i class="fas fa-ellipsis-vertical dropdown-toggle" onclick="toggleDropdownMenu(this)">&#8942;</i>
                   <ul class="dropdown-menu">
-                    <form method="POST" action="{{ url_for('touroperator.toggle_guide_account_status', id=guide.id) }}">
-                      <li>
-                        <button class="status-btn {{ 'deactivate' if guide.account_status else '' }}">
-                          {{ 'Deactivate Account' if guide.account_status else 'Activate Account' }}
-                        </button>
-                      </li>
-                    </form>
+                    <li>
+                      <button 
+                        class="status-btn {{ 'deactivate' if guide.account_status else '' }}" 
+                        data-guide-id="{{ guide.id }}" 
+                        data-guide-name="{{ guide.user.first_name }}"
+                      >
+                        {{ 'Deactivate Account' if guide.account_status else 'Activate Account' }}
+                      </button>
+                    </li>
                     <li>
                       <button class="view-guide-btn" onclick="redirectToProfile('{{ guide.id }}')">View Profile</button>
                     </li>
                   </ul>
                 </div>
               </div>
+              
             </div>
             {% else %}
             <p>No tour guides available.</p>
             {% endfor %}
           </div>
-          
-          <!-- Tour Guide List -->
-          <div class="container">
-          
-            <hr>
-            <br>
-            <h2 class="page-title">Available Tour Guides for TODAY</h2>
-            <br>
-              <table class="table table-bordered">
-                  <thead>
-                      <tr>
-                          <th>Tour Guide Name</th>
-                          <th>Contact Number</th>
-                          <th>Price</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {% for tour_guide, user in available_guides %}
-                      <tr>
-                          <td>{{ user.first_name }} {{ user.last_name }}</td> <!-- Full name -->
-                          <td>{{ tour_guide.contact_num }}</td>
-                          <td>{{ tour_guide.price }}</td>
-                      </tr>
-                      {% else %}
-                      <tr>
-                          <td colspan="3">No available tour guides for today.</td>
-                      </tr>
-                      {% endfor %}
-                  </tbody>
-              </table>
 
-          </div>
-
-
-          
-
-          <!-- Add Tour Guide Modal -->
           <div class="modal hidden" id="tour-guide-modal">
             <div class="modal-content">
-              
               <button class="modal-x-btn" id="close-tour-guide-modal">&times;</button>
               <h1 class="modal-title">Create Tour Guide Account</h1>
               <p class="modal-subtitle">Fill in the required details to create a new tour guide account.</p>
-
+          
               <form method="POST" id="tour-guide-form" action="{{ url_for('touroperator.create_tourguide') }}">
-                {{ guide_form.hidden_tag() }}  <!-- CSRF token if using Flask-WTF -->
-            
+                {{ guide_form.hidden_tag() }}
+          
+                <!-- First Name -->
                 <div class="input-container">
                   <label for="fname">First Name</label>
-                    {% if guide_form.fname.errors %}
-                      {{ guide_form.fname(class="form-control form-control-lg is-invalid") }}
-                      <div class="invalid-feedback">
-                        {% for error in guide_form.fname.errors %}
-                          <span>{{ error }}</span>
-                        {% endfor %}
-                      </div>
-                    {% else %}
-                      {{ guide_form.fname(class="form-control" , placeholder="Enter Guide First Name" ) }}
-                    {% endif %}
+                  {{ guide_form.fname(class="form-control", placeholder="Enter First Name") }}
+                  <div class="tooltip"></div>
                 </div>
-            
+          
+                <!-- Last Name -->
                 <div class="input-container">
                   <label for="lname">Last Name</label>
-                  {% if guide_form.lname.errors %}
-                    {{ guide_form.lname(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                      {% for error in guide_form.lname.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    {{ guide_form.lname(class="form-control", placeholder="Enter Guide Last Name") }}
-                  {% endif %}
+                  {{ guide_form.lname(class="form-control", placeholder="Enter Last Name") }}
+                  <div class="tooltip"></div>
                 </div>
-            
+          
+                <!-- Email -->
                 <div class="input-container">
                   <label for="email">Email</label>
-                  {% if guide_form.email.errors %}
-                    {{ guide_form.email(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                      {% for error in guide_form.email.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    {{ guide_form.email(class="form-control", placeholder="Enter Email") }}
-                  {% endif %}
+                  {{ guide_form.email(class="form-control", placeholder="Enter Email Address") }}
+                  <div class="tooltip"></div>
                 </div>
-            
+          
+                <!-- Contact Number -->
                 <div class="input-container">
                   <label for="contact_number">Contact Number</label>
-                  {% if guide_form.contact_number.errors %}
-                    {{ guide_form.contact_number(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                      {% for error in guide_form.contact_number.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    {{ guide_form.contact_number(class="form-control", placeholder="Enter Contact Number") }}
-                  {% endif %}
+                  {{ guide_form.contact_number(class="form-control", placeholder="Enter Contact Number") }}
+                  <div class="tooltip"></div>
                 </div>
-            
+          
+                <!-- Password -->
                 <div class="input-container">
                   <label for="password">Password</label>
-                  {% if guide_form.password.errors %}
-                    {{ guide_form.password(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                      {% for error in guide_form.password.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    {{ guide_form.password(class="form-control", placeholder="Enter Password") }}
-                  {% endif %}
+                  {{ guide_form.password(class="form-control", placeholder="Enter Password") }}
+                  <div class="tooltip"></div>
                 </div>
-            
+          
+                <!-- Confirm Password -->
                 <div class="input-container">
                   <label for="confirm_password">Confirm Password</label>
-                  {% if guide_form.confirm_password.errors %}
-                    {{ guide_form.confirm_password(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                      {% for error in guide_form.confirm_password.errors %}
-                        <span>{{ error }}</span>
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    {{ guide_form.confirm_password(class="form-control", placeholder="Confirm Password" ) }}
-                  {% endif %}
+                  {{ guide_form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+                  <div class="tooltip"></div>
                 </div>
-            
+          
                 <div class="button-container">
                   <button type="submit" name="submit_tour_guide" class="primary-btn">Create Account</button>
                 </div>
-
               </form>
-
             </div>
           </div>
-
+          
 
 
 
@@ -936,17 +870,35 @@
             </div>
           </div>            
         </div>
-  
+
         <!-- Logout Confirmation Modal -->
-        <div id="logout-modal" class="modal hidden">
+        <div id="logout-modal" class="logout-modal hidden">
           <div class="modal-content">
             <h3>Confirm Logout</h3>
-            <button class="primary-btn" id="confirm-logout">Logout</button>
-            <button class="primary-btn" id="cancel-logout">Cancel</button>
+            <p>Are you sure you want to log out?</p>
+            <div class="logout-button-container">
+              <button id="cancel-logout-btn" class="cancel-btn">Cancel</button>
+              <a href="{{ url_for('main.logout') }}">
+                <button id="confirm-logout-btn" class="logout-btn">Log Out</button>
+              </a>
+            </div>
           </div>
         </div>
 
-        <div id="toast-wrapper"></div>
+
+        <div id="toast-container"></div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmation-modal" class="hidden">
+          <div class="modal-content">
+            <p id="confirmation-message">Are you sure you want to perform this action?</p>
+            <div class="modal-actions">
+              <button id="confirm-no" class="no-btn">No</button>
+              <button id="confirm-yes" class="yes-btn">Yes</button>
+            </div>
+          </div>
+        </div>
+
 
         <!-- Modal Overlay -->
         <div id="modal-overlay" class="modal-overlay hidden"></div>

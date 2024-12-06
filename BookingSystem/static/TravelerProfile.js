@@ -95,40 +95,46 @@
       height: 150,
     });
 
-  // Convert the canvas to a blob and send it to the backend
-  canvas.toBlob(async (blob) => {
+    // Convert the canvas to a blob and send it to the backend
+    canvas.toBlob(async (blob) => {
       const formData = new FormData();
       formData.append('profile_picture', blob, 'profile.jpg');
-
+      
       try {
         const response = await fetch('/update_profile_picture', {
           method: 'POST',
           body: formData,
         });
-
+      
         if (!response.ok) {
           console.error(`Failed to update profile picture. Status: ${response.status} ${response.statusText}`);
           const errorData = await response.json();
           console.error("Error message from server:", errorData);
-          alert('Failed to update profile picture.');
+            
+          // Show error toast
+          showToast('Failed to update profile picture.', 'error');
         } else {
           const data = await response.json();
-          
+            
           // Update both profile pictures in the navbar and profile panel
           const newImageUrl = `${data.image_url}?timestamp=${new Date().getTime()}`; // Append timestamp to avoid caching issues
           profilePicNav.src = newImageUrl;
           profilePicPanel.src = newImageUrl;
-
-          alert('Profile picture updated successfully!');
+      
+          // Show success toast
+          showToast('Profile picture updated successfully!', 'success');
         }
       } catch (error) {
         console.error("Error uploading profile picture:", error);
-        alert("An error occurred while uploading the profile picture.");
+          
+        // Show error toast
+        showToast('An error occurred while uploading the profile picture.', 'error');
       }
-
+      
       // Close the cropper modal
       cropperModal.classList.remove('show');
     });
+    
   });
 
   // Close cropper modal
@@ -344,27 +350,29 @@
 
     // Add event listeners to Cancel buttons in the cards
     document.querySelectorAll('.cancel-booking-btn').forEach(button => {
-        button.addEventListener('click', async function () {
-            const bookingId = this.dataset.id;
+      button.addEventListener('click', function () {
+          const bookingId = this.dataset.id;
 
-            if (!confirm('Are you sure you want to cancel this booking?')) return;
+          // Show confirmation modal
+          showConfirmationModal('Are you sure you want to cancel this booking?', async () => {
+              try {
+                  const response = await fetch(`/booking/cancel/${bookingId}`, { method: 'POST' });
+                  const result = await response.json();
 
-            try {
-                const response = await fetch(`/booking/cancel/${bookingId}`, { method: 'POST' });
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert(result.message);
-                    location.reload(); // Refresh the page to reflect changes
-                } else {
-                    alert(result.error || 'Failed to cancel the booking.');
-                }
-            } catch (error) {
-                console.error('Error cancelling booking:', error);
-                alert('An error occurred while cancelling the booking.');
-            }
-        });
+                  if (response.ok) {
+                      showToast(result.message, 'success'); // Show success toast
+                      location.reload(); // Refresh the page to reflect changes
+                  } else {
+                      showToast(result.error || 'Failed to cancel the booking.', 'error'); // Show error toast
+                  }
+              } catch (error) {
+                  console.error('Error cancelling booking:', error);
+                  showToast('An error occurred while cancelling the booking.', 'error'); // Show error toast
+              }
+          });
+      });
     });
+
 
     // Handle showing the Cancel button in the modal dynamically
     async function fetchAndDisplayBookingDetails(bookingId) {
@@ -411,8 +419,14 @@
 
 
 
-// Submit reviews
-  
+
+
+
+
+// My Reviews
+
+
+  // Submit Reviews
 
   document.addEventListener('DOMContentLoaded', () => {
     const reviewModal = document.getElementById('review-modal');
@@ -458,7 +472,7 @@
       e.preventDefault();
 
       if (selectedRating === 0) {
-        alert('Please select a star rating.');
+        showToast('Please select a star rating.', 'error'); // Error toast
         return;
       }
 
@@ -477,7 +491,7 @@
         const response = await fetch('/submit_review', { method: 'POST', body: formData });
         const data = await response.json();
         if (data.success) {
-          alert(data.message);
+          showToast(data.message, 'success'); // Success toast
 
           // Update the review button dynamically
           const reviewButton = document.querySelector(`.review-btn[data-booking-id="${bookingId}"]`);
@@ -491,18 +505,18 @@
           reviewModal.classList.add('hidden');
           reviewModal.classList.remove('show');
         } else {
-          alert(`Error submitting review: ${data.message}`);
+          showToast(`Error submitting review: ${data.message}`, 'error'); // Error toast
         }
       } catch (error) {
         console.error('Error submitting review:', error);
+        showToast('An error occurred while submitting the review. Please try again.', 'error'); // Error toast
       }
     });
   });
-//
 
 
 
-// Reviews Container
+  // Reviews Container
   // Review Cards Hide Function
   const toggleReviewsBtn = document.getElementById('toggle-reviews');
   const reviewsContainer = document.getElementById('reviews-container');
@@ -515,7 +529,12 @@
     toggleReviewsBtn.innerHTML = 
       reviewsContainer.classList.contains('hidden') ? '&#128584;' : '&#128065;';
   });
+
+
+
 //
+
+
 
 
 
@@ -576,33 +595,37 @@
     // Confirm password and open the appropriate modal
     passwordConfirmBtn.addEventListener('click', async () => {
       const enteredPassword = confirmPasswordInput.value.trim();
-  
+
       // Show loading feedback
       passwordConfirmBtn.textContent = 'Verifying...';
       passwordConfirmBtn.disabled = true;
-  
+
       try {
         const response = await fetch('/tourguide/verify_password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: enteredPassword }),
         });
-  
+
         const result = await response.json();
-  
+
         if (result.success) {
           closeModal(); // Close password confirmation modal
+
+          // Show success toast
+          showToast('Password verified successfully!', 'success');
+
           if (activeAction === 'email') {
             openChangeEmailModal();
           } else if (activeAction === 'password') {
             openChangePasswordModal();
           }
         } else {
-          alert(result.message || 'Incorrect password. Please try again.');
+          showToast(result.message || 'Incorrect password. Please try again.', 'error'); // Error toast
         }
       } catch (error) {
         console.error('Error verifying password:', error);
-        alert('An error occurred while verifying the password. Please try again.');
+        showToast('An error occurred while verifying the password. Please try again.', 'error'); // Error toast
       } finally {
         passwordConfirmBtn.textContent = 'Confirm';
         passwordConfirmBtn.disabled = false;
@@ -612,36 +635,36 @@
     // Save new email
     saveEmailBtn.addEventListener('click', async () => {
       const newEmail = document.getElementById('new-email-input').value.trim();
-  
+
       // Validate the email format
       const emailValidationError = isValidEmail(newEmail);
       if (emailValidationError) {
-        alert(emailValidationError); // Show validation error
+        showToast(emailValidationError, 'error'); // Validation error toast
         return; // Stop execution if email is invalid
       }
-  
+
       try {
         saveEmailBtn.textContent = 'Saving...';
         saveEmailBtn.disabled = true;
-  
+
         const response = await fetch('/tourguide/update_email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: newEmail }),
         });
-  
+
         const result = await response.json();
-  
+
         if (result.success) {
-          alert('Email updated successfully!');
+          showToast('Email updated successfully!', 'success'); // Success toast
           currentEmailInput.value = newEmail; // Update displayed email immediately
           closeModal();
         } else {
-          alert(result.message || 'Failed to update email.');
+          showToast(result.message || 'Failed to update email.', 'error'); // Error toast
         }
       } catch (error) {
         console.error('Error updating email:', error);
-        alert('An error occurred. Please try again.');
+        showToast('An error occurred. Please try again.', 'error'); // Error toast
       } finally {
         saveEmailBtn.textContent = 'Save Email';
         saveEmailBtn.disabled = false;
@@ -652,41 +675,40 @@
     savePasswordBtn.addEventListener('click', async () => {
       const newPassword = document.getElementById('new-password').value.trim();
       const confirmNewPassword = document.getElementById('confirm-new-password').value.trim();
-  
+
       if (newPassword !== confirmNewPassword) {
-        alert('Passwords do not match. Please try again.');
+        showToast('Passwords do not match. Please try again.', 'error'); // Error toast
         return;
       }
-  
+
       // Validate the password strength
       const passwordValidationError = isValidPassword(newPassword);
       if (passwordValidationError) {
-        alert(passwordValidationError); // Show validation error
+        showToast(passwordValidationError, 'error'); // Validation error toast
         return; // Stop execution if password is invalid
       }
-  
+
       try {
         savePasswordBtn.textContent = 'Saving...';
         savePasswordBtn.disabled = true;
-  
+
         const response = await fetch('/update_password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: newPassword }),
         });
-  
+
         const result = await response.json();
-  
+
         if (result.success) {
-          alert('Password updated successfully!');
-          currentPasswordInput.value = newPassword; // Update displayed password field (if visible)
+          showToast('Password updated successfully!', 'success'); // Success toast
           closeModal();
         } else {
-          alert(result.message || 'Failed to update password.');
+          showToast(result.message || 'Failed to update password.', 'error'); // Error toast
         }
       } catch (error) {
         console.error('Error updating password:', error);
-        alert('An error occurred. Please try again.');
+        showToast('An error occurred. Please try again.', 'error'); // Error toast
       } finally {
         savePasswordBtn.textContent = 'Save Password';
         savePasswordBtn.disabled = false;
@@ -721,3 +743,62 @@
     }
   });
   
+
+
+
+  
+// Toast and confirmation Modal
+
+
+
+  function showToast(message, type = 'success') {
+    const toastContainer = document.getElementById('toast-container');
+    
+    // Create a new toast element
+    const toast = document.createElement('div');
+    toast.classList.add('toast', type);
+    toast.textContent = message;
+
+    // Append the toast to the container
+    toastContainer.appendChild(toast);
+
+    // Remove the toast after a few seconds
+    setTimeout(() => {
+      toast.remove();
+    }, 4000); 
+  }
+
+
+  function showConfirmationModal(message, onConfirm) {
+    const modal = document.getElementById('confirmation-modal');
+    const confirmMessage = document.getElementById('confirmation-message');
+    const confirmYes = document.getElementById('confirm-yes');
+    const confirmNo = document.getElementById('confirm-no');
+    const modalOverlay = document.querySelector('.modal-overlay');
+
+    // Set the confirmation message
+    confirmMessage.textContent = message;
+
+    // Adjust z-index for overlay
+    modalOverlay.classList.add('hidden'); // Temporarily hide overlay blur
+    modal.classList.remove('hidden'); // Show the confirmation modal
+
+    // Event listeners
+    const handleConfirm = () => {
+      onConfirm();
+      closeModal();
+    };
+
+    const closeModal = () => {
+      modalOverlay.classList.remove('hidden'); // Restore overlay blur
+      modal.classList.add('hidden');
+      confirmYes.removeEventListener('click', handleConfirm);
+      confirmNo.removeEventListener('click', closeModal);
+    };
+
+    confirmYes.addEventListener('click', handleConfirm);
+    confirmNo.addEventListener('click', closeModal);
+  }
+
+
+// 

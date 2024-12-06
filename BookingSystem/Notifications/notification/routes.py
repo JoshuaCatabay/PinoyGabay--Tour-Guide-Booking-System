@@ -86,6 +86,7 @@ def get_notification_count():
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
     
+
 @notification.route('/operator', methods=['GET'])
 @login_required
 def get_operator_notifications():
@@ -117,6 +118,8 @@ def get_operator_notifications():
     except Exception as e:
         print(f"Error fetching operator notifications: {str(e)}")  # Debugging log
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+    
 @notification.route('/operator/mark_as_read/<int:notification_id>', methods=['POST'])
 @login_required
 def mark_as_read_operator(notification_id):

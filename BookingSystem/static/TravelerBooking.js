@@ -157,238 +157,224 @@
 
 
 document.addEventListener('DOMContentLoaded', async function () {
-  const datePicker = document.getElementById('date-picker');
-  const confirmBookingButton = document.getElementById('confirm-booking-btn');
-  const bookingModal = document.getElementById('booking-modal');
-  const thankYouPopup = document.getElementById('thank-you-popup');
-  const closeModalButton = document.getElementById('close-booking-modal');
-  const tourPackageSelect = document.getElementById('tour-package-select');
-  const tourGuideId = document.querySelector('[data-tour-guide-id]').getAttribute('data-tour-guide-id');
-
-  // Modal elements
-  const modalTravelerName = document.getElementById('modal-traveler-name');
-  const modalTourGuideName = document.getElementById('modal-tour-guide-name');
-  const modalTourGuideNumber = document.getElementById('modal-tour-guide-number');
-  const modalTourGuidePrice = document.getElementById('modal-tour-guide-price'); // Added for price
-  const modalTourDate = document.getElementById('modal-tour-date');
-  const modalTravelerQuantity = document.getElementById('modal-traveler-quantity');
-  const modalSpecialNotes = document.getElementById('modal-special-notes');
-  const modalTourImage = document.getElementById('modal-tour-image');
-  const modalPackageTitle = document.getElementById('modal-package-title');
-  const modalPackageDescription = document.getElementById('modal-package-description');
-  const modalPriceList = document.getElementById('modal-price-list');
-  const modalInclusionsList = document.getElementById('modal-inclusions-list');
-  const modalExclusionsList = document.getElementById('modal-exclusions-list');
-  const modalItineraryList = document.getElementById('modal-itinerary-list');
-
-  // Fetch Traveler Information
-  async function fetchTravelerInfo() {
+    const datePicker = document.getElementById('date-picker');
+    const confirmBookingButton = document.getElementById('confirm-booking-btn');
+    const bookingModal = document.getElementById('booking-modal');
+    const thankYouPopup = document.getElementById('thank-you-popup');
+    const closeModalButton = document.getElementById('close-booking-modal');
+    const tourPackageSelect = document.getElementById('tour-package-select');
+    const tourGuideId = document.querySelector('[data-tour-guide-id]').getAttribute('data-tour-guide-id');
+  
+    // Modal elements
+    const modalTravelerName = document.getElementById('modal-traveler-name');
+    const modalTourGuideName = document.getElementById('modal-tour-guide-name');
+    const modalTourGuideNumber = document.getElementById('modal-tour-guide-number');
+    const modalTourGuidePrice = document.getElementById('modal-tour-guide-price'); // Added for price
+    const modalTourDate = document.getElementById('modal-tour-date');
+    const modalTravelerQuantity = document.getElementById('modal-traveler-quantity');
+    const modalSpecialNotes = document.getElementById('modal-special-notes');
+    const modalTourImage = document.getElementById('modal-tour-image');
+    const modalPackageTitle = document.getElementById('modal-package-title');
+    const modalPackageDescription = document.getElementById('modal-package-description');
+    const modalPriceList = document.getElementById('modal-price-list');
+    const modalInclusionsList = document.getElementById('modal-inclusions-list');
+    const modalExclusionsList = document.getElementById('modal-exclusions-list');
+    const modalItineraryList = document.getElementById('modal-itinerary-list');
+  
+    // Function to check if the user is authenticated
+    async function checkAuthentication() {
       try {
-          const response = await fetch('/traveler_info');
-          if (!response.ok) throw new Error('Failed to fetch traveler information.');
-          const travelerData = await response.json();
-          modalTravelerName.textContent = travelerData.name;
+        const response = await fetch('/check-login-status');
+        const result = await response.json();
+        return result.logged_in; // Returns true if the user is logged in
       } catch (error) {
-          console.error('Error fetching traveler info:', error);
-          modalTravelerName.textContent = "Unavailable";
+        console.error('Error checking authentication status:', error);
+        return false; // Assume not logged in if there's an error
       }
-  }
-
-  // Fetch Tour Guide Contact Information and Price
-  async function fetchTourGuideContactAndPrice() {
+    }
+  
+    // Fetch Traveler Information
+    async function fetchTravelerInfo() {
       try {
-          const response = await fetch(`/tourguide/get_contact/${tourGuideId}`);
-          if (!response.ok) throw new Error('Failed to fetch tour guide contact and price.');
-          const contactData = await response.json();
-
-          // Populate contact information and price
-          modalTourGuideName.textContent = contactData.name;
-          modalTourGuideNumber.textContent = contactData.contact_number;
-          modalTourGuidePrice.textContent = `₱${contactData.price.toFixed(2)}`;
+        const response = await fetch('/traveler_info');
+        if (!response.ok) throw new Error('Failed to fetch traveler information.');
+        const travelerData = await response.json();
+        modalTravelerName.textContent = travelerData.name;
       } catch (error) {
-          console.error('Error fetching tour guide contact and price:', error);
-          modalTourGuideName.textContent = "Unavailable";
-          modalTourGuideNumber.textContent = "Unavailable";
-          modalTourGuidePrice.textContent = "Unavailable";
+        console.error('Error fetching traveler info:', error);
+        modalTravelerName.textContent = "Unavailable";
       }
-  }
-
-  // Populate Modal on "Book Now"
-  confirmBookingButton.addEventListener('click', async function () {
+    }
+  
+    // Fetch Tour Guide Contact Information and Price
+    async function fetchTourGuideContactAndPrice() {
+      try {
+        const response = await fetch(`/tourguide/get_contact/${tourGuideId}`);
+        if (!response.ok) throw new Error('Failed to fetch tour guide contact and price.');
+        const contactData = await response.json();
+  
+        // Populate contact information and price
+        modalTourGuideName.textContent = contactData.name;
+        modalTourGuideNumber.textContent = contactData.contact_number;
+        modalTourGuidePrice.textContent = `₱${contactData.price.toFixed(2)}`;
+      } catch (error) {
+        console.error('Error fetching tour guide contact and price:', error);
+        modalTourGuideName.textContent = "Unavailable";
+        modalTourGuideNumber.textContent = "Unavailable";
+        modalTourGuidePrice.textContent = "Unavailable";
+      }
+    }
+  
+    // Populate Modal on "Book Now"
+    confirmBookingButton.addEventListener('click', async function () {
+      const isAuthenticated = await checkAuthentication(); // Check if the user is logged in
+  
+      if (!isAuthenticated) {
+        // Redirect unauthenticated users to the signup page
+        window.location.href =  "/traveler_register";
+        return; // Stop execution here
+      }
+  
       const dateValue = datePicker.value;
       const tourPackageId = tourPackageSelect.value;
       const travelerQuantity = document.getElementById('traveler-quantity').value;
       const specialNotes = document.getElementById('personalized').value;
-
+  
       if (!dateValue) {
-          alert("Please select a date or date range.");
-          datePicker.focus();
-          return;
+        alert("Please select a date or date range.");
+        datePicker.focus();
+        return;
       }
       if (!tourPackageId) {
-          alert("Please select a tour package.");
-          tourPackageSelect.focus();
-          return;
+        alert("Please select a tour package.");
+        tourPackageSelect.focus();
+        return;
       }
-
+  
       try {
-    // Fetch Package Details
-    const packageDetailsResponse = await fetch(`/tour_package/details/${tourPackageId}`);
-    if (!packageDetailsResponse.ok) throw new Error("Failed to fetch package details.");
-    const packageData = await packageDetailsResponse.json();
-
-    // Populate modal with package and booking details
-    modalTourDate.textContent = dateValue;
-    modalTravelerQuantity.textContent = travelerQuantity;
-    modalSpecialNotes.textContent = specialNotes || "N/A";
-
-    modalTourImage.src = `/static/${packageData.package_img || "default.jpg"}`;
-    modalPackageTitle.textContent = packageData.name;
-    modalPackageDescription.textContent = packageData.description;
-
-    // Populate location
-    const modalPackageLocation = document.getElementById('modal-package-location');
-    modalPackageLocation.textContent = packageData.location || "Location not provided";
-
-    // Populate estimated prices
-    modalPriceList.innerHTML = '';
-    packageData.estimated_prices.forEach(price => {
-        const li = document.createElement('li');
-        li.textContent = `${price.description}: ₱${price.estimated_price}`;
-        modalPriceList.appendChild(li);
-    });
-
-
-          // Populate inclusions
-          modalInclusionsList.innerHTML = '';
-          packageData.inclusions.forEach(inclusion => {
-              const li = document.createElement('li');
-              li.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
-              modalInclusionsList.appendChild(li);
-          });
-
-          // Populate exclusions
-          modalExclusionsList.innerHTML = '';
-          packageData.exclusions.forEach(exclusion => {
-              const li = document.createElement('li');
-              li.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
-              modalExclusionsList.appendChild(li);
-          });
-
-          // Populate itinerary
-          modalItineraryList.innerHTML = '';
-          packageData.itineraries.forEach(itinerary => {
-              const li = document.createElement('li');
-              li.innerHTML = `<span class="timeline-dot"></span>
-                              <div class="timeline-content">
-                                  <strong>${itinerary.title}:</strong> ${itinerary.subtitle}
-                              </div>`;
-              modalItineraryList.appendChild(li);
-          });
-
-          // Fetch Traveler and Tour Guide Info (with price)
-          await fetchTravelerInfo();
-          await fetchTourGuideContactAndPrice();
-
-          // Show modal
-          bookingModal.classList.add('show');
-          document.body.style.overflow = "hidden";
+        const packageDetailsResponse = await fetch(`/tour_package/details/${tourPackageId}`);
+        if (!packageDetailsResponse.ok) throw new Error("Failed to fetch package details.");
+        const packageData = await packageDetailsResponse.json();
+  
+        // Populate modal with package and booking details
+        modalTourDate.textContent = dateValue;
+        modalTravelerQuantity.textContent = travelerQuantity;
+        modalSpecialNotes.textContent = specialNotes || "N/A";
+  
+        modalTourImage.src = `/static/${packageData.package_img || "default.jpg"}`;
+        modalPackageTitle.textContent = packageData.name;
+        modalPackageDescription.textContent = packageData.description;
+  
+        // Populate inclusions
+        modalInclusionsList.innerHTML = '';
+        packageData.inclusions.forEach(inclusion => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
+          modalInclusionsList.appendChild(li);
+        });
+  
+        // Populate exclusions
+        modalExclusionsList.innerHTML = '';
+        packageData.exclusions.forEach(exclusion => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
+          modalExclusionsList.appendChild(li);
+        });
+  
+        // Populate itinerary
+        modalItineraryList.innerHTML = '';
+        packageData.itineraries.forEach(itinerary => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="timeline-dot"></span>
+                            <div class="timeline-content">
+                                <strong>${itinerary.title}:</strong> ${itinerary.subtitle}
+                            </div>`;
+          modalItineraryList.appendChild(li);
+        });
+  
+        // Fetch Traveler and Tour Guide Info (with price)
+        await fetchTravelerInfo();
+        await fetchTourGuideContactAndPrice();
+  
+        // Show modal
+        bookingModal.classList.add('show');
+        document.body.style.overflow = "hidden";
       } catch (error) {
-          console.error("Error populating modal:", error);
-          alert("Failed to load booking details. Please try again.");
+        console.error("Error populating modal:", error);
+        alert("Failed to load booking details. Please try again.");
       }
-  });
-
-  // Close modal
-  closeModalButton.addEventListener('click', function () {
+    });
+  
+    // Close modal
+    closeModalButton.addEventListener('click', function () {
       bookingModal.classList.remove('show');
       document.body.style.overflow = "auto";
-  });
-
-  const modalConfirmButton = document.getElementById('confirm-booking-modal');
-  modalConfirmButton.addEventListener('click', async function () {
-      const dateRange = datePicker.value.split(" → "); // Extract start and end dates
+    });
+  
+    const modalConfirmButton = document.getElementById('confirm-booking-modal');
+    modalConfirmButton.addEventListener('click', async function () {
+      const dateRange = datePicker.value.split(" → ");
       const tourPackageId = tourPackageSelect.value;
       const travelerQuantity = document.getElementById('traveler-quantity').value;
       const specialNotes = document.getElementById('personalized').value || '';
       const price = modalTourGuidePrice.textContent.replace('₱', '').trim();
   
       try {
-          // Validate date range
-          if (dateRange.length < 1 || !dateRange[0]) {
-              alert("Please select a valid date or date range.");
-              datePicker.focus();
-              return;
-          }
+        if (dateRange.length < 1 || !dateRange[0]) {
+          alert("Please select a valid date or date range.");
+          datePicker.focus();
+          return;
+        }
   
-          const dateStart = dateRange[0]; // Start date
-          const dateEnd = dateRange[1] || dateStart; // End date (same as start if no range selected)
+        const dateStart = dateRange[0];
+        const dateEnd = dateRange[1] || dateStart;
   
-          // Calculate duration in days (inclusive)
-          const durationInDays = Math.ceil(
-              (new Date(dateEnd) - new Date(dateStart)) / (1000 * 60 * 60 * 24)
-          ) + 1; // Add 1 to include both start and end days
+        const durationInDays = Math.ceil((new Date(dateEnd) - new Date(dateStart)) / (1000 * 60 * 60 * 24)) + 1;
   
-          console.log("Date Start:", dateStart);
-          console.log("Date End:", dateEnd);
-          console.log("Duration (days):", durationInDays);
+        const bookingData = {
+          tour_guide_id: tourGuideId,
+          package_id: tourPackageId,
+          date_start: dateStart,
+          date_end: dateEnd,
+          traveler_quantity: travelerQuantity,
+          special_notes: specialNotes,
+          price: parseFloat(price),
+          duration: durationInDays,
+        };
   
-          const bookingData = {
-              tour_guide_id: tourGuideId,
-              package_id: tourPackageId,
-              date_start: dateStart,
-              date_end: dateEnd,
-              traveler_quantity: travelerQuantity,
-              special_notes: specialNotes,
-              price: parseFloat(price),
-              duration: durationInDays,
-          };
+        const response = await fetch('/booking/create_booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData),
+        });
   
-          console.log("Booking data payload:", bookingData); // Debugging
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create booking.');
+        }
   
-          // Send booking data to the backend
-          const response = await fetch('/booking/create_booking', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(bookingData),
-          });
+        const responseData = await response.json();
+        console.log('Booking created:', responseData);
   
-          console.log("Response status:", response.status);
-  
-          if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.error || 'Failed to create booking.');
-          }
-  
-          const responseData = await response.json();
-          console.log('Booking created:', responseData);
-  
-          // Close modal and show thank-you popup
-          bookingModal.classList.remove('show');
-          document.body.style.overflow = 'auto';
-          thankYouPopup.style.display = 'flex';
-          setTimeout(() => {
-              thankYouPopup.style.display = 'none';
-          }, 3000);
+        bookingModal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        thankYouPopup.style.display = 'flex';
+        setTimeout(() => {
+          thankYouPopup.style.display = 'none';
+        }, 3000);
       } catch (error) {
-          console.error('Error confirming booking:', error);
-          alert('Failed to confirm booking. Please try again.');
+        console.error('Error confirming booking:', error);
+        alert('Failed to confirm booking. Please try again.');
       }
-  });
+    });
   
-  
-
-  
-
-  // Cancel booking
-  const modalCancelButton = document.getElementById('cancel-booking-modal');
-  modalCancelButton.addEventListener('click', function () {
+    const modalCancelButton = document.getElementById('cancel-booking-modal');
+    modalCancelButton.addEventListener('click', function () {
       bookingModal.classList.remove('show');
       document.body.style.overflow = "auto";
+    });
   });
-});
+
 
 
 

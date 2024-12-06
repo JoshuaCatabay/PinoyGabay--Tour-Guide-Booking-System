@@ -2,75 +2,101 @@
 {% block content %}
 
 <!DOCTYPE html>
+
+
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tour Guide Profile - PinoyGabay</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='Traveler.css') }}"defer>
-  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
-  <!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Guide Profile - PinoyGabay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Traveler.css') }}"defer>
 
-<!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+  </head>
+
   
-
-</head>
   <body>
+    
     {% if user_role != 'touroperator' %}
-         <!-- Navbar -->
-         <nav class="navbar">
-          <div class="navbar-container">
-              <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
-                  <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
-              </a>
-              <div class="navbar-links">
-                <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
-
-                <div class="notification-container">
-                  <!-- Notification Bell -->
-                  <button id="notification-bell" class="notification-bell">
-                    <span class="bell-icon">&#128276;</span>
-                    <span class="notification-count">0</span>
-                  </button>
-                
-                  <!-- Notification Dropdown -->
-                  <div id="notification-dropdown" class="notification-dropdown hidden">
-                    <h3>Notifications</h3>
-                    <ul id="notification-list">
-                      <li class="notification-item">No new notifications</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                
-                
-                
-               <!-- Dark Mode Toggle Icon -->
-                <div class="icon dark-mode-toggle">
-                  <i class="dark-mode-icon">🌙</i>
-                </div>
-    
-                <!-- Profile Icon -->
-                <div class="profile-container-nav">
-                  <a href="{{ url_for('main.account') }}">
-                      <img class= "profile-icon" id="profile-pic" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
-                    </a>
-                </div>
-    
-              </div>
-          </div>
-        </nav>
-        {% else %}
-        <!-- Back Button -->
-        <div style="padding: 10px;">
-          <a href="{{ url_for('touroperator.touroperator_dashboard') }}" class="back-button" style="text-decoration: none; font-size: 18px;">
-            &larr; Back to Dashboard
+        
+      <!-- Navbar -->
+      <nav class="navbar">
+          
+        <div class="navbar-container">
+              
+          <!-- Logo -->
+          <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
+            <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
           </a>
+
+          <div class="navbar-links">
+                  
+            {% if current_user.is_authenticated %}
+                      
+              <!-- Links for Logged-In Users -->
+              <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
+      
+              <!-- Notification Bell -->
+              <div class="notification-container">
+                        
+                <button id="notification-bell" class="notification-bell">
+                  <span class="bell-icon">&#128276;</span>
+                  <span class="notification-count">0</span>
+                </button>
+                          
+                <!-- Notification Dropdown -->
+                <div id="notification-dropdown" class="notification-dropdown hidden">
+                  <h3>Notifications</h3>
+
+                  <ul id="notification-list">
+                    <li class="notification-item">No new notifications</li>
+                  </ul>
+
+                </div>
+              </div>
+      
+              <!-- Dark Mode Toggle Icon -->
+              <div class="icon dark-mode-toggle">
+                <i class="dark-mode-icon">🌙</i>
+              </div>
+      
+              <!-- Profile Icon -->
+              <div class="profile-container-nav">
+                <a href="{{ url_for('main.account') }}">
+                  <img class="profile-icon" id="profile-pic" 
+                  src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" 
+                  alt="Profile Picture">
+                </a>
+              </div>
+
+            {% else %}
+
+              <!-- Links for Unauthenticated Users -->
+              <a href="{{ url_for('main.traveler_login') }}" class="nav-link">Login</a>
+              <a href="{{ url_for('main.traveler_register') }}" class="nav-link">Sign Up</a>
+              
+            {% endif %}
+
+          </div>
         </div>
-       {% endif %}
+      </nav>
+      
+    {% else %}
+
+      <!-- Back Button -->
+      <div style="padding: 10px;">
+        <a href="{{ url_for('touroperator.touroperator_dashboard') }}" class="back-button" style="text-decoration: none; font-size: 18px;">
+          &larr; Back to Dashboard
+        </a>
+      </div>
+
+    {% endif %}
 
 
         
@@ -78,67 +104,80 @@
     <div class="form_container">
 
       <!-- Left Section: Tour Guide Details -->
-        <div class="left-column">
+      <div class="left-column">
           
-          <div class="profile-overview">
-            <img src="{{ profile.profile_picture }}" alt="Tour Guide Picture" class="profile-pic" />
-            <div class="profile-details">
-                <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ profile.name }}</span>, Your Friendly Tour Guide</h2>
-                <p class="ratings">
-                    <span class="average-rating">{{ profile.average_rating }}</span>
-                    {% for i in range(profile.average_rating|int) %}
-                        &#9733; <!-- Full star -->
-                    {% endfor %}
-                    {% if profile.average_rating % 1 >= 0.5 %}
-                        &#9733; <!-- Half star -->
-                    {% endif %}
-                    {% for i in range(5 - profile.average_rating|int - (1 if profile.average_rating % 1 >= 0.5 else 0)) %}
-                        &#9734; <!-- Empty star -->
-                    {% endfor %}
-                    ({{ profile.review_count or 0 }} Reviews | {{ profile.total_tours or 0 }} Completed Tours)
-                </p>
-            </div>
+        <div class="profile-overview">
+          <img src="{{ profile.profile_picture }}" alt="Tour Guide Picture" class="profile-pic" />
+          <div class="profile-details">
+            <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ profile.name }}</span>, Your Friendly Tour Guide</h2>
+            <p class="ratings">
+              <span class="average-rating">{{ profile.average_rating }}</span>
+                
+              {% for i in range(profile.average_rating|int) %}
+                &#9733; <!-- Full star -->
+              {% endfor %}
+                    
+              {% if profile.average_rating % 1 >= 0.5 %}
+                &#9733; <!-- Half star -->
+              {% endif %}
+
+              {% for i in range(5 - profile.average_rating|int - (1 if profile.average_rating % 1 >= 0.5 else 0)) %}
+                &#9734; <!-- Empty star -->
+              {% endfor %}
+
+              ({{ profile.review_count or 0 }} Reviews | {{ profile.total_tours or 0 }} Completed Tours)
+            </p>
+
+          </div>
+
         </div>
         
         
-          <!-- About Me -->
-          <div class="about-me">
-            <h2>About Me</h2>
-            <p>{{ profile.bio }}</p>
+        <!-- About Me -->
+        <div class="about-me">
+          <h2>About Me</h2>
+          <p>{{ profile.bio }}</p>
+        </div>
+
+        <!-- Why Choose Me Section -->
+        <section class="why-choose-me-row">
+
+          <div class="characteristics-box">
+            <h3>Characteristics</h3>
+            
+            <ul class="checklist">
+
+              {% for characteristic in profile.characteristics %}
+                <li><span class="checkmark">&#10003;</span> {{ characteristic }}</li>
+              {% endfor %}
+
+            </ul>
           </div>
 
-          <!-- Why Choose Me Section -->
-          <section class="why-choose-me-row">
+          <div class="skills-box">
+            <h3>Skills</h3>
+              
+            <ul class="checklist">
 
-            <div class="characteristics-box">
-              <h3>Characteristics</h3>
-              <ul class="checklist">
-                {% for characteristic in profile.characteristics %}
-                  <li><span class="checkmark">&#10003;</span> {{ characteristic }}</li>
-                {% endfor %}
-              </ul>
-            </div>
+              {% for skill in profile.skills %}
+                <li><span class="checkmark">&#10003;</span> {{ skill }}</li>
+              {% endfor %}
 
-            <div class="skills-box">
-              <h3>Skills</h3>
-              <ul class="checklist">
-                {% for skill in profile.skills %}
-                  <li><span class="checkmark">&#10003;</span> {{ skill }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-          </section>
+            </ul>
+          </div>
+        </section>
 
                     
-          <div class="container">
-            <h2>
-              Traveler Reviews 
-              <span class="total-reviews">({{ profile.review_count }})</span>
-            </h2>
+        <div class="container">
+          <h2>
+            Traveler Reviews 
+            <span class="total-reviews">({{ profile.review_count }})</span>
+          </h2>
           
-            <div class="traveler-reviews">
-              {% if profile.review_count > 0 %}
-                {% for review in profile.reviews %}
+          <div class="traveler-reviews">
+            {% if profile.review_count > 0 %}
+
+              {% for review in profile.reviews %}
                 <div class="review-card">
                   <img src="{{ review.tour_image }}" alt="Review Image" class="tour-image" />
                   <div class="review-content">
@@ -158,210 +197,238 @@
                   </div>
                 </div>
                 
-                {% endfor %}
-              {% else %}
-                <p>No reviews yet.</p>
-              {% endif %}
+              {% endfor %}
+
+            {% else %}
+
+              <p>No reviews yet.</p>
+            {% endif %}
+
+          </div>
+          
+          <!-- Pagination Controls -->
+          {% if profile.pagination.total_pages > 1 %}
+
+            <div class="pagination-container">
+
+              <!-- First Page -->
+              <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
+
+              <!-- Previous Page -->
+              <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
+
+              <!-- Page Numbers -->
+              {% for page in range(1, profile.pagination.total_pages + 1) %}
+
+                {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
+                  <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
+                {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
+                
+                  <span class="pagination-ellipsis">...</span>
+                {% endif %}
+
+              {% endfor %}
+
+              <!-- Next Page -->
+              <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
+
+              <!-- Last Page -->
+              <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
+            
             </div>
-          
-<!-- Pagination Controls -->
-{% if profile.pagination.total_pages > 1 %}
-<div class="pagination-container">
-  <!-- First Page -->
-  <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
-
-  <!-- Previous Page -->
-  <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
-
-  <!-- Page Numbers -->
-  {% for page in range(1, profile.pagination.total_pages + 1) %}
-  {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
-    <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
-  {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
-    <span class="pagination-ellipsis">...</span>
-  {% endif %}
-  {% endfor %}
-
-  <!-- Next Page -->
-  <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
-
-  <!-- Last Page -->
-  <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
-</div>
-{% endif %}
+          {% endif %}
           
           
         </div>
-        </div>
+      </div>
         
 
 
-        {% if user_role != 'touroperator' %}
-      <!-- Right Section: Sticky Booking Form -->
-      <div class="right-column">
-        <div class="booking-form">
-          <h2 class="guide-name">Have a Wonderful Travel with <span id="full-name">{{ profile.name }}</span></h2>
-          <form>
-            <div class="form-section">
-              <label for="date-picker"><strong>Select Date or Date Range:</strong></label>
-              <input
+      {% if user_role != 'touroperator' %}
+      
+        <!-- Right Section: Sticky Booking Form -->
+        <div class="right-column">
+          <div class="booking-form">
+            <h2 class="guide-name">Have a Wonderful Travel with <span id="full-name">{{ profile.name }}</span></h2>
+          
+            <form>
+              <div class="form-section">
+                <label for="date-picker"><strong>Select Date or Date Range:</strong></label>
+                
+                <input
                   type="text"
                   id="date-picker"
                   name="date"
                   placeholder="Select a date or range"
                   data-tour-guide-id="{{ tour_guide.id }}"
                   readonly
-              />
-          </div>
+                />
+              </div>
           
+              <label for="tour-type">Tour Type</label>
 
+              <select id="tour-package-select" name="tour_package_id" required>
 
+                <option value="" disabled selected>Select Tour Package</option>
 
-            <label for="tour-type">Tour Type</label>
-            <select id="tour-package-select" name="tour_package_id" required>
-              <option value="" disabled selected>Select Tour Package</option>
-              {% for package in profile.tour_packages %}
-                <option value="{{ package.id }}">{{ package.name }}</option>
-              {% endfor %}
-            </select>
+                {% for package in profile.tour_packages %}
+                  <option value="{{ package.id }}">{{ package.name }}</option>
+                {% endfor %}
 
-            <!-- Traveler Quantity -->
-            <label for="traveler-quantity">Number of Travelers</label>
-            <div class="quantity-container">
-              <input type="number" id="traveler-quantity" min="1" value="1" />
-            </div>
+              </select>
 
-            <label for="personalized">Personalized Tour</label>
-            <textarea id="personalized" rows="4" placeholder="Enter your preferences or notes"></textarea>
+              <!-- Traveler Quantity -->
+              <label for="traveler-quantity">Number of Travelers</label>
+              <div class="quantity-container">
+                <input type="number" id="traveler-quantity" min="1" value="1" />
+              </div>
 
-            <!-- Price and Button Row -->
-            <div class="price-button-row">
-              <span class="price-label">₱{{ profile.price }}</span>
-              <button type="button" class="confirm-btn" id="confirm-booking-btn">Book Now</button>
+              <label for="personalized">Personalized Tour</label>
+              <textarea id="personalized" rows="4" placeholder="Enter your preferences or notes"></textarea>
 
-            </div>
-          </form>
+              <!-- Price and Button Row -->
+              <div class="price-button-row">
+                <span class="price-label">₱{{ profile.price }}</span>
+                <button type="button" class="confirm-btn" id="confirm-booking-btn">Book Now</button>
+
+              </div>
+
+            </form>
+          </div>
         </div>
-      </div>
 
       {% else %}
-      <!-- Availability Tab Pane -->
-      <div class="tab-pane" id="calendar">
-        <div class="availability-container">
-          <h2>Calendar Availability</h2>
 
-          <!-- Legend -->
-          <div class="calendar-legend">
+        <!-- Availability Tab Pane -->
+        <div class="tab-pane" id="calendar">
+          <div class="availability-container">
+            <h2>Calendar Availability</h2>
 
-          </div>
+            <!-- Legend -->
+            <div class="calendar-legend">
 
-          <!-- Calendar -->
-          <div id="availability-calendar"></div>
-          <div class="form-section">
-            <label for="date-picker"><strong>Availability Calendar</strong></label>
-            <input
+            </div>
+
+            <!-- Calendar -->
+            <div id="availability-calendar"></div>
+
+            <div class="form-section">
+              <label for="date-picker"><strong>Availability Calendar</strong></label>
+              <input
                 type="text"
                 id="date-picker"
                 name="date"
                 placeholder="View Availability Calendar"
                 data-tour-guide-id="{{ tour_guide.id }}"
                 readonly
-            />
+              />
+            </div>
+          </div> 
         </div>
-    {% endif %}
+      {% endif %}
    
-    <!-- Sticky Footer Booking Button -->
-    <div class="footer-booking-bar" id="footer-booking-bar">
-      <span class="footer-guide-name">Book with <span id="full-name">{{ profile.name }}</span><br>
-      <span class="footer-price">₱{{ profile.price }}</span>
-      <button id="footer-book-btn" class="footer-btn">Book Now</button>
-    </div>
+      <!-- Sticky Footer Booking Button -->
+      <div class="footer-booking-bar" id="footer-booking-bar">
+        <span class="footer-guide-name">Book with <span id="full-name">{{ profile.name }}</span><br>
+        <span class="footer-price">₱{{ profile.price }}</span>
+        <button id="footer-book-btn" class="footer-btn">Book Now</button>
+      </div>
 
-<!-- Booking Confirmation Modal -->
-<div id="booking-modal" class="modal hidden">
-  <div class="modal-content">
-    <div class="traveler-info"></div>
-      <h4 class="container-header">Traveler Information</h4>
-      <br>
-      <div class="info-item">
-        <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
-      </div>
-      <div class="info-item">
-        <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
-      </div>
-      <div class="info-item">
-        <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
-      </div>
-      <div class="info-item">
-        <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
-      </div>
-      <div class="info-item">
-        <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+      <!-- Booking Confirmation Modal -->
+      <div id="booking-modal" class="modal hidden">
+        <div class="modal-content">
+
+          <div class="traveler-info"></div>
+          <h4 class="container-header">Traveler Information</h4>
+          <br>
+            
+          <div class="info-item">
+            <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+          </div>
+
+          <div class="info-item">
+            <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
+          </div>
+
+          <div class="info-item">
+            <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
+          </div>
+
+          <div class="info-item">
+            <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
+          </div>
+
+          <div class="info-item">
+            <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+          </div>
+            
+          <div class="info-item">
+            <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
+          </div>
+
+          <!-- Special Notes Section -->
+          <div class="notes-box">
+            <h5>Special Notes</h5>
+            <p id="modal-special-notes">Loading...</p>
+          </div>
+
+
+
+          <div class="tour-package-details"></div>
+          <h4 class="container-header">Tour Package Details</h4>
+          <br>
+
+          <div class="modal-header">
+            <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+            
+            <div class="header-text-overlay">
+              <h3 class="package-title" id="modal-package-title">Loading...</h3>
+              <p class="location" id="modal-package-location">
+                <span class="location-icon">&#x1F4CD;</span> Loading...
+              </p>
+            </div>
+
+          </div>
+
+          <p id="modal-package-description" class="description">Loading...</p>
+
+          <!-- Estimated Price Section -->
+          <div class="modal-section">
+            <h4>Estimated Price</h4>
+            <ul id="modal-price-list" class="price-list">Loading...</ul>
+          </div>
+
+          <!-- Inclusions Section -->
+          <div class="modal-section">
+            <h4>Inclusions</h4>
+            <ul id="modal-inclusions-list" class="inclusions-list">Loading...</ul>
+          </div>
+
+          <!-- Exclusions Section -->
+          <div class="modal-section">
+            <h4>Exclusions</h4>
+            <ul id="modal-exclusions-list" class="exclusions-list">Loading...</ul>
+          </div>
+
+          <!-- Itinerary Section -->
+          <div class="modal-section itinerary-section">
+            <h4>Itinerary</h4>
+            <ul id="modal-itinerary-list" class="itinerary-list">Loading...</ul>
+          </div>
+          <button id="close-booking-modal" class="close-btn">Close</button>
+          
+          <!-- Buttons for Confirm and Cancel -->
+          <div class="modal-footer">
+            <button id="confirm-booking-modal" class="primary-btn">Confirm Booking</button>
+            <button id="cancel-booking-modal" class="secondary-btn">Cancel</button>
+          </div>
+            
+        </div>
       </div>
       
-      <div class="info-item">
-        <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
-      </div>
 
-      <!-- Special Notes Section -->
-      <div class="notes-box">
-        <h5>Special Notes</h5>
-        <p id="modal-special-notes">Loading...</p>
-      </div>
-
-
-
-    <div class="tour-package-details"></div>
-      <h4 class="container-header">Tour Package Details</h4>
-      <br>
-
-      <div class="modal-header">
-        <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
-        <div class="header-text-overlay">
-          <h3 class="package-title" id="modal-package-title">Loading...</h3>
-          <p class="location" id="modal-package-location">
-            <span class="location-icon">&#x1F4CD;</span> Loading...
-          </p>
-        </div>
-      </div>
-
-      <p id="modal-package-description" class="description">Loading...</p>
-
-      <!-- Estimated Price Section -->
-      <div class="modal-section">
-        <h4>Estimated Price</h4>
-        <ul id="modal-price-list" class="price-list">Loading...</ul>
-      </div>
-
-      <!-- Inclusions Section -->
-      <div class="modal-section">
-        <h4>Inclusions</h4>
-        <ul id="modal-inclusions-list" class="inclusions-list">Loading...</ul>
-      </div>
-
-      <!-- Exclusions Section -->
-      <div class="modal-section">
-        <h4>Exclusions</h4>
-        <ul id="modal-exclusions-list" class="exclusions-list">Loading...</ul>
-      </div>
-
-      <!-- Itinerary Section -->
-      <div class="modal-section itinerary-section">
-        <h4>Itinerary</h4>
-        <ul id="modal-itinerary-list" class="itinerary-list">Loading...</ul>
-      </div>
-      <button id="close-booking-modal" class="close-btn">Close</button>
-      <!-- Buttons for Confirm and Cancel -->
-  <div class="modal-footer">
-    <button id="confirm-booking-modal" class="primary-btn">Confirm Booking</button>
-    <button id="cancel-booking-modal" class="secondary-btn">Cancel</button>
-  </div>
 
     </div>
-  </div>
-
-
-</div>
 
 
     <!-- Thank You Popup -->

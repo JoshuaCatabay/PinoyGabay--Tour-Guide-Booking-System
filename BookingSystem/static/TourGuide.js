@@ -66,7 +66,7 @@
 
   // Confirm Logout and Redirect
   confirmLogoutBtn.addEventListener('click', () => {
-    window.location.href = 'Traveler - TGList.html'; // Redirect to homepage
+    window.location.href = 'logout'; // Redirect to homepage
   });
 
   // Cancel Logout and Close Modal
@@ -1452,6 +1452,29 @@
     const showModal = modal.getAttribute("data-show-modal");
     if (showModal === "true") {
         modal.style.display = "flex";
+    }
+  });
+
+
+  // Function to close the modal and redirect to the main page
+  function closeTGAccountStatusModal(event) {
+    event.preventDefault(); // Prevent default behavior of the click
+
+    // Hide the modal
+    document.getElementById("tgAccountStatusModal").style.display = "none";
+
+    // Redirect to the main page
+    window.location.href = "logout"; // Replace "/" with the correct URL if needed
+  }
+
+  // Wait for the DOM to load before running the script
+  document.addEventListener("DOMContentLoaded", () => {
+    // Check the data attribute to see if the modal should be shown
+    const accountStatusModal = document.getElementById("tgAccountStatusModal");
+    const showAccountStatus = accountStatusModal.getAttribute("data-show-account-status");
+
+    if (showAccountStatus === "true") {
+        accountStatusModal.style.display = "flex";
     }
   });
 

@@ -551,7 +551,12 @@ def get_profile_status():
 
 @tourguide.route('/profile/<int:tour_guide_id>')
 def profile(tour_guide_id):
-    user_role = current_user.role
+    # Check if the user is logged in and set the user role accordingly
+    if current_user.is_authenticated:
+        user_role = current_user.role
+    else:
+        user_role = 'guest'  # Default role for unauthorized users
+
     page = request.args.get('page', 1, type=int)
     per_page = 4  # Number of reviews per page
 
@@ -670,7 +675,7 @@ def get_active_tourguides():
     ).outerjoin(
         subquery_tours, subquery_tours.c.tour_guide_id == TourGuide.id
     ).filter(
-        TourGuide.active == True
+        (TourGuide.active == True) & (TourGuide.account_status == True)
     ).all()
 
     guides_data = []

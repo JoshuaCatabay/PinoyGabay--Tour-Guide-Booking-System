@@ -1,36 +1,48 @@
-/* General Reset */
 * {
   margin: 0;
   box-sizing: border-box;
-  font-family: Arial, sans-serif; 
+  font-family: Arial, sans-serif;
 }
 
-h1 {
-  font-size: 32px;
-  color: #2b2d42;
-  margin-bottom: 10px;
-  text-align: center;
-}
+/* General */
 
-h2 {
-  font-size: 24px;
-}
+  /* Body and Background */
+  body {
+    background-color: #f7fff7; /* Off White */
+    color: #2b2d42; /* Dark Charcoal */
+    padding: 0%;
+    font-size: 16px;
+    line-height: 1.5;
+    padding-left: 10%;
+    padding-right: 10%;
+  }
+
+  h1 {
+    font-size: 32px;
+    color: #2b2d42;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
 
   h3 {
-  font-size: 20px;
-}
-  
-/* Body and Background */
-body {
-  background-color: #f7fff7; /* Off White */
-  color: #2b2d42; /* Dark Charcoal */
-  padding: 0%;
-  font-size: 16px;
-  line-height: 1.5;
-  padding-left: 10%;
-  padding-right: 10%;
-}
-  
+    font-size: 20px;
+    color: #1a535c;
+  }
+
+  /* Profile Container */
+  .main-container {
+    display: flex;
+    min-height: 100vh;
+    margin-top: 70px;
+  }
+
+/*  */
+
+
 /* =======================
 Header Styles
 ======================= */
@@ -109,6 +121,8 @@ a:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 60px;
+  
 }
 
 

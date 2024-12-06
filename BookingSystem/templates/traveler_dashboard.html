@@ -11,51 +11,63 @@
 
 
         <!-- Navbar -->
+
         <nav class="navbar">
             <div class="navbar-container">
                 <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
                     <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
                 </a>
                 <div class="navbar-links">
-                  <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
-
-                  <div class="notification-container">
-                    <button id="notification-bell" class="notification-bell">
-                      <span class="bell-icon">&#128276;</span>
-                      <span class="notification-count">0</span> <!-- Number of notifications -->
-                    </button>
-                    
-                  <div class="notification-dropdown">
-                      <h3>Notifications</h3>
-                      <ul class="notification-list">
-                        <li class="notification-item">No Notifications</li> <!-- Example empty notification -->
-                      </ul>
-                      <button class="view-all-btn">View all</button>
+                    {% if current_user.is_authenticated %}
+                        <!-- Navigation links for registered/logged-in users -->
+                        <!-- <a href="{{ url_for('main.traveler_dashboard') }}" class="nav-link">Dashboard</a> -->
+                        <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
+        
+                      <!-- Notification Bell -->
+                      <div class="notification-container">
+                        <button id="notification-bell" class="notification-bell">
+                            <span class="bell-icon">&#128276;</span>
+                            <span class="notification-count">0</span>
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notification-dropdown" class="notification-dropdown hidden">
+                            <h3>Notifications</h3>
+                            <ul id="notification-list">
+                                <li class="notification-item">No new notifications</li>
+                            </ul>
+                        </div>
                     </div>
-                  </div>  
-                  
-                 <!-- Dark Mode Toggle Icon -->
-                  <div class="icon dark-mode-toggle">
-                    <i class="dark-mode-icon">🌙</i>
-                  </div>
-      
-                  <!-- Profile Icon -->
-                  <div class="profile-container-nav">
-                    <a href="{{ url_for('main.account') }}">
-                        <img class= "profile-icon" id="profile-pic" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
-                      </a>
-                  </div>
-      
+        
+                        <!-- Dark Mode Toggle -->
+                        <div class="icon dark-mode-toggle">
+                            <i class="dark-mode-icon">🌙</i>
+                        </div>
+        
+                        <!-- Profile Icon -->
+                        <div class="profile-container-nav">
+                            <a href="{{ url_for('main.account') }}">
+                                <img class="profile-icon" id="profile-pic" 
+                                    src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" 
+                                    alt="Profile Picture">
+                            </a>
+                        </div>
+                    {% else %}
+                        <!-- Navigation links for guests/not logged-in users -->
+                        <a href="{{ url_for('main.traveler_login') }}" class="nav-link">Login</a>
+                        <a href="{{ url_for('main.traveler_register') }}" class="nav-link">Sign Up</a>
+                    {% endif %}
                 </div>
             </div>
-          </nav>
+        </nav>
+        
           
       
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-box">
-            <h1>“Experience Bolinao with BATOG: <span style="color: #ff9f1c; font-style: italic;">Bolinao Association of Tour Guides.</span>”</h1>
+            <h1>“Experience Bolinao with BATOG: <span style="color: #ff9f1c; font-style: italic;">Bolinao Association of Tour Guides</span>”</h1>
             <ul class="contact-info">
                 <li><i class="fas fa-map-marker-alt"></i> Germinal, Bolinao, Pangasinan</li>
                 <li><i class="fas fa-envelope"></i> <a href="mailto:bolinaotourguides@gmail.com">bolinaotourguides@gmail.com</a> </li>
@@ -295,72 +307,109 @@
 
     <!--COPY ALL FOR NOTIFICATION BELL AND DARKMODE-->
 <script>
-  
-    document.querySelector('.dark-mode-toggle').addEventListener('click', function() {
-      document.body.classList.toggle('dark-mode');
-      document.querySelector('.navbar').classList.toggle('dark-mode');
-      document.querySelector('.profile-icon').classList.toggle('dark-mode');
-    });
-    
-      document.addEventListener("DOMContentLoaded", function() {
-      const notificationBell = document.getElementById("notification-bell");
-      const notificationDropdown = document.querySelector(".notification-dropdown");
-    
-      // Toggle notification dropdown on bell click
-      notificationBell.addEventListener("click", function(event) {
-        notificationDropdown.classList.toggle("active");
-        event.stopPropagation(); // Prevent click from closing immediately
+
+
+document.addEventListener('DOMContentLoaded', () => {
+const NOTIFICATIONS_URL = '/notifications';
+const notificationBell = document.getElementById('notification-bell');
+const notificationDropdown = document.getElementById('notification-dropdown');
+const notificationCount = document.querySelector('.notification-count');
+const notificationList = document.getElementById('notification-list');
+
+// Fetch notifications
+async function fetchNotifications() {
+  try {
+    const response = await fetch(`${NOTIFICATIONS_URL}/`);
+    if (!response.ok) throw new Error('Failed to fetch notifications');
+
+    const data = await response.json();
+    console.log("Fetched Notifications:", data); // Debugging fetched notifications
+
+    notificationList.innerHTML = ''; // Clear old notifications
+
+    if (!data.notifications || data.notifications.length === 0) {
+      notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+    } else {
+      data.notifications.forEach(notification => {
+        const li = document.createElement('li');
+        li.classList.add('notification-item');
+        li.setAttribute('data-id', notification.id);
+        li.innerHTML = `
+          <span>${notification.message}</span>
+          <small>${notification.created_at}</small>
+        `;
+        notificationList.appendChild(li);
       });
-    
-      // Close dropdown if clicked outside
-      document.addEventListener("click", function(event) {
-        if (!notificationDropdown.contains(event.target) && !notificationBell.contains(event.target)) {
-          notificationDropdown.classList.remove("active");
-        }
-      });
+    }
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+  }
+}
+
+// Fetch notification count
+async function fetchNotificationCount() {
+  try {
+    const response = await fetch(`${NOTIFICATIONS_URL}/count`);
+    if (!response.ok) throw new Error('Failed to fetch notification count');
+
+    const data = await response.json();
+    notificationCount.textContent = data.count || 0; // Update count display
+  } catch (error) {
+    console.error('Error fetching notification count:', error);
+  }
+}
+  // Toggle dropdown visibility
+  notificationBell.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    notificationDropdown.classList.toggle('hidden');
+    notificationDropdown.style.display = notificationDropdown.classList.contains('hidden') ? 'none' : 'block';
+
+    if (!notificationDropdown.classList.contains('hidden')) {
+      await fetchNotifications();
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!notificationDropdown.contains(e.target) && e.target !== notificationBell) {
+      notificationDropdown.classList.add('hidden');
+      notificationDropdown.style.display = 'none';
+    }
+  });
+
+
+// Mark notification as read
+notificationList.addEventListener('click', async (e) => {
+  const notificationItem = e.target.closest('.notification-item');
+  if (!notificationItem) return;
+
+  const notificationId = notificationItem.getAttribute('data-id');
+  try {
+    const response = await fetch(`${NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
     });
-    
-    
-    // Toggle the notification dropdown visibility
-    document.getElementById('notification-bell').addEventListener('click', function() {
-      const dropdown = document.getElementById('notification-dropdown');
-      dropdown.classList.toggle('hidden');
-      dropdown.style.display = dropdown.classList.contains('hidden') ? 'none' : 'block';
-    });
-    
-    document.addEventListener("DOMContentLoaded", function () {
-      const notificationBell = document.getElementById("notification-bell");
-      const notificationContainer = document.querySelector(".notification-container");
-      const notificationCount = document.querySelector(".notification-count");
-      const notificationList = document.getElementById("notification-list");
-    
-      // Toggle notification dropdown on bell click
-      notificationBell.addEventListener("click", function () {
-        notificationContainer.classList.toggle("active");
-      });
-    
-      // Example function to add notifications
-      function addNotification(message) {
-        const newNotification = document.createElement("li");
-        newNotification.classList.add("notification-item");
-        newNotification.textContent = message;
-        notificationList.appendChild(newNotification);
-    
-        // Update notification count
-        const count = parseInt(notificationCount.textContent);
-        notificationCount.textContent = count + 1;
-    
-        // Remove "No Notifications" message if present
-        const noNotificationMessage = document.querySelector(".notification-item");
-        if (noNotificationMessage && noNotificationMessage.textContent === "No Notifications") {
-          noNotificationMessage.remove();
-        }
-      }
-    
-      // Example: Add a notification on page load (replace or remove in production)
-      addNotification("New booking confirmed!");
-      addNotification("Your tour guide has arrived.");
-    });
+    if (!response.ok) throw new Error('Failed to mark notification as read');
+
+    notificationItem.remove(); // Remove the notification from the list
+
+    // Update count
+    const count = parseInt(notificationCount.textContent, 10);
+    notificationCount.textContent = Math.max(count - 1, 0); // Ensure count doesn't go below 0
+
+    // Display "No new notifications" if list is empty
+    if (notificationList.children.length === 0) {
+      notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
+    }
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
+});
+
+// Fetch notification count on page load
+fetchNotificationCount();
+
+})
 
 
     
