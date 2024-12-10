@@ -1,3 +1,38 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const profileToggle = document.getElementById('profile-toggle'); // Profile toggle container
+  const arrowIcon = document.getElementById('arrow-icon'); // Arrow icon
+  const tabsPanel = document.querySelector('.tabs-panel'); // Side panel
+  const tabLinks = document.querySelectorAll('.tabs-panel a'); // All links in the side panel
+
+  // Function to toggle the side panel
+  function toggleTabsPanel(event) {
+    event.preventDefault(); // Prevent default behavior of the link
+    const isPanelVisible = tabsPanel.classList.contains('show');
+
+    if (isPanelVisible) {
+      tabsPanel.classList.remove('show'); // Hide the panel
+      arrowIcon.classList.remove('rotate'); // Reset arrow rotation
+    } else {
+      tabsPanel.classList.add('show'); // Show the panel
+      arrowIcon.classList.add('rotate'); // Rotate the arrow
+    }
+  }
+
+  // Attach the event listener to the profile toggle
+  profileToggle.addEventListener('click', toggleTabsPanel);
+
+  // Close the side panel when any tab link is clicked
+  tabLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        tabsPanel.classList.remove('show'); // Close the panel
+        arrowIcon.classList.remove('rotate'); // Reset arrow rotation
+      }
+    });
+  });
+});
+
+
 
 
 // Smooth scrolling to sections
@@ -207,37 +242,57 @@
 //Bookings
 
   document.addEventListener('DOMContentLoaded', function () {
-    
     // Modal elements
     const modal = document.getElementById('booking-details-modal');
     const modalLoader = document.getElementById('modal-loader');
     const modalDetails = document.getElementById('modal-details');
-    const modalStatus = document.getElementById('modal-status'); // Add this
-    const closeModalButton = document.getElementById('close-booking-modal');
+    const modalStatus = document.getElementById('modal-status');
+    const closeModalButton = document.querySelector('.primary-btn'); 
+    const xCloseButton = document.querySelector('.x-btn'); 
 
     // Function to fetch and display booking details
     async function fetchAndDisplayBookingDetails(bookingId) {
-      console.log('Fetching details for booking ID:', bookingId); // Debugging log
+      console.log('Fetching details for booking ID:', bookingId);
 
       // Reset modal state
       modalLoader.style.display = 'block';
       modalDetails.classList.add('hidden');
-      modal.classList.add('show'); // Show modal
-      modal.classList.remove('hidden'); // Ensure it's visible
+      modal.classList.add('show'); 
+      modal.classList.remove('hidden'); 
       document.body.style.overflow = 'hidden';
 
       try {
-        // Fetch booking details
         const response = await fetch(`/booking/details/${bookingId}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch booking details: ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log('Booking details fetched:', data); // Debugging log
+        console.log('Booking details fetched:', data);
 
-        // Populate modal with booking details
-        modalStatus.textContent = data.status; // Display status
+        // Populate and style status
+        modalStatus.textContent = data.status;
+        modalStatus.className = 'status-circle'; 
+        
+        switch (data.status.toLowerCase()) {
+          case 'upcoming':
+            modalStatus.classList.add('status-label', 'upcoming');
+            break;
+          case 'ongoing':
+            modalStatus.classList.add('status-label', 'ongoing');
+            break;
+          case 'completed':
+            modalStatus.classList.add('status-label', 'completed');
+            break;
+          case 'cancelled':
+            modalStatus.classList.add('status-label', 'cancelled');
+            break;
+          default:
+            modalStatus.classList.add('status-label');
+            break;
+        }
+
+        // Populate modal content
         document.getElementById('modal-traveler-name').textContent = data.traveler.name;
         document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
         document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
@@ -246,15 +301,12 @@
         document.getElementById('modal-tour-guide-price').textContent = `₱${data.price}`;
         document.getElementById('modal-special-notes').textContent = data.special_notes;
 
-        // Populate package details
         const packageData = data.package;
         document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
         document.getElementById('modal-package-title').textContent = packageData.name;
-        document.getElementById('modal-package-location').textContent = packageData.location || "Location not provided";
+        document.getElementById('modal-package-location').innerHTML = `<span class="location-icon">&#x1F4CD;</span> ${packageData.location || "Location not provided"}`;
         document.getElementById('modal-package-description').textContent = packageData.description;
 
-
-        // Populate estimated prices
         const priceList = document.getElementById('modal-price-list');
         priceList.innerHTML = '';
         packageData.estimated_prices.forEach(price => {
@@ -263,7 +315,6 @@
           priceList.appendChild(li);
         });
 
-        // Populate inclusions
         const inclusionsList = document.getElementById('modal-inclusions-list');
         inclusionsList.innerHTML = '';
         packageData.inclusions.forEach(inclusion => {
@@ -272,7 +323,6 @@
           inclusionsList.appendChild(li);
         });
 
-        // Populate exclusions
         const exclusionsList = document.getElementById('modal-exclusions-list');
         exclusionsList.innerHTML = '';
         packageData.exclusions.forEach(exclusion => {
@@ -281,7 +331,6 @@
           exclusionsList.appendChild(li);
         });
 
-        // Populate itineraries
         const itineraryList = document.getElementById('modal-itinerary-list');
         itineraryList.innerHTML = '';
         packageData.itineraries.forEach(itinerary => {
@@ -295,48 +344,41 @@
           itineraryList.appendChild(li);
         });
 
-
-          // Show modal content
-          modalLoader.style.display = 'none';
-          modalDetails.classList.remove('hidden');
-          console.log('Modal content populated successfully.'); // Debugging log
-        } catch (error) {
-          console.error('Error loading booking details:', error);
-          modalLoader.style.display = 'none';
-          alert('Failed to load booking details. Please try again.');
-        }
+        modalLoader.style.display = 'none';
+        modalDetails.classList.remove('hidden');
+        console.log('Modal content populated successfully.');
+      } catch (error) {
+        console.error('Error loading booking details:', error);
+        modalLoader.style.display = 'none';
+        alert('Failed to load booking details. Please try again.');
       }
+    }
 
-      // Add event listeners to booking cards
-      document.querySelectorAll('.view-booking').forEach(button => {
-        button.addEventListener('click', function () {
-          const bookingId = this.id.split('-').pop(); // Extract the booking ID from the button ID
-          fetchAndDisplayBookingDetails(bookingId);
-        });
+    // Event listeners for booking cards
+    document.querySelectorAll('.view-booking').forEach(button => {
+      button.addEventListener('click', function () {
+        const bookingId = this.id.split('-').pop(); 
+        fetchAndDisplayBookingDetails(bookingId);
       });
+    });
 
-      // Close modal
-      closeModalButton.addEventListener('click', function () {
-        modal.classList.remove('show');
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-      });
+    // Function to close the modal
+    function closeModal() {
+      modal.classList.remove('show');
+      modal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    if (closeModalButton) {
+      closeModalButton.addEventListener('click', closeModal);
+    }
+    if (xCloseButton) {
+      xCloseButton.addEventListener('click', closeModal);
+    }
+
+    console.log('Event listeners attached to Close and X buttons.');
   });
 
-  
-  // Show Booking modal logic
-  const bookingModal = document.getElementById('booking-modal');
-  const bookingInfo = document.getElementById('booking-info');
-  const closeBookingModal = document.getElementById('close-booking-modal');
-
-  function openBookingDetails(details) {
-    bookingInfo.textContent = details;
-    bookingModal.classList.add('show');
-  }
-
-  closeBookingModal.addEventListener('click', () => {
-    bookingModal.classList.remove('show');
-  });
 
 //
 

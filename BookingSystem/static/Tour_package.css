@@ -2,166 +2,579 @@
    Global Styles
 ======================= */
 body {
-    display: flex;
-    justify-content: center;
-    font-family: Arial, sans-serif;
     margin: 0;
-    background-color: #f0f0f0; 
+    background-color: whitesmokes;
+    font-family: Arial, sans-serif;
 }
-
-/* =======================
-   Header Styles
-======================= */
-.header {
+ 
+ 
+/* Navbar Styling */
+.navbar {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     width: 100%;
-    padding: 20px 10%;
-    background: #1A535C;
+    background-color: #1A535C; /* Deep Cyan */
+    padding: 5px 5px;
+    color: white;
+    z-index: 100;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+  }
+
+
+  .navbar-container {
+    max-width: 100%; 
+    padding-left: 10%; 
+    padding-right: 10%; 
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-sizing: border-box;
-    z-index: 100; 
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-}
+    min-height: 60px;
+    
+  }
 
-.logo {
-    font-size: 25px;
-    color: white;
-    text-decoration: none;
-    font-weight: 600;
-    margin-left: 15px;
-}
-
-.navbar a {
+  .navbar a {
     font-size: 18px;
-    color: white;
+    color:  white;
     text-decoration: none;
     font-weight: 700;
     margin-left: 33px;
     margin-right: 20px;
     transition: .3s;
-}
+  }
 
-.navbar a:hover {
-    color: #ff9f1c; /* Golden Orange */
-}
+  .navbar a:hover {
+    color: #ff9f1c;
+  }
 
-/* =======================
-   Gradient Overlay
-======================= */
-.gradient-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70%; /* Adjust height of gradient as needed */
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.87), rgba(0, 0, 0, 0));
-}
 
-/* =======================
-   Card Details Styles
-======================= */
-.card-details {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    color: white;
-    z-index: 1; /* Ensure text is above the gradient */
-}
+  a {
+    color: #4ecdc4; 
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+    
+  a:hover {
+    color: #ff9f1c;
+  } 
 
-.title-rating {
+  .navbar-links {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-}
+    gap: 15px;
+  }
 
-.rating {
-    margin-left: 10px; /* Space between title and rating */
-}
+  .logo {
+    font-size: 25px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 15px;
+  }
 
-.heart {
+  /* Profile Icon */
+  .profile-container {
+    display: flex;
+    align-items: center;
+    margin: 0%;
+  }
+
+  .profile-icon {
+    width: 100%;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Circular shape */
+    object-fit: cover; /* Prevent image distortion */
+    border: 2px solid #4ecdc4; /* Bright Turquoise border */
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  .profile-icon:hover {
+    transform: scale(1.1); /* Slight zoom on hover */
+  }
+
+
+  /* Navbar Adjustment on Small Screens */
+  @media (max-width: 480px) {
+  .navbar-container {
+    flex-direction: column; /* Stack links vertically */
+    gap: 10px;
+  }
+
+  .nav-link {
+    font-size: 16px; /* Adjust font size */
+    }
+  }
+
+  
+  /* Notification */
+  .notification-container {
+    position: relative;
+  }
+
+  .notification-bell {
+    cursor: pointer;
+    position: relative;
+    background-color: none;
+  }
+
+  .notification-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: red;
+    color: white;
+    font-size: 12px;
+    border-radius: 50%;
+    padding: 3px 6px;
+  }
+
+  .notification-dropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background:#4ecdc4;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none; /* Default state is hidden */
+  }
+
+  .notification-dropdown.hidden {
+    display: none !important;
+  }
+
+
+  .notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+  }
+
+  .notification-item:hover {
+    background-color:#1A535C;
+  }
+
+  .notification-item small {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+  }
+
+
+
+/*  */
+
+  
+  
+
+
+  /* Booking Deetails */
+
+
+  
+
+  /* Status Box Styling */
+  .status-box {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+  }
+
+  .status-circle {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #4ecdc4;
+    border-radius: 50px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  
+  /* Close Button */
+  .x-btn {
     position: absolute;
     top: 10px;
-    right: 10px;
-    font-size: 24px; /* Adjust size as needed */
-    color: white; /* Heart color */
-}
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer;
+    z-index: 10; 
+    transition: color 0.3s ease;
+  }
 
-/* =======================
-   List Styles
-======================= */
-#list {
-    padding: 6rem 2rem;
-}
+  .x-btn:hover {
+    color: #ff4b4b; /* Red color on hover */
+  }
 
-#list h1 {
+
+  .booking-modal {
+    display: none; /* Initially hidden */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Black with transparency */
+    backdrop-filter: blur(1px); /* Blur the background */
+    z-index: 1000; /* Above everything */
+    justify-content: center;
     align-items: center;
-    text-align: center; /* Center the title text */
-    font-size: 28px; /* Font size for title */
-    color: #101720;
+  }
+
+
+  .booking-modal.show {
+    display: flex;
+  }
+
+
+  /* Modal Content Alignment */
+  .booking-modal-content {
+    background-color: white;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 10px;
+    overflow-y: auto;
+    max-height: 90vh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative; /* Ensures the button is positioned relative to this container */
+  }
+
+  #modal-details{
+    width: 90%;
+  }
+
+  
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 15px; /* Space between buttons */
+    margin-top: 15px; /* Space above buttons */
+  }
+
+  /* Center Alignment for Containers */
+  .traveler-info-container, .tour-package-details-container {
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 80%; /* Consistent width across sections */
+    max-width: 900px;
+  }
+
+
+  /* Centered Header Styling */
+  .container-header {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #2b2d42;
+    border-bottom: 2px solid #4ecdc4;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+
+
+  /* Info Items Spacing */
+  .info-item {
+    font-size: 16px;
+    color: #2b2d42;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between; /* Align labels and values horizontally */
+  }
+
+
+  /* Notes Box Styling */
+  .notes-box {
+    background-color: #eaf7f7;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border-left: 5px solid #4ecdc4;
+    font-size: 14px;
+  }
+
+  /* Modal Header Improvements */
+  .modal-header {
+    text-align: center;
+    margin-bottom: 25px;
+    position: relative;
+    border-radius: 8px;
+  }
+
+  .header-image-wrapper {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .modal-header-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    filter: brightness(70%); /* Darken the image for better text contrast */
+  }
+
+  .header-text-overlay {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    color: white;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+  }
+
+  .package-title {
+    font-size: 26px;
+    font-weight: bold;
+    margin: 0;
+    color: white;
+  }
+
+  .location {
+    font-size: 16px;
+    margin-top: 5px;
+    text-align: left;
+  }
+
+  .location-icon {
+    margin-right: 5px;
+  }
+
+  /* Description Box Styling */
+  .description-box {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #eaf7f7;
+    border-left: 5px solid #4ecdc4;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #2b2d42;
+    line-height: 1.5;
+  }
+
+  /* Modal Sections with Gaps */
+  .modal-section {
+    margin-top: 20px;
+  }
+
+  /* Price List Styling */
+  .price-list, .inclusions-list, .exclusions-list, .itinerary-list {
+    margin: 15px 0;
+    padding-left: 20px;
+    list-style: none;
+  }
+
+  .price-list li, .inclusions-list li, .exclusions-list li {
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkmark {
+    color: #4ecdc4;
+    margin-right: 8px;
+  }
+
+  .crossmark {
+    color: #ff4b4b;
+    margin-right: 8px;
+  }
+
+  /* Itinerary Timeline */
+  .itinerary-list {
+    position: relative;
+  }
+
+  .itinerary-list::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #4ecdc4;
+  }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #4ecdc4;
+    border-radius: 50%;
+    position: absolute;
+    left: 10px;
+  }
+
+  .timeline-content {
+    margin-left: 35px;
+    padding-bottom: 10px;
+  }
+
+  .timeline-content strong {
+    color: #333;
+    font-size: 16px;
+  }
+
+  .timeline-content p {
+    color: #666;
+    margin: 5px 0;
+  }
+
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .booking-modal-content {
+    width: 90%; /* Almost full width */
+    max-width: 600px;
+  }
+
+  .modal-header-image {
+    height: 150px; /* Reduce height for medium screens */
+  }
+
+  .info-item {
+    flex-direction: column; /* Stack label and value */
+    text-align: left;
+    margin-bottom: 15px;
+  }
+
+  .container-header {
+    font-size: 16px; /* Adjust font size */
+  }
+
+  .modal-footer {
+    flex-direction: column; /* Stack buttons */
+    gap: 5px;
+  }
 }
 
-.package-container {
+@media (max-width: 480px) {
+  .booking-modal-content {
+    width: 80%; /* Full width for small screens */
+    max-height: 85vh; /* Slightly less height for better fit */
+  }
+
+  .modal-header-image {
+    height: 120px; /* Reduce height further */
+  }
+
+  .info-item {
+    font-size: 14px; /* Adjust font size */
+  }
+
+  .modal-footer {
+    flex-direction: column; /* Stack buttons */
+    gap: 5px;
+  }
+}
+
+
+
+
+
+
+
+
+
+  /* Package cards container */
+  .package-container {
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
     justify-content: center;
-}
+    margin-top: 50px;
+  }
 
-.card-details {
+
+  .card-details {
     position: absolute;
     bottom: 10px;
     left: 10px;
     color: white;
     z-index: 1; /* Ensure text is above the gradient */
-}
-
-.title-rating {
+  }
+  
+  .title-rating {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
+  }
 
-.rating {
+  .title-rating h3{
+    color: white;
+  }
+
+  .rating {
     margin-left: 10px; /* Space between title and rating */
-}
+  }
 
-.heart {
+  .heart {
     position: absolute;
     top: 10px;
     right: 10px;
     font-size: 24px; /* Adjust size as needed */
     color: white; /* Heart color */
-}
+  }
 
-.card {
+  .card-details {
+    width: 100%; /* Make cards responsive */
+    max-width: 300px; /* Prevent cards from becoming too wide */
+    margin: auto; /* Center cards */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+
+  .card {
     position: relative;
     width: 300px; /* Adjust as needed */
     height: 372px; /* Adjust as needed */
     border-radius: 10px;
     overflow: hidden;
     border: 2px solid #06294e;
-    box-shadow: 0 0 20px rgb(255, 174, 6);
-}
+    box-shadow: 0 0 10px rgb(255, 174, 6);
+  }
 
 
-.card-content {
+  .card-content {
     position: relative;
     width: 100%;
     height: 100%;
-}
+  }
 
-.card-image {
+  .card-content img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
+  }
 
-/* Gradient overlay */
-.gradient-overlay {
+  .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Gradient overlay */
+  .gradient-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -169,10 +582,10 @@ body {
     height: 100%;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.87), rgba(0, 0, 0, 0));
     z-index: 1; /* Ensure it's above the image but below the text */
-}
+  }
 
-/* Overlay for the button */
-.card-overlay {
+  /* Overlay for the button */
+  .card-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -185,19 +598,19 @@ body {
     opacity: 0; /* Start hidden */
     transition: opacity 0.5s ease; /* Smooth transition */
     z-index: 2; /* Ensure it's above everything else */
-}
+  }
 
-/* Show overlay on hover */
-.card:hover .card-overlay {
+  /* Show overlay on hover */
+  .card:hover .card-overlay {
     opacity: 1; /* Show overlay on hover */
-}
+  }
 
-.card:hover {
+  .card:hover {
     transform: scale(1.05);
-}
+  }
 
-/* View Package button */
-.view-package {
+  /* View Package button */
+  .view-package {
     background: #ff9f1c; /* Button color */
     color: #101720;
     padding: 0.5rem 1rem;
@@ -206,229 +619,44 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.3s; /* Change background on hover */
-}
+  }
 
 
-/* Optional: Add hover effect to button */
-.card-overlay:hover .view-package {
+  /* Optional: Add hover effect to button */
+  .card-overlay:hover .view-package {
     background-color: #ff7f00; /* Darker shade on hover */
-}
+  }
 
-
-.hidden {
+  .hidden {
     display: none;
-}
-
-/* Modal Overlay */
-#modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85); /* Darker overlay for better focus */
-    z-index: 999;
-    display: none;
-    transition: opacity 0.3s ease; /* Smooth transition for overlay */
-}
-
-/* Tour Modal */
-#tour-package-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%; /* Responsive width */
-    max-width: 600px; /* Adjusted for a more compact look */
-    background-color: #ffffff;
-    border-radius: 15px; /* Rounded corners for a modern look */
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3); /* Stronger shadow for depth */
-    z-index: 1000;
-    overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-/* Show modal and overlay */
-#modal-overlay:not(.hidden),
-#tour-package-modal:not(.hidden) {
-    display: block;
-}
-
-#tour-package-modal:not(.hidden) {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
-
-/* Modal Header */
-.modal-header {
-    position: relative;
-    height: 200px;
-    background-color: #1A535C; /* Dark teal for header */
-    color: #ffffff;
-}
-
-
-/* Header Image */
-.modal-header-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-top-left-radius: 15px; /* Rounded top corners */
-    border-top-right-radius: 15px;
-    filter: brightness(0.8); /* Darker filter to make text more readable */
-}
-
-/* Header Text Overlay */
-.header-text-overlay {
-    position: absolute;
-    bottom: 15px;
-    left: 20px;
-    color: white;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger shadow for contrast */
-}
-
-/* Package Title */
-.package-title {
-    font-size: 1.6rem;
-    font-weight: bold;
-    margin: 0;
-    color: #FFDA44; /* Gold color for title */
-}
-
-/* Location */
-.location {
-    font-size: 1.1rem;
-    margin: 0;
-    color: #16A085; /* Vibrant teal for location */
-}
-
-/* Close Button */
-.close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 1.8rem;
-    color: #ffffff;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.close-btn:hover {
-    color: #FF6347; /* Soft coral color for hover effect */
-}
-
-/* Modal Content */
-.tour-modal-content {
-    padding: 20px;
-    background-color: #f9f9f9; /* Light background for content area */
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for content */
-    max-height: 70vh; /* Limit the max height to 70% of the viewport height */
-    overflow-y: auto; /* Enable vertical scrolling if content exceeds max-height */
-}
-
-/* Description */
-.description {
-    font-size: 1rem;
-    margin: 15px 0;
-    color: #34495E; /* Dark gray text for readability */
-}
-
-/* Modal Sections */
-.modal-section {
-    margin: 20px 0; /* Increased margin for spacing */
-}
-
-.modal-section h4 {
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-    color: #2C3E50; /* Darker color for section headings */
-    font-weight: 600;
-}
-
-/* Lists */
-.price-list,
-.inclusions-list,
-.exclusions-list,
-.itinerary-list {
-    list-style-type: none;
-    padding: 0;
-}
-
-.price-list li,
- .inclusions-list li,
-.exclusions-list li,
-.itinerary-list li {
-    padding: 8px 0;
-    border-bottom: 1px solid #ddd; /* Light border for separation */
-}
-
-.price-list li:last-child,
-.inclusions-list li:last-child,
-.exclusions-list li:last-child,
-.itinerary-list li:last-child {
-    border-bottom: none; /* Remove border for last item */
-}
-
-/* Price List Specific Styles */
-.price-list li {
-    color: #e74c3c; /* Red color for price items */
-    font-weight: bold;
-}
-
-/* Inclusions and Exclusions List */
-.inclusions-list li,
-.exclusions-list li {
-    color: #27ae60; /* Green for inclusions and red for exclusions */
-}
-
-/* Itinerary Items */
-.itinerary-list li {
-    color: #2980b9; /* Blue for itinerary items */
-}
+  }
 
 
 
-/* =======================
-   Responsive Design
-======================= */
-@media (max-width: 768px) {
-    .header {
-        padding: 15px 5%; /* Adjust padding for smaller screens */
-    }
-    
-    .navbar a {
-        font-size: 16px; /* Smaller font size for links */
-        margin-left: 20px; /* Adjust margin */
-        margin-right: 15px; /* Adjust margin */
-    }
-
-    .package-container {
-        padding: 3rem 1rem; /* Adjust padding for small screens */
-    }
-
+  @media (max-width: 768px) {
     .card {
-        width: 100%; /* Full width on smaller screens */
-        height: auto; /* Adjust height automatically */
+      max-width: 280px; /* Smaller card width */
     }
+  }
 
-    #title-tab h1 {
-        font-size: 24px; /* Smaller font size for title on mobile */
+  @media (max-width: 480px) {
+    .card {
+      max-width: 250px; /* Further reduce size for smaller screens */
     }
-}
+  }
 
-/* @media (max-width: 600px) {
-    .modal {
-        width: 95%; 
-    }
-   
-    .modal-header-image {
-        height: 150px; 
-    }
+  /* Ensure buttons are accessible on smaller screens */
+  .view-package {
+    font-size: 14px; /* Reduce size */
+    padding: 8px 12px;
+  }
 
-    .package-title {
-        font-size: 1.3rem; 
+  .view-package:hover {
+    background-color: #ff7f00; /* Slightly brighter hover color */
+  }
+
+  @media (max-width: 768px) {
+    .view-package {
+      font-size: 12px; /* Compact size */
     }
-   } */
-    
+  }

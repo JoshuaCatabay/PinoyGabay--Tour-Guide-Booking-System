@@ -24,11 +24,14 @@ main = Blueprint('main', __name__)  # Ensure the 'main' blueprint is set
 @main.route('/')
 @main.route('/home')
 def home():
-    return render_template('home.html')
+    return "Hello"
+    return render_template('traveler_dashboard.html')
 
 @main.route('/pg_home', endpoint='pg_home')
 def pg_home():
     return render_template('pg_home.html')
+
+
 
 
 
@@ -197,7 +200,7 @@ def logout():
     # Clear all session data
     session.clear()
     flash('You have been logged out successfully.', 'success')
-    return redirect(url_for('main.home'))
+    return redirect(url_for('main.traveler_dashboard'))
 
 
 
@@ -252,6 +255,13 @@ def account():
         .all()
     )
 
+    # Count completed tours
+    total_completed_tours = (
+        db.session.query(func.count(Booking.id))
+        .filter_by(user_id=current_user.id, status=BookingStatus.STATUS_COMPLETED.value)
+        .scalar()
+    )
+
     # Fetch reviews submitted by the traveler
     reviews = (
         db.session.query(ReviewsRating)
@@ -301,7 +311,8 @@ def account():
         reviews=reviews_data,
         BookingStatus=BookingStatus,  # Pass BookingStatus to the template
         to_review=to_review,  # Pass the to_review list
-        to_review_count=to_review_count  # Pass the count
+        to_review_count=to_review_count,  # Pass the count
+        total_completed_tours=total_completed_tours  # Pass to template
     )
 
 
@@ -348,15 +359,21 @@ def redirect_booking():
     else:
         return redirect(url_for('signup'))  # Redirect to signup page 
 
+
+
+
 @main.route('/traveler_dashboard')
 def traveler_dashboard():
     packages = TourPackage.query.limit(4).all()
     return render_template('traveler_dashboard.html',packages=packages)
 
+
 @main.route('/tour_package')
 def tour_package():
-    return render_template('tour_package.html')
-
+    # Replace 'specific_tour_operator_id' with the desired tour operator's ID
+    specific_tour_operator_id = 3  # Example value for testing
+    packages = TourPackage.query.filter_by(toperator_id=specific_tour_operator_id).all()
+    return render_template('tour_package.html', packages=packages)
 
 
 

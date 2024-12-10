@@ -164,9 +164,10 @@
                   {% for booking in bookings %}
                   <tr class="booking-row" data-status="{{ booking.status }}">
                     <td>
-                      {{ booking.date_start.strftime('%b %d, %Y') }}
+                      <span class="date-start">{{ booking.date_start.strftime('%b %d, %Y') }}</span>
                       {% if booking.date_start != booking.date_end %}
-                        - {{ booking.date_end.strftime('%b %d, %Y') }}
+                      <br>
+                      <span class="date-end">- {{ booking.date_end.strftime('%b %d, %Y') }}</span>
                       {% endif %}
                     </td>
                     <td>{{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</td>
@@ -183,23 +184,27 @@
           </div>
 
         
-          <div id="booking-details-modal" class="modal hidden">
-            <div class="modal-content">
+          <div id="booking-details-modal" class="booking-modal hidden">
+            <div class="booking-modal-content">
 
               <!-- Loader -->
               <div id="modal-loader" style="display: none;">Loading...</div>
-        
+
               <!-- Booking Details -->
               <div id="modal-details" class="hidden">
+               
+                <button id="close-booking-modal" class="x-btn">&times;</button>
+
+                <div class="status-box">
+                  <span class="status-circle" id="modal-status">Loading...</span>
+                </div>
+
+                
 
                 <!-- Traveler Information -->
-                <div class="container-section traveler-info expanded">
+                <div class="traveler-info-container">
 
                   <h4 class="container-header">Traveler Information</h4>
-
-                  <div class="status-box">
-                    <span class="status-circle" id="modal-status">Loading...</span>
-                  </div>
 
                   <div class="info-item">
                     <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
@@ -234,20 +239,28 @@
                 </div>
         
                 <!-- Tour Package Details -->
-                <div class="container-section tour-package-details expanded">
+                <div class="tour-package-details-container">
 
                   <h4 class="container-header">Tour Package Details</h4>
+                  <br>
+
                   <div class="modal-header">
-                    <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
-                    <div class="header-text-overlay">
-                      <h3 id="modal-package-title">Loading...</h3>
-                      <p id="modal-package-location">
-                        <span class="location-icon">&#x1F4CD;</span> Loading location...
-                      </p>
+                    <div class="header-image-wrapper">
+                      <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+                      <div class="header-text-overlay">
+                        <h3 class="package-title" id="modal-package-title">Loading...</h3>
+                        <p class="location" id="modal-package-location">
+                          <span class="location-icon">&#x1F4CD;</span> Loading location...
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <p id="modal-package-description" class="description">Loading...</p>
-            
+
+                  <!-- Description Section -->
+                  <div class="description-box">
+                    <p id="modal-package-description" class="description">Loading...</p>
+                  </div>
+
                   <!-- Estimated Prices -->
                   <div class="modal-section">
                     <h4>Estimated Prices</h4>
@@ -269,14 +282,13 @@
                   <!-- Itinerary -->
                   <div class="modal-section itinerary-section">
                     <h4>Itinerary</h4>
-                    <ul id="modal-itinerary-list" class="timeline"></ul>
+                    <ul id="modal-itinerary-list" class="itinerary-list"></ul>
                   </div>
 
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="modal-footer">
-                  <button id="modal-cancel-booking-btn" class="cancel-booking-btn hidden" data-id="">Cancel Booking</button>
                   <button id="close-booking-modal" class="primary-btn">Close</button>
                 </div>
 
@@ -326,7 +338,6 @@
 
                       <!-- Review Text Section -->
                       <div class="review-text-container">
-                        <span class="quote-icon">&ldquo;</span>
                         <p class="review-text">{{ review.comment }}</p>
                       </div>
 
@@ -494,8 +505,10 @@
           
           <section id="tour-packages">
             
-            <h2><span style="color: #ff9f1c">Available Tour Packages/Itineraries</span></h2>
-              
+            <h2><span style="color: #ff9f1c">Available Tour Packages</span></h2>
+            
+            <br>
+
             <div class="package-container">
               {% for package in packages %}
 
@@ -513,7 +526,8 @@
                         </div>
                       </div>
 
-                        <p>{{ package.description }}</p>
+                      <p>{{ package.description }}</p>
+
                     </div>
 
                   </div>
@@ -535,40 +549,55 @@
 
 
           <!-- View Package Modal -->
-          <div id="tour-details-modal" class="modal hidden">
-            <div class="modal-content">
+          <div id="tour-details-modal" class="booking-modal hidden">
+            <div class="booking-modal-content">
+              <span id="close-modal" class="close-btn">&times;</span>
 
-              <!-- Modal Header -->
-              <div class="modal-header">
-                <img src="" alt="Tour Package Image" class="modal-header-image">
-                <h2 class="modal-title"></h2>
-                <p><strong>Location:</strong> <span class="location"></span></p> <!-- Added Location -->
-                <span id="close-modal" class="close-btn">&times;</span>
+              <div class="tour-package-details-container">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                  <div class="header-image-wrapper">
+                    <img src="" alt="Tour Package Image" class="modal-header-image">
+                    <div class="header-text-overlay">
+                      <h2 class="modal-title"></h2>
+                      <p class="location" id="modal-package-location">
+                        <span class="location-icon">&#x1F4CD;</span> Loading location...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="modal-body">
+
+                  <div class="description-box">
+                    <p class="description"></p>
+                  </div>
+
+                  <div class="modal-section">
+                    <h4>Estimated Prices</h4>
+                    <ul class="price-list"></ul>
+                  </div>
+
+                  <div class="modal-section">
+                    <h4>Inclusions</h4>
+                    <ul class="inclusions-list"></ul>
+                  </div>
+
+                  <div class="modal-section">
+                    <h4>Exclusions</h4>
+                    <ul class="exclusions-list"></ul>
+                  </div>
+
+                  <div class="modal-section itinerary-section">
+                    <h4>Itinerary</h4>
+                    <ul class="itinerary-list"></ul>
+                  </div>
+                  
+                </div>
               </div>
-
-              <div class="modal-body">
-                <p class="description"></p>
-                <div>
-                  <h4>Estimated Prices</h4>
-                  <ul class="price-list"></ul>
-                </div>
-                <div>
-                  <h4>Inclusions</h4>
-                  <ul class="inclusions-list"></ul>
-                </div>
-                <div>
-                  <h4>Exclusions</h4>
-                  <ul class="exclusions-list"></ul>
-                </div>
-                <div>
-                  <h4>Itinerary</h4>
-                  <ul class="itinerary-list"></ul>
-                </div>
-              </div>
-
               <div class="modal-footer">
-                <button id="delete-package" class="danger-btn" data-package-id="">Delete</button>
-                <button id="edit-package" data-package-id="" class="secondary-btn">Edit</button>
+                <button id="delete-package" class="logout-btn" data-package-id="">Delete</button>
+                <button id="edit-package" data-package-id="" class="primary-btn">Edit</button>
               </div>
 
             </div>

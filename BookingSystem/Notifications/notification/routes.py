@@ -23,6 +23,7 @@ from datetime import date
 from BookingSystem.models import BookingStatus
 from BookingSystem.models import Notification
 from BookingSystem.utils import update_statuses
+from pytz import timezone 
 
 notification = Blueprint('notification', __name__)
 
@@ -31,29 +32,35 @@ notification = Blueprint('notification', __name__)
 def get_notifications():
     """Fetch unread notifications for the current user."""
     try:
-        # Filter unread notifications for the current user
+        # Debugging log
+        print(f"Fetching notifications for Traveler ID: {current_user.id}")
+
+        # Fetch notifications where the user's role is traveler
         notifications = Notification.query.filter_by(
             user_id=current_user.id,
             is_read=False
         ).order_by(Notification.created_at.desc()).all()
 
-        # Debugging: Log notifications retrieved
-        print(f"Fetched Notifications for User {current_user.id}: {[n.message for n in notifications]}")
+        if not notifications:
+            print("No notifications found for the traveler.")  # Debugging log
 
-        # Prepare the notification data
+        # Convert timestamps to Asia/Manila time
+        local_tz = timezone('Asia/Manila')
         notifications_data = [
             {
                 "id": notification.id,
                 "message": notification.message,
-                "created_at": notification.created_at.strftime('%b %d, %Y %I:%M %p'),
+                # Convert created_at to Asia/Manila timezone
+                "created_at": notification.created_at.astimezone(local_tz).isoformat(),
                 "is_read": notification.is_read,
-                "role": notification.role,  # Include role to differentiate notifications
             }
             for notification in notifications
         ]
 
+        # Send notifications JSON response
         return jsonify({"notifications": notifications_data}), 200
     except Exception as e:
+        print(f"Error fetching traveler notifications: {str(e)}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
@@ -90,7 +97,7 @@ def get_notification_count():
 @notification.route('/operator', methods=['GET'])
 @login_required
 def get_operator_notifications():
-    """Fetch notifications for the logged-in operator."""
+    """Fetch unread notifications for the logged-in operator."""
     try:
         # Debugging log
         print(f"Fetching notifications for Operator ID: {current_user.id}")
@@ -104,22 +111,26 @@ def get_operator_notifications():
         if not notifications:
             print("No notifications found for the operator.")  # Debugging log
 
+        # Convert timestamps to Asia/Manila time
+        local_tz = timezone('Asia/Manila')
         notifications_data = [
             {
                 "id": notification.id,
                 "message": notification.message,
-                "created_at": notification.created_at.strftime('%b %d, %Y %I:%M %p'),
+                # Convert created_at to Asia/Manila timezone
+                "created_at": notification.created_at.astimezone(local_tz).isoformat(),
                 "is_read": notification.is_read,
             }
             for notification in notifications
         ]
 
+        # Send notifications JSON response
         return jsonify({"notifications": notifications_data}), 200
     except Exception as e:
-        print(f"Error fetching operator notifications: {str(e)}")  # Debugging log
+        print(f"Error fetching operator notifications: {str(e)}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
-    
-    
+
+
 @notification.route('/operator/mark_as_read/<int:notification_id>', methods=['POST'])
 @login_required
 def mark_as_read_operator(notification_id):

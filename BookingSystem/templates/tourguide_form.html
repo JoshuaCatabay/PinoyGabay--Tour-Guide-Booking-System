@@ -17,6 +17,8 @@
 
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script src="{{ url_for('static', filename='TravelerBooking.js') }}"defer></script>
     
   </head>
 
@@ -39,8 +41,7 @@
                   
             {% if current_user.is_authenticated %}
                       
-              <!-- Links for Logged-In Users -->
-              <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
+
       
               <!-- Notification Bell -->
               <div class="notification-container">
@@ -60,12 +61,7 @@
 
                 </div>
               </div>
-      
-              <!-- Dark Mode Toggle Icon -->
-              <div class="icon dark-mode-toggle">
-                <i class="dark-mode-icon">🌙</i>
-              </div>
-      
+
               <!-- Profile Icon -->
               <div class="profile-container-nav">
                 <a href="{{ url_for('main.account') }}">
@@ -110,23 +106,16 @@
           <img src="{{ profile.profile_picture }}" alt="Tour Guide Picture" class="profile-pic" />
           <div class="profile-details">
             <h2 class="h2-guide-name">Mabuhay! I Am <span>{{ profile.name }}</span>, Your Friendly Tour Guide</h2>
+            
+            <!-- Profile Ratings Display -->
             <p class="ratings">
-              <span class="average-rating">{{ profile.average_rating }}</span>
-                
-              {% for i in range(profile.average_rating|int) %}
-                &#9733; <!-- Full star -->
-              {% endfor %}
-                    
-              {% if profile.average_rating % 1 >= 0.5 %}
-                &#9733; <!-- Half star -->
-              {% endif %}
-
-              {% for i in range(5 - profile.average_rating|int - (1 if profile.average_rating % 1 >= 0.5 else 0)) %}
-                &#9734; <!-- Empty star -->
-              {% endfor %}
-
-              ({{ profile.review_count or 0 }} Reviews | {{ profile.total_tours or 0 }} Completed Tours)
+              <span class="star-icon">★</span>
+              <span class="rating-value">{{ profile.average_rating or 0 }}</span>
+              <span class="review-count">({{ profile.review_count or 0 }} Reviews)</span>
+              <span class="separator">|</span>
+              <span class="total-tours">{{ profile.total_tours or 0 }} <span class="tours">Tours Completed</span></span>
             </p>
+
 
           </div>
 
@@ -135,126 +124,109 @@
         
         <!-- About Me -->
         <div class="about-me">
-          <h2>About Me</h2>
+          <div class="about-header">
+            <span class="hand-icon">👋</span>
+            <h2>About Me</h2>
+          </div>
           <p>{{ profile.bio }}</p>
         </div>
 
+
         <!-- Why Choose Me Section -->
-        <section class="why-choose-me-row">
+        <section class="why-choose-me-container">
+          <h2 class="why-choose-me-title">Why Choose Me</h2>
+          <p class="section-subtitle">Discover what makes me the perfect guide for your next adventure</p>
+          <div class="why-choose-me-row">
+            <div class="characteristics-box">
+              <h3>Characteristics</h3>
+              <ul class="checklist">
+                {% for characteristic in profile.characteristics %}
+                  <li><span class="checkmark-box">✔</span> {{ characteristic }}</li>
+                {% endfor %}
+              </ul>
+            </div>
 
-          <div class="characteristics-box">
-            <h3>Characteristics</h3>
-            
-            <ul class="checklist">
-
-              {% for characteristic in profile.characteristics %}
-                <li><span class="checkmark">&#10003;</span> {{ characteristic }}</li>
-              {% endfor %}
-
-            </ul>
-          </div>
-
-          <div class="skills-box">
-            <h3>Skills</h3>
-              
-            <ul class="checklist">
-
-              {% for skill in profile.skills %}
-                <li><span class="checkmark">&#10003;</span> {{ skill }}</li>
-              {% endfor %}
-
-            </ul>
+            <div class="skills-box">
+              <h3>Skills</h3>
+              <ul class="checklist">
+                {% for skill in profile.skills %}
+                  <li><span class="checkmark-box">✔</span> {{ skill }}</li>
+                {% endfor %}
+              </ul>
+            </div>
           </div>
         </section>
-
-                    
-        <div class="container">
+        
+        <div class="reviews-container">
           <h2>
-            Traveler Reviews 
+            Traveler Reviews
             <span class="total-reviews">({{ profile.review_count }})</span>
           </h2>
-          
-          <div class="traveler-reviews">
+          <hr>
+        
+          <!-- Reviews Grid -->
+          <div class="traveler-reviews-grid">
             {% if profile.review_count > 0 %}
-
               {% for review in profile.reviews %}
                 <div class="review-card">
-                  <img src="{{ review.tour_image }}" alt="Review Image" class="tour-image" />
+                  <img src="{{ review.tour_image }}" alt="Tour Image" class="tour-image" />
                   <div class="review-content">
                     <div class="traveler-info">
                       <img src="{{ review.traveler_profile }}" alt="Traveler Picture" class="traveler-pic" />
                       <div class="traveler-details">
                         <h3>{{ review.traveler_name }}</h3>
-                        <p class="tour-name">Tour Package</p>
+                        <p class="review-tour-package">{{ review.tour_package_name }}</p>
                         <div class="ratings"><p>{{ review.rating }} ★</p></div>
                       </div>
                     </div>
-                    <p class="review-text">{{ review.comment }}</p>
+                    <div class="review-text-container">
+                      <span class="quote-icon">&ldquo;</span>
+                      <p class="review-text">{{ review.comment }}</p>
+                    </div>
                     <div class="review-footer">
                       <p class="review-date">{{ review.review_date }}</p>
-                      <p class="toured-by">Toured by: <span class="tour-guide-name">{{ review.tour_guide_name }}</span></p>
+                      <p class="toured-by">Toured by: <span class="tour-guide-name">{{ review.guide_name }}</span></p>
                     </div>
                   </div>
                 </div>
-                
               {% endfor %}
-
             {% else %}
-
               <p>No reviews yet.</p>
             {% endif %}
-
           </div>
-          
-          <!-- Pagination Controls -->
+        
+          <!-- Pagination -->
           {% if profile.pagination.total_pages > 1 %}
-
-            <div class="pagination-container">
-
-              <!-- First Page -->
-              <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
-
-              <!-- Previous Page -->
-              <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
-
-              <!-- Page Numbers -->
-              {% for page in range(1, profile.pagination.total_pages + 1) %}
-
-                {% if page == 1 or page == profile.pagination.total_pages or (page >= profile.pagination.current_page - 1 and page <= profile.pagination.current_page + 1) %}
-                  <a href="?page={{ page }}" class="pagination-btn {% if profile.pagination.current_page == page %}active{% endif %}">{{ page }}</a>
-                {% elif page == profile.pagination.current_page - 2 or page == profile.pagination.current_page + 2 %}
-                
-                  <span class="pagination-ellipsis">...</span>
-                {% endif %}
-
-              {% endfor %}
-
-              <!-- Next Page -->
-              <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
-
-              <!-- Last Page -->
-              <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
-            
-            </div>
+          <div class="pagination-container">
+            <a href="?page=1" class="pagination-btn {% if profile.pagination.current_page == 1 %}disabled{% endif %}">«</a>
+            <a href="?page={{ profile.pagination.prev_page }}" class="pagination-btn {% if not profile.pagination.has_prev %}disabled{% endif %}">‹</a>
+            {% for page in range(1, profile.pagination.total_pages + 1) %}
+              {% if page == profile.pagination.current_page %}
+                <a href="?page={{ page }}" class="pagination-btn active">{{ page }}</a>
+              {% else %}
+                <a href="?page={{ page }}" class="pagination-btn">{{ page }}</a>
+              {% endif %}
+            {% endfor %}
+            <a href="?page={{ profile.pagination.next_page }}" class="pagination-btn {% if not profile.pagination.has_next %}disabled{% endif %}">›</a>
+            <a href="?page={{ profile.pagination.total_pages }}" class="pagination-btn {% if profile.pagination.current_page == profile.pagination.total_pages %}disabled{% endif %}">»</a>
+          </div>
           {% endif %}
-          
-          
         </div>
+        
       </div>
         
 
 
       {% if user_role != 'touroperator' %}
-      
-        <!-- Right Section: Sticky Booking Form -->
+        
         <div class="right-column">
           <div class="booking-form">
             <h2 class="guide-name">Have a Wonderful Travel with <span id="full-name">{{ profile.name }}</span></h2>
-          
+        
             <form>
+              <!-- Date Picker Section -->
               <div class="form-section">
                 <label for="date-picker"><strong>Select Date or Date Range:</strong></label>
-                
                 <input
                   type="text"
                   id="date-picker"
@@ -264,38 +236,39 @@
                   readonly
                 />
               </div>
-          
-              <label for="tour-type">Tour Type</label>
-
-              <select id="tour-package-select" name="tour_package_id" required>
-
-                <option value="" disabled selected>Select Tour Package</option>
-
-                {% for package in profile.tour_packages %}
-                  <option value="{{ package.id }}">{{ package.name }}</option>
-                {% endfor %}
-
-              </select>
-
+        
+              <!-- Tour Type -->
+              <div class="form-section">
+                <label for="tour-type">Tour Package</label>
+                <select id="tour-package-select" name="tour_package_id" required>
+                  <option value="" disabled selected>Select Tour Package</option>
+                  {% for package in profile.tour_packages %}
+                    <option value="{{ package.id }}">{{ package.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+        
               <!-- Traveler Quantity -->
-              <label for="traveler-quantity">Number of Travelers</label>
-              <div class="quantity-container">
+              <div class="form-section">
+                <label for="traveler-quantity">Number of Travelers</label>
                 <input type="number" id="traveler-quantity" min="1" value="1" />
               </div>
-
-              <label for="personalized">Personalized Tour</label>
-              <textarea id="personalized" rows="4" placeholder="Enter your preferences or notes"></textarea>
-
-              <!-- Price and Button Row -->
+        
+              <!-- Personalized Tour -->
+              <div class="form-section">
+                <label for="personalized">Notes</label>
+                <textarea id="personalized" rows="4" placeholder="Enter your notes (optional)"></textarea>
+              </div>
+        
+              <!-- Price and Booking Button -->
               <div class="price-button-row">
                 <span class="price-label">₱{{ profile.price }}</span>
                 <button type="button" class="confirm-btn" id="confirm-booking-btn">Book Now</button>
-
               </div>
-
             </form>
           </div>
         </div>
+        
 
       {% else %}
 
@@ -329,404 +302,136 @@
    
       <!-- Sticky Footer Booking Button -->
       <div class="footer-booking-bar" id="footer-booking-bar">
-        <span class="footer-guide-name">Book with <span id="full-name">{{ profile.name }}</span><br>
-        <span class="footer-price">₱{{ profile.price }}</span>
-        <button id="footer-book-btn" class="footer-btn">Book Now</button>
+        <div class="footer-info">
+          <span class="footer-guide-name">Book with <span id="full-name">{{ profile.name }}</span></span>
+        </div>
+        <div class="footer-actions">
+          <span class="footer-price">₱{{ profile.price }}</span>
+          <button id="footer-book-btn" class="footer-btn">Book Now</button>
+        </div>
       </div>
+
 
       <!-- Booking Confirmation Modal -->
       <div id="booking-modal" class="modal hidden">
         <div class="modal-content">
 
-          <div class="traveler-info"></div>
-          <h4 class="container-header">Traveler Information</h4>
-          <br>
-            
-          <div class="info-item">
-            <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+          <button id="close-booking-modal" class="x-btn">&times;</button>
+
+          <div class="traveler-info-container">
+            <h4 class="container-header">Traveler Information</h4>
+            <br>
+              
+            <div class="info-item">
+              <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+            </div>
+
+            <div class="info-item">
+              <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
+            </div>
+
+            <div class="info-item">
+              <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
+            </div>
+
+            <div class="info-item">
+              <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+            </div>
+              
+            <div class="info-item">
+              <strong>Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
+            </div>
+
+            <!-- Special Notes Section -->
+            <div class="notes-box">
+              <h5>Notes</h5>
+              <p id="modal-special-notes">Loading...</p>
+            </div>
           </div>
 
-          <div class="info-item">
-            <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
-          </div>
+          <div class="tour-package-details-container">
+            <h4 class="container-header">Tour Package Details</h4>
+            <br>
+            <!-- Package Image Section with Enhanced Visibility -->
+            <div class="modal-header">
+              <div class="header-image-wrapper">
+                <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+                <div class="header-text-overlay">
+                  <h3 class="package-title" id="modal-package-title">Loading...</h3>
+                  <p class="location" id="modal-package-location">
+                    <span class="location-icon">&#x1F4CD;</span> Loading...
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          <div class="info-item">
-            <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
-          </div>
+            <!-- Description Section -->
+            <div class="description-box">
+              <p id="modal-package-description" class="description">Loading...</p>
+            </div>
 
-          <div class="info-item">
-            <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
-          </div>
+            <!-- Estimated Price Section -->
+            <div class="modal-section">
+              <h4>Estimated Price</h4>
+              <ul id="modal-price-list" class="price-list">Loading...</ul>
+            </div>
 
-          <div class="info-item">
-            <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
-          </div>
-            
-          <div class="info-item">
-            <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
-          </div>
+            <!-- Inclusions Section -->
+            <div class="modal-section">
+              <h4>Inclusions</h4>
+              <ul id="modal-inclusions-list" class="inclusions-list">Loading...</ul>
+            </div>
 
-          <!-- Special Notes Section -->
-          <div class="notes-box">
-            <h5>Special Notes</h5>
-            <p id="modal-special-notes">Loading...</p>
-          </div>
+            <!-- Exclusions Section -->
+            <div class="modal-section">
+              <h4>Exclusions</h4>
+              <ul id="modal-exclusions-list" class="exclusions-list">Loading...</ul>
+            </div>
 
-
-
-          <div class="tour-package-details"></div>
-          <h4 class="container-header">Tour Package Details</h4>
-          <br>
-
-          <div class="modal-header">
-            <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
-            
-            <div class="header-text-overlay">
-              <h3 class="package-title" id="modal-package-title">Loading...</h3>
-              <p class="location" id="modal-package-location">
-                <span class="location-icon">&#x1F4CD;</span> Loading...
-              </p>
+            <!-- Itinerary Section -->
+            <div class="modal-section itinerary-section">
+              <h4>Itinerary</h4>
+              <ul id="modal-itinerary-list" class="itinerary-list">Loading...</ul>
             </div>
 
           </div>
-
-          <p id="modal-package-description" class="description">Loading...</p>
-
-          <!-- Estimated Price Section -->
-          <div class="modal-section">
-            <h4>Estimated Price</h4>
-            <ul id="modal-price-list" class="price-list">Loading...</ul>
-          </div>
-
-          <!-- Inclusions Section -->
-          <div class="modal-section">
-            <h4>Inclusions</h4>
-            <ul id="modal-inclusions-list" class="inclusions-list">Loading...</ul>
-          </div>
-
-          <!-- Exclusions Section -->
-          <div class="modal-section">
-            <h4>Exclusions</h4>
-            <ul id="modal-exclusions-list" class="exclusions-list">Loading...</ul>
-          </div>
-
-          <!-- Itinerary Section -->
-          <div class="modal-section itinerary-section">
-            <h4>Itinerary</h4>
-            <ul id="modal-itinerary-list" class="itinerary-list">Loading...</ul>
-          </div>
-          <button id="close-booking-modal" class="close-btn">Close</button>
+          
           
           <!-- Buttons for Confirm and Cancel -->
           <div class="modal-footer">
-            <button id="confirm-booking-modal" class="primary-btn">Confirm Booking</button>
-            <button id="cancel-booking-modal" class="secondary-btn">Cancel</button>
+            <button id="cancel-booking-modal" class="cancel-btn">Cancel</button>
+            <button id="confirm-booking-modal" class="confirm-btn">Confirm Booking</button>
           </div>
             
         </div>
       </div>
       
-
-
-    </div>
-
-
-    <!-- Thank You Popup -->
-    <div id="thank-you-popup" class="modal" style="display: none;">
-      <div class="modal-content">
-        <h2>Thank You!</h2>
-        <p>Your booking has been confirmed.</p>
+      <!-- Thank You Popup -->
+      <div id="thank-you-popup" class="modal" style="display: none;">
+        <div class="modal-content">
+          <h2>Thank You!</h2>
+          <p>Your booking has been confirmed.</p>
+        </div>
       </div>
+
+      
+      <!-- Toast Message -->
+      <div id="toast-container"></div>
+
+      <!-- Confirmation Modal -->
+      <div id="confirmation-modal" class="hidden">
+        <div class="modal-content">
+          <p id="confirmation-message">Are you sure you want to perform this action?</p>
+          <div class="modal-actions">
+            <button id="confirm-no" class="no-btn">No</button>
+            <button id="confirm-yes" class="yes-btn">Yes</button>
+          </div>
+        </div>
+      </div>
+
+
     </div>
 
-    <script>
-
-      // Scroll to Booking Form from Footer Button
-      const footerBookBtn = document.getElementById('footer-book-btn');
-      const bookingForm = document.querySelector('.booking-form');
-
-      footerBookBtn.addEventListener('click', () => {
-        bookingForm.scrollIntoView({ behavior: 'smooth' });
-      });
-
-      // Function to handle footer visibility
-      const footerBookingBar = document.getElementById('footer-booking-bar');
-      function handleFooterVisibility() {
-        if (window.innerWidth > 768) {
-          footerBookingBar.style.display = 'none'; // Hide on large screens
-        } else {
-          footerBookingBar.style.display = 'flex'; // Show on small screens
-        }
-      }
-
-      // Run on load and on window resize
-      window.addEventListener('resize', handleFooterVisibility);
-      window.addEventListener('DOMContentLoaded', handleFooterVisibility);
-
-
-document.addEventListener('DOMContentLoaded', () => {
-const NOTIFICATIONS_URL = '/notifications';
-const notificationBell = document.getElementById('notification-bell');
-const notificationDropdown = document.getElementById('notification-dropdown');
-const notificationCount = document.querySelector('.notification-count');
-const notificationList = document.getElementById('notification-list');
-
-// Fetch notifications
-async function fetchNotifications() {
-  try {
-    const response = await fetch(`${NOTIFICATIONS_URL}/`);
-    if (!response.ok) throw new Error('Failed to fetch notifications');
-
-    const data = await response.json();
-    console.log("Fetched Notifications:", data); // Debugging fetched notifications
-
-    notificationList.innerHTML = ''; // Clear old notifications
-
-    if (!data.notifications || data.notifications.length === 0) {
-      notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-    } else {
-      data.notifications.forEach(notification => {
-        const li = document.createElement('li');
-        li.classList.add('notification-item');
-        li.setAttribute('data-id', notification.id);
-        li.innerHTML = `
-          <span>${notification.message}</span>
-          <small>${notification.created_at}</small>
-        `;
-        notificationList.appendChild(li);
-      });
-    }
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-  }
-}
-
-// Fetch notification count
-async function fetchNotificationCount() {
-  try {
-    const response = await fetch(`${NOTIFICATIONS_URL}/count`);
-    if (!response.ok) throw new Error('Failed to fetch notification count');
-
-    const data = await response.json();
-    notificationCount.textContent = data.count || 0; // Update count display
-  } catch (error) {
-    console.error('Error fetching notification count:', error);
-  }
-}
-  // Toggle dropdown visibility
-  notificationBell.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    notificationDropdown.classList.toggle('hidden');
-    notificationDropdown.style.display = notificationDropdown.classList.contains('hidden') ? 'none' : 'block';
-
-    if (!notificationDropdown.classList.contains('hidden')) {
-      await fetchNotifications();
-    }
-  });
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!notificationDropdown.contains(e.target) && e.target !== notificationBell) {
-      notificationDropdown.classList.add('hidden');
-      notificationDropdown.style.display = 'none';
-    }
-  });
-
-
-// Mark notification as read
-notificationList.addEventListener('click', async (e) => {
-  const notificationItem = e.target.closest('.notification-item');
-  if (!notificationItem) return;
-
-  const notificationId = notificationItem.getAttribute('data-id');
-  try {
-    const response = await fetch(`${NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) throw new Error('Failed to mark notification as read');
-
-    notificationItem.remove(); // Remove the notification from the list
-
-    // Update count
-    const count = parseInt(notificationCount.textContent, 10);
-    notificationCount.textContent = Math.max(count - 1, 0); // Ensure count doesn't go below 0
-
-    // Display "No new notifications" if list is empty
-    if (notificationList.children.length === 0) {
-      notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-    }
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
-  }
-});
-
-// Fetch notification count on page load
-fetchNotificationCount();
-
-})
-
-      </script>
-
-<!-- 
-
-// const NOTIFICATIONS_URL = '/notifications';
-
-// // Fetch notifications
-// async function fetchNotifications() {
-//   try {
-//     const response = await fetch(`${NOTIFICATIONS_URL}/`); // Fetch unread notifications
-//     if (!response.ok) throw new Error('Failed to fetch notifications');
-
-//     const data = await response.json();
-//     const notificationList = document.getElementById('notification-list');
-//     notificationList.innerHTML = ''; // Clear old notifications
-
-//     if (data.notifications.length === 0) {
-//       notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-//     } else {
-//       data.notifications.forEach(notification => {
-//         notificationList.innerHTML += `
-//           <li class="notification-item" data-id="${notification.id}">
-//             ${notification.message} <span>${notification.created_at}</span>
-//           </li>
-//         `;
-//       });
-//     }
-//   } catch (error) {
-//     console.error('Error fetching notifications:', error);
-//   }
-// }
-
-// // Fetch notification count
-// async function fetchNotificationCount() {
-//   try {
-//     const response = await fetch(`${NOTIFICATIONS_URL}/count`); // Fetch unread count
-//     if (!response.ok) throw new Error('Failed to fetch notification count');
-
-//     const data = await response.json();
-//     const notificationCount = document.querySelector('.notification-count');
-//     notificationCount.textContent = data.count || 0; // Show 0 if no notifications
-//   } catch (error) {
-//     console.error('Error fetching notification count:', error);
-//   }
-// }
-
-
-// document.addEventListener('DOMContentLoaded', () => {
-//   const notificationBell = document.getElementById('notification-bell');
-//   const notificationDropdown = document.getElementById('notification-dropdown');
-//   const notificationCount = document.querySelector('.notification-count');
-//   const notificationList = document.getElementById('notification-list');
-
-//   // Fetch notification count on page load
-//   async function fetchNotificationCount() {
-//     try {
-//       const response = await fetch('/notifications/count');
-//       if (!response.ok) throw new Error('Failed to fetch notification count');
-
-//       const data = await response.json();
-//       notificationCount.textContent = data.count;
-//     } catch (error) {
-//       console.error('Error fetching notification count:', error);
-//     }
-//   }
-
-//   // Open notifications dropdown
-//   notificationBell.addEventListener('click', async () => {
-//     notificationDropdown.classList.toggle('hidden');
-//     notificationDropdown.style.display = notificationDropdown.classList.contains('hidden') ? 'none' : 'block';
-
-//     // Fetch notifications when dropdown is opened
-//     try {
-//       const response = await fetch('/notifications/');
-//       if (!response.ok) throw new Error('Failed to fetch notifications');
-
-//       const data = await response.json();
-//       notificationList.innerHTML = '';
-
-//       if (data.notifications.length === 0) {
-//         notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-//       } else {
-//         data.notifications.forEach(notification => {
-//           notificationList.innerHTML += `
-//             <li class="notification-item" data-id="${notification.id}">
-//               ${notification.message} <span>${notification.created_at}</span>
-//             </li>
-//           `;
-//         });
-//       }
-//     } catch (error) {
-//       console.error('Error fetching notifications:', error);
-//     }
-//   });
-
-//   fetchNotificationCount(); // Fetch count initially
-// });
-
-// // Mark notification as read
-// notificationList.addEventListener('click', async (e) => {
-//   const notificationItem = e.target.closest('.notification-item');
-//   if (!notificationItem) return;
-
-//   const notificationId = notificationItem.getAttribute('data-id');
-//   try {
-//     const response = await fetch(`/notifications/mark_as_read/${notificationId}`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//     });
-//     if (!response.ok) throw new Error('Failed to mark notification as read');
-
-//     notificationItem.remove(); // Remove the notification from the list
-//     const count = parseInt(notificationCount.textContent, 10);
-//     notificationCount.textContent = Math.max(count - 1, 0); // Decrement count, ensuring it doesn't go below 0
-
-//     // Close dropdown if all notifications are read
-//     if (notificationList.children.length === 0) {
-//       notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-//     }
-//   } catch (error) {
-//     console.error('Error marking notification as read:', error);
-//   }
-// });
-
-// // Mark notification as read
-// notificationList.addEventListener('click', async (e) => {
-//   const notificationItem = e.target.closest('.notification-item');
-//   if (!notificationItem) return;
-
-//   const notificationId = notificationItem.getAttribute('data-id');
-//   try {
-//     const response = await fetch(`/notifications/mark_as_read/${notificationId}`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//     });
-//     if (!response.ok) throw new Error('Failed to mark notification as read');
-
-//     notificationItem.remove(); // Remove the notification from the list
-//     const count = parseInt(notificationCount.textContent, 10);
-//     notificationCount.textContent = Math.max(count - 1, 0); // Decrement count, ensuring it doesn't go below 0
-
-//     // Close dropdown if all notifications are read
-//     if (notificationList.children.length === 0) {
-//       notificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-//     }
-//   } catch (error) {
-//     console.error('Error marking notification as read:', error);
-//   }
-// });
-
-// document.addEventListener('click', (e) => {
-//   if (!notificationDropdown.contains(e.target) && e.target !== notificationBell) {
-//     notificationDropdown.classList.add('hidden');
-//     notificationDropdown.style.display = 'none';
-//   }
-// }); -->
-
-
-
-
-    <script src="{{ url_for('static', filename='TravelerBooking.js') }}"defer></script>
   </body>
 </html>
 

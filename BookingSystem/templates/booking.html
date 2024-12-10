@@ -21,18 +21,18 @@
         </a>
           
         <div class="navbar-links">
+
           {% if current_user.is_authenticated %}
             <!-- Links for Logged-In Users -->
-                    
-            <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
-    
+
             <!-- Notification Bell -->
             <div class="notification-container">
+                        
               <button id="notification-bell" class="notification-bell">
                 <span class="bell-icon">&#128276;</span>
                 <span class="notification-count">0</span>
               </button>
-                        
+                          
               <!-- Notification Dropdown -->
               <div id="notification-dropdown" class="notification-dropdown hidden">
                 <h3>Notifications</h3>
@@ -40,9 +40,10 @@
                 <ul id="notification-list">
                   <li class="notification-item">No new notifications</li>
                 </ul>
-                        
+
               </div>
             </div>
+
     
             <!-- Profile Icon -->
             <div class="profile-container-nav">
@@ -67,7 +68,7 @@
 
 
     <!-- Main Content -->
-    <div class="container">
+    <div class="TGList_container">
       <h1 class="page-title">Choose Your Tour Guide</h1>
         
       <div class="tour-guide-list" id="tour-guide-list">
@@ -79,6 +80,6 @@
     </div>
 
 
-     
+      
   </body>
 </html>

@@ -1,30 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Home</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    </head>
+
+    <body>
 
 
-        <!-- Navbar -->
+    <!-- Navbar -->
 
-        <nav class="navbar">
-            <div class="navbar-container">
-                <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
-                    <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
-                </a>
-                <div class="navbar-links">
-                    {% if current_user.is_authenticated %}
-                        <!-- Navigation links for registered/logged-in users -->
-                        <!-- <a href="{{ url_for('main.traveler_dashboard') }}" class="nav-link">Dashboard</a> -->
-                        <a href="{{ url_for('main.booking') }}" class="nav-link">My Bookings</a>
+    <nav class="navbar">
+        <div class="navbar-container">
+                
+            <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
+                <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
+            </a>
+                
+            <div class="navbar-links">
+                    
+                {% if current_user.is_authenticated %}
+                        
+                    <!-- Navigation links for registered/logged-in users -->
         
-                      <!-- Notification Bell -->
-                      <div class="notification-container">
+                    <!-- Notification Bell -->
+                    <div class="notification-container">
                         <button id="notification-bell" class="notification-bell">
                             <span class="bell-icon">&#128276;</span>
                             <span class="notification-count">0</span>
@@ -33,36 +37,35 @@
                         <!-- Notification Dropdown -->
                         <div id="notification-dropdown" class="notification-dropdown hidden">
                             <h3>Notifications</h3>
+                            
                             <ul id="notification-list">
                                 <li class="notification-item">No new notifications</li>
                             </ul>
+
                         </div>
                     </div>
         
-                        <!-- Dark Mode Toggle -->
-                        <div class="icon dark-mode-toggle">
-                            <i class="dark-mode-icon">🌙</i>
-                        </div>
-        
-                        <!-- Profile Icon -->
-                        <div class="profile-container-nav">
-                            <a href="{{ url_for('main.account') }}">
-                                <img class="profile-icon" id="profile-pic" 
-                                    src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" 
-                                    alt="Profile Picture">
-                            </a>
-                        </div>
-                    {% else %}
-                        <!-- Navigation links for guests/not logged-in users -->
-                        <a href="{{ url_for('main.traveler_login') }}" class="nav-link">Login</a>
-                        <a href="{{ url_for('main.traveler_register') }}" class="nav-link">Sign Up</a>
-                    {% endif %}
-                </div>
+
+                    <!-- Profile Icon -->
+                    <div class="profile-container-nav">
+                        <a href="{{ url_for('main.account') }}">
+                            <img class="profile-icon" id="profile-pic" 
+                            src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_img or 'default.jpg')) }}" 
+                            alt="Profile Picture">
+                        </a>
+                    </div>
+                {% else %}
+                        
+                    <!-- Navigation links for guests/not logged-in users -->
+                    <a href="{{ url_for('main.traveler_login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('main.traveler_register') }}" class="nav-link">Sign Up</a>
+                    
+                {% endif %}
             </div>
-        </nav>
+        </div>
+    </nav>
         
           
-      
 
     <!-- Hero Section -->
     <section class="hero">
@@ -97,7 +100,8 @@
     </section>
 
     <section id="tour-packages">
-        <h2>Available Tour <span style="color: #ff9f1c">Packages/Itineraries</span></h2>
+        <h2>Available Tour <span style="color: #ff9f1c">Packages</span></h2>
+        <a href="{{ url_for('main.tour_package') }}"> See all </a>
         <div class="package-container">
             {% for package in packages %}
             <div class="card">
@@ -107,9 +111,6 @@
                     <div class="card-details">
                         <div class="title-rating">
                             <h3>{{ package.name }}</h3>
-                            <div class="rating">
-                                <span style="padding-right: 20px;">{{ package.average_rating or 'N/A' }}</span>
-                            </div>
                         </div>
                         <p>{{ package.description }}</p>
                     </div>
@@ -121,62 +122,13 @@
             {% endfor %}
         </div>
 
-        <!-- <div class="card">
-            <div class="card-content">
-                <img src="Image/D2.jfif" alt="Image" class="card-image">
-                <div class="gradient-overlay"></div>
-                <div class="card-details">
-                    <div class="title-rating">
-                        <h3>Patar Beach</h3>
-                        <div class="rating">
-                            <span style="padding-right: 20px;">4.7</span>
-                        </div>
-                    </div>
-                    <p>Relax on the beautiful shores of Patar Beach.</p>
-                </div>
-                <span class="heart">❤️</span>
-            </div>
-            <div class="card-overlay">
-                <button class="view-package" id="view-package-btn">View Package</button>
-            </div>
-        </div>   -->
 
-<!-- View Package Modal -->
-<div id="tour-details-modal" class="modal hidden">
-    <div class="modal-content">
-  <!-- Modal Header -->
-  <div class="modal-header">
-    <img src="" alt="Tour Package Image" class="modal-header-image">
-    <h2 class="modal-title"></h2>
-    <span id="close-modal" class="close-btn">&times;</span>
-  </div>
-  
-      <div class="modal-body">
-        <p class="description"></p>
-        <div>
-          <h4>Estimated Prices</h4>
-          <ul class="price-list"></ul>
-        </div>
-        <div>
-          <h4>Inclusions</h4>
-          <ul class="inclusions-list"></ul>
-        </div>
-        <div>
-          <h4>Exclusions</h4>
-          <ul class="exclusions-list"></ul>
-        </div>
-        <div>
-          <h4>Itinerary</h4>
-          <ul class="itinerary-list"></ul>
-        </div>
-      </div>
 
-      </div>
-    </div>
-  
 
-                    <!-- Modal Overlay -->
-<div id="modal-overlay" class="modal-overlay hidden"></div>
+
+        <!-- Modal Overlay -->
+        <div id="modal-overlay" class="modal-overlay hidden"></div>
+
     </section>
 
     <!-- Popular Places Section -->
@@ -305,7 +257,59 @@
     </footer>
 
 
-    <!--COPY ALL FOR NOTIFICATION BELL AND DARKMODE-->
+
+    
+        <!-- View Package Modal -->
+        <div id="tour-details-modal" class="booking-modal hidden">
+            <div class="booking-modal-content">
+              <span id="close-modal" class="x-btn">&times;</span>
+
+              <div class="tour-package-details-container">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                  <div class="header-image-wrapper">
+                    <img src="" alt="Tour Package Image" class="modal-header-image">
+                    <div class="header-text-overlay">
+                      <h2 class="modal-title"></h2>
+                      <p class="location" id="modal-package-location">
+                        <span class="location-icon">&#x1F4CD;</span> Loading location...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="modal-body">
+
+                  <div class="description-box">
+                    <p class="description"></p>
+                  </div>
+
+                  <div class="modal-section">
+                    <h4>Estimated Prices</h4>
+                    <ul class="price-list"></ul>
+                  </div>
+
+                  <div class="modal-section">
+                    <h4>Inclusions</h4>
+                    <ul class="inclusions-list"></ul>
+                  </div>
+
+                  <div class="modal-section">
+                    <h4>Exclusions</h4>
+                    <ul class="exclusions-list"></ul>
+                  </div>
+
+                  <div class="modal-section itinerary-section">
+                    <h4>Itinerary</h4>
+                    <ul class="itinerary-list"></ul>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!--  -->
 <script>
 
 
@@ -412,82 +416,103 @@ fetchNotificationCount();
 })
 
 
-    
-    document.addEventListener('DOMContentLoaded', function () {
+
+
+
+
+
+  // View Package
+
+  document.addEventListener('DOMContentLoaded', function () {
     // Open "View Package" Modal
     document.querySelectorAll('.view-package').forEach(button => {
-        button.addEventListener('click', async function () {
-            const packageId = this.getAttribute('data-package-id'); // Get the package ID
+      button.addEventListener('click', async function () {
+        const packageId = this.getAttribute('data-package-id'); // Get the package ID
 
-            try {
-                // Fetch the package details from the server
-                const response = await fetch(`/view_package/${packageId}`);
-                
-                if (!response.ok) {
-                    throw new Error("Failed to fetch package details.");
-                }
+        try {
+          // Fetch the package details from the server
+          const response = await fetch(`/touroperator/get_tour_package/${packageId}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch package details.");
+          }
+          const data = await response.json();
 
-                const data = await response.json();
+          // Populate Modal Content
+          const modal = document.getElementById('tour-details-modal');
+          modal.querySelector('.modal-header-image').src = data.package_img
+            ? `/static/${data.package_img}`
+            : '/static/default.jpg';
+          modal.querySelector('.modal-title').textContent = data.name || 'Unnamed Package';
+          modal.querySelector('.description').textContent = data.description || 'No description provided';
 
-                // Populate Modal Content
-                const modal = document.getElementById('tour-details-modal');
-                modal.querySelector('.modal-header-image').src = data.package_img
-                    ? `/static/${data.package_img}`
-                    : '/static/default.jpg';
-                modal.querySelector('.modal-title').textContent = data.name || 'Unnamed Package';
-                modal.querySelector('.description').textContent = data.description || 'No description provided';
+          // Populate Location
+          const locationContainer = modal.querySelector('.location');
+          if (locationContainer) {
+            locationContainer.textContent = data.location || 'Location not specified';
+          }
 
-                // Populate other fields
-                const priceList = modal.querySelector('.price-list');
-                priceList.innerHTML = '';
-                data.estimated_prices.forEach(price => {
-                    const priceItem = document.createElement('li');
-                    priceItem.textContent = `${price.description}: ₱${price.estimated_price}`;
-                    priceList.appendChild(priceItem);
-                });
+          // Populate Estimated Prices
+          const priceList = modal.querySelector('.price-list');
+          priceList.innerHTML = '';
+          data.estimated_prices.forEach(price => {
+            const priceItem = document.createElement('li');
+            priceItem.textContent = `💰  ${price.description}: ₱${price.estimated_price}`;
+            priceList.appendChild(priceItem);
+          });
 
-                const inclusionsList = modal.querySelector('.inclusions-list');
-                inclusionsList.innerHTML = '';
-                data.inclusions.forEach(inclusion => {
-                    const inclusionItem = document.createElement('li');
-                    inclusionItem.textContent = inclusion.inclusion;
-                    inclusionsList.appendChild(inclusionItem);
-                });
+          // Populate Inclusions
+          const inclusionsList = modal.querySelector('.inclusions-list');
+          inclusionsList.innerHTML = '';
+          data.inclusions.forEach(inclusion => {
+            const inclusionItem = document.createElement('li');
+            inclusionItem.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
+            inclusionsList.appendChild(inclusionItem);
+          });
 
-                const exclusionsList = modal.querySelector('.exclusions-list');
-                exclusionsList.innerHTML = '';
-                data.exclusions.forEach(exclusion => {
-                    const exclusionItem = document.createElement('li');
-                    exclusionItem.textContent = exclusion.exclusion;
-                    exclusionsList.appendChild(exclusionItem);
-                });
+          // Populate Exclusions
+          const exclusionsList = modal.querySelector('.exclusions-list');
+          exclusionsList.innerHTML = '';
+          data.exclusions.forEach(exclusion => {
+            const exclusionItem = document.createElement('li');
+            exclusionItem.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
+            exclusionsList.appendChild(exclusionItem);
+          });
 
-                const itineraryList = modal.querySelector('.itinerary-list');
-                itineraryList.innerHTML = '';
-                data.itineraries.forEach(item => {
-                    const itineraryItem = document.createElement('li');
-                    itineraryItem.innerHTML = `<strong>${item.title}:</strong> ${item.subtitle}`;
-                    itineraryList.appendChild(itineraryItem);
-                });
+          // Populate Itinerary
+          const itineraryList = modal.querySelector('.itinerary-list');
+          itineraryList.innerHTML = '';
+          data.itineraries.forEach(item => {
+            const itineraryItem = document.createElement('li');
+            itineraryItem.innerHTML = `
+              <span class="timeline-dot"></span>
+              <div class="timeline-content">
+                <strong>${item.title}:</strong> 
+                <p> ${item.subtitle} </p>
+              </div>`;
+            itineraryList.appendChild(itineraryItem);
+          });
 
-                // Show Modal
-                modal.classList.add('show');
-                document.getElementById('modal-overlay').classList.add('show');
-            } catch (error) {
-                console.error("Failed to load package details:", error);
-                alert('Could not load package details. Please try again.');
-            }
-        });
+          // Show Modal
+          modal.classList.add('show');
+          document.getElementById('modal-overlay').classList.add('show');
+
+        } catch (error) {
+          console.error("Failed to load package details:", error);
+          alert('Could not load package details. Please try again.');
+        }
+      });
     });
 
     // Close Modal
     const closeModal = () => {
-        document.getElementById('tour-details-modal').classList.remove('show');
-        document.getElementById('modal-overlay').classList.remove('show');
+      document.getElementById('tour-details-modal').classList.remove('show');
+      document.getElementById('modal-overlay').classList.remove('show');
     };
     document.getElementById('close-modal').addEventListener('click', closeModal);
     document.getElementById('modal-overlay').addEventListener('click', closeModal);
-});
+  });
+
+
 
 
 

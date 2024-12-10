@@ -222,7 +222,7 @@ def tourguide_dashboard():
         tour_guide = TourGuide.query.get(review.tour_guide_id)
         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
 
-        traveler_profile_path = url_for('static', filename=f"profile_pics/{current_user.profile_img}") if current_user.profile_img else url_for('static', filename="default_traveler_image.jpg")
+        
         tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
         guide_profile_path = url_for('static', filename=f"profile_pics/{tour_guide.user.profile_img}") if tour_guide and tour_guide.user.profile_img else url_for('static', filename="default_guide_image.jpg")
         tour_package_name = tour_package.name if tour_package else "Unknown Package"
@@ -231,7 +231,7 @@ def tourguide_dashboard():
 
         reviews_data.append({
             "traveler_name": f"{review.user.first_name} {review.user.last_name}",
-            "traveler_profile_img": traveler_profile_path,
+            "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
             "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "Unknown Guide",
             "guide_profile_img": guide_profile_path,
             "tour_package_name": tour_package_name,
@@ -596,15 +596,23 @@ def profile(tour_guide_id):
     # Prepare reviews for rendering
     reviews_data = []
     for review in paginated_reviews.items:
+        booking = Booking.query.get(review.booking_id)
+        tour_package = TourPackage.query.get(booking.package_id) if booking else None
+        tour_guide = TourGuide.query.get(review.tour_guide_id)
         review_image = ReviewImages.query.filter_by(rr_id=review.id).first()
         tour_image_path = f"review_pics/{review_image.img}" if review_image else 'default.jpg'
+        tour_package_name = tour_package.name if tour_package else "Unknown Package"
+
         reviews_data.append({
             "traveler_name": f"{review.user.first_name} {review.user.last_name}",
             "traveler_profile": url_for('static', filename=f"profile_pics/{review.user.profile_img}"),
+            "guide_name": f"{tour_guide.user.first_name} {tour_guide.user.last_name}" if tour_guide else "Unknown Guide",
             "rating": review.rating,
+            "tour_package_name": tour_package_name,
             "comment": review.comment,
             "review_date": review.datetime.strftime('%b. %d, %Y'),
             "tour_image": url_for('static', filename=tour_image_path)  # Ensure correct image path
+            
         })
 
     # Pagination data

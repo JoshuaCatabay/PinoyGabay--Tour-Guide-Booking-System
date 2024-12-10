@@ -92,56 +92,65 @@ console.log('TourOperator.js loaded successfully!');
     const OPERATOR_NOTIFICATIONS_URL = '/notifications/operator';
     const operatorNotificationList = document.getElementById('operator-notification-list');
     const operatorNotificationCount = document.getElementById('operator-notification-count');
-
+  
+    // Helper function to adjust timezone to Asia/Manila manually
+    function formatTime(utcTime) {
+      const date = new Date(utcTime);
+  
+      // Shift time to Asia/Manila timezone (UTC+8)
+      const utcOffset = 8 * 60; // Manila is UTC+8 in minutes
+      const localTime = new Date(date.getTime() + utcOffset * 60 * 1000);
+  
+      return localTime.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    }
+  
     // Fetch operator notifications
     async function fetchOperatorNotifications() {
       try {
         const response = await fetch(OPERATOR_NOTIFICATIONS_URL);
         if (!response.ok) throw new Error('Failed to fetch operator notifications');
-
+  
         const data = await response.json();
         console.log('Fetched Operator Notifications:', data);
-
+  
         operatorNotificationList.innerHTML = ''; // Clear old notifications
-
+  
         if (data.notifications.length === 0) {
           operatorNotificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
-          operatorNotificationCount.textContent = `(0)`; // Update count to 0
+          operatorNotificationCount.textContent = '(0)'; // Update count to 0
         } else {
           operatorNotificationCount.textContent = `(${data.notifications.length})`; // Update count dynamically
           data.notifications.forEach(notification => {
-            operatorNotificationList.innerHTML += `
-              <li class="notification-item clickable" data-id="${notification.id}">
-                <div>
-                  ${notification.message} <span class="timestamp">${notification.created_at}</span>
-                </div>
-              </li>
+            const li = document.createElement('li');
+            li.classList.add('notification-item');
+            li.setAttribute('data-id', notification.id);
+  
+            li.innerHTML = `
+              <div>
+                ${notification.message} <span class="timestamp">${formatTime(notification.created_at)}</span>
+              </div>
             `;
+  
+            operatorNotificationList.appendChild(li);
           });
         }
       } catch (error) {
         console.error('Error fetching operator notifications:', error);
       }
     }
-
-    // Fetch notification count
-    async function fetchOperatorNotificationCount() {
-      try {
-        const response = await fetch(`${OPERATOR_NOTIFICATIONS_URL}/count`);
-        if (!response.ok) throw new Error('Failed to fetch operator notification count');
-
-        const data = await response.json();
-        operatorNotificationCount.textContent = `(${data.count || 0})`;
-      } catch (error) {
-        console.error('Error fetching operator notification count:', error);
-      }
-    }
-
+  
     // Mark notification as read when clicking the notification
     operatorNotificationList.addEventListener('click', async (e) => {
       const notificationItem = e.target.closest('.notification-item');
       if (!notificationItem) return;
-
+  
       const notificationId = notificationItem.getAttribute('data-id');
       try {
         const response = await fetch(`${OPERATOR_NOTIFICATIONS_URL}/mark_as_read/${notificationId}`, {
@@ -149,14 +158,13 @@ console.log('TourOperator.js loaded successfully!');
           headers: { 'Content-Type': 'application/json' },
         });
         if (!response.ok) throw new Error('Failed to mark notification as read');
-
+  
         notificationItem.remove(); // Remove the notification from the list
-
+  
         // Update the count
         const count = parseInt(operatorNotificationCount.textContent.replace(/[()]/g, ''), 10);
         operatorNotificationCount.textContent = `(${Math.max(count - 1, 0)})`;
-
-        // Display "No new notifications" if the list is empty
+  
         if (operatorNotificationList.children.length === 0) {
           operatorNotificationList.innerHTML = '<li class="notification-item">No new notifications</li>';
         }
@@ -164,10 +172,9 @@ console.log('TourOperator.js loaded successfully!');
         console.error('Error marking notification as read:', error);
       }
     });
-
-    // Fetch notifications and count on page load
+  
+    // Fetch notifications on page load
     fetchOperatorNotifications();
-    fetchOperatorNotificationCount();
   });
 
 
@@ -227,38 +234,59 @@ console.log('TourOperator.js loaded successfully!');
 
 
   // Booking Modal
-
+  // Bookings
   document.addEventListener('DOMContentLoaded', function () {
     // Modal elements
     const modal = document.getElementById('booking-details-modal');
     const modalLoader = document.getElementById('modal-loader');
     const modalDetails = document.getElementById('modal-details');
-    const modalStatus = document.getElementById('modal-status'); // Add this
-    const closeModalButton = document.getElementById('close-booking-modal');
+    const modalStatus = document.getElementById('modal-status');
+    const closeModalButton = document.querySelector('.primary-btn'); 
+    const xCloseButton = document.querySelector('.x-btn'); 
 
     // Function to fetch and display booking details
     async function fetchAndDisplayBookingDetails(bookingId) {
-      console.log('Fetching details for booking ID:', bookingId); // Debugging log
+      console.log('Fetching details for booking ID:', bookingId);
 
       // Reset modal state
       modalLoader.style.display = 'block';
       modalDetails.classList.add('hidden');
-      modal.classList.add('show'); // Show modal
-      modal.classList.remove('hidden'); // Ensure it's visible
+      modal.classList.add('show'); 
+      modal.classList.remove('hidden'); 
       document.body.style.overflow = 'hidden';
 
       try {
-        // Fetch booking details
         const response = await fetch(`/booking/details/${bookingId}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch booking details: ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log('Booking details fetched:', data); // Debugging log
+        console.log('Booking details fetched:', data);
 
-        // Populate modal with booking details
-        modalStatus.textContent = data.status; // Display status
+        // Populate and style status
+        modalStatus.textContent = data.status;
+        modalStatus.className = 'status-circle'; 
+        
+        switch (data.status.toLowerCase()) {
+          case 'upcoming':
+            modalStatus.classList.add('status-label', 'upcoming');
+            break;
+          case 'ongoing':
+            modalStatus.classList.add('status-label', 'ongoing');
+            break;
+          case 'completed':
+            modalStatus.classList.add('status-label', 'completed');
+            break;
+          case 'cancelled':
+            modalStatus.classList.add('status-label', 'cancelled');
+            break;
+          default:
+            modalStatus.classList.add('status-label');
+            break;
+        }
+
+        // Populate modal content
         document.getElementById('modal-traveler-name').textContent = data.traveler.name;
         document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
         document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
@@ -267,15 +295,12 @@ console.log('TourOperator.js loaded successfully!');
         document.getElementById('modal-tour-guide-price').textContent = `₱${data.price}`;
         document.getElementById('modal-special-notes').textContent = data.special_notes;
 
-        // Populate package details
         const packageData = data.package;
         document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
         document.getElementById('modal-package-title').textContent = packageData.name;
-        document.getElementById('modal-package-location').textContent = packageData.location || "Location not provided";
+        document.getElementById('modal-package-location').innerHTML = `<span class="location-icon">&#x1F4CD;</span> ${packageData.location || "Location not provided"}`;
         document.getElementById('modal-package-description').textContent = packageData.description;
 
-
-        // Populate estimated prices
         const priceList = document.getElementById('modal-price-list');
         priceList.innerHTML = '';
         packageData.estimated_prices.forEach(price => {
@@ -284,7 +309,6 @@ console.log('TourOperator.js loaded successfully!');
           priceList.appendChild(li);
         });
 
-        // Populate inclusions
         const inclusionsList = document.getElementById('modal-inclusions-list');
         inclusionsList.innerHTML = '';
         packageData.inclusions.forEach(inclusion => {
@@ -293,7 +317,6 @@ console.log('TourOperator.js loaded successfully!');
           inclusionsList.appendChild(li);
         });
 
-        // Populate exclusions
         const exclusionsList = document.getElementById('modal-exclusions-list');
         exclusionsList.innerHTML = '';
         packageData.exclusions.forEach(exclusion => {
@@ -302,7 +325,6 @@ console.log('TourOperator.js loaded successfully!');
           exclusionsList.appendChild(li);
         });
 
-        // Populate itineraries
         const itineraryList = document.getElementById('modal-itinerary-list');
         itineraryList.innerHTML = '';
         packageData.itineraries.forEach(itinerary => {
@@ -316,11 +338,9 @@ console.log('TourOperator.js loaded successfully!');
           itineraryList.appendChild(li);
         });
 
-
-        // Show modal content
         modalLoader.style.display = 'none';
         modalDetails.classList.remove('hidden');
-        console.log('Modal content populated successfully.'); // Debugging log
+        console.log('Modal content populated successfully.');
       } catch (error) {
         console.error('Error loading booking details:', error);
         modalLoader.style.display = 'none';
@@ -328,21 +348,31 @@ console.log('TourOperator.js loaded successfully!');
       }
     }
 
-    // Add event listeners to booking cards
+    // Event listeners for booking cards
     document.querySelectorAll('.view-booking').forEach(button => {
       button.addEventListener('click', function () {
-        const bookingId = this.id.split('-').pop(); // Extract the booking ID from the button ID
+        const bookingId = this.id.split('-').pop(); 
         fetchAndDisplayBookingDetails(bookingId);
       });
     });
 
-    // Close modal
-    closeModalButton.addEventListener('click', function () {
+    // Function to close the modal
+    function closeModal() {
       modal.classList.remove('show');
       modal.classList.add('hidden');
       document.body.style.overflow = 'auto';
-    });
+    }
+
+    if (closeModalButton) {
+      closeModalButton.addEventListener('click', closeModal);
+    }
+    if (xCloseButton) {
+      xCloseButton.addEventListener('click', closeModal);
+    }
+
+    console.log('Event listeners attached to Close and X buttons.');
   });
+
 
 
 
@@ -781,7 +811,7 @@ console.log('TourOperator.js loaded successfully!');
           priceList.innerHTML = '';
           data.estimated_prices.forEach(price => {
             const priceItem = document.createElement('li');
-            priceItem.textContent = `${price.description}: ₱${price.estimated_price}`;
+            priceItem.textContent = `💰  ${price.description}: ₱${price.estimated_price}`;
             priceList.appendChild(priceItem);
           });
 
@@ -810,7 +840,10 @@ console.log('TourOperator.js loaded successfully!');
             const itineraryItem = document.createElement('li');
             itineraryItem.innerHTML = `
               <span class="timeline-dot"></span>
-              <div class="timeline-content"><strong>${item.title}:</strong> ${item.subtitle}</div>`;
+              <div class="timeline-content">
+                <strong>${item.title}:</strong> 
+                <p> ${item.subtitle} </p>
+              </div>`;
             itineraryList.appendChild(itineraryItem);
           });
 

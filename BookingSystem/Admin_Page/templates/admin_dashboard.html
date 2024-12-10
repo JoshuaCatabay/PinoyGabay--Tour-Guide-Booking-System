@@ -7,55 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
-    <style>
-      #toast-wrapper {
-          position: fixed;
-          top: 15px;
-          right: 15px;
-          z-index: 1060;
-      }
-      .custom-toast {
-          background-color: #5cb85c; /* Default green */
-          color: white;
-          padding: 12px 18px;
-          border-radius: 6px;
-          margin-bottom: 12px;
-          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-          animation: slideIn 0.5s, fadeOut 0.5s 4.5s;
-      }
-      .custom-toast.success {
-          background-color: #5cb85c;
-      }
-      .custom-toast.error {
-          background-color: #d9534f;
-      }
-      .custom-toast.info {
-          background-color: #5bc0de;
-      }
-      @keyframes slideIn {
-          from {
-              opacity: 0;
-              transform: translateY(-20px);
-          }
-          to {
-              opacity: 1;
-              transform: translateY(0);
-          }
-      }
-      @keyframes fadeOut {
-          from {
-              opacity: 1;
-              transform: translateY(0);
-          }
-          to {
-              opacity: 0;
-              transform: translateY(-20px);
-          }
-      }
-    </style>
+
 </head>
 <body>
-        <div id="toast-wrapper"></div>
+
         <div class="dashboard-container">
 
           <button class="btn-sidebar-toggle" id="sidebar-toggle">
@@ -81,9 +36,12 @@
           <!-- Tab Content -->
           <div class="tab-content">
             <div class="tab-pane active" id="overview">
+
               <h2>Overview</h2>
               <p>Quick snapshot of system metrics and activities.</p>
+
               <br>
+              
                 <div class="overview">
                   <br>
                   <div class="overview-card">
@@ -112,114 +70,68 @@
                         <!-- Modal Trigger Button -->
                         <button class="primary-btn" id="add-operator-btn">Add Tour Operator</button>
 
-                        <!-- Modal Overlay and Content -->
-                        <div class="modal-wrapper hidden" id="operator-modal-wrapper">
-                        <div class="modal-overlay" id="modal-overlay"></div>
-            
-                        <div class="modal">
-                            <button class="close-btn" id="close-operator-modal">&times;</button>
-                            <div class="form-section">
-                            <h1>Create Tour Operator Account</h1>
-                            <p class="subtitle">Fill in the required details to create an account.</p>
-            
-                            <form method="POST" id="operator-form" action="{{ url_for('admin.create_operator') }}">
-                              {{ form.hidden_tag() }}  <!-- CSRF token if using Flask-WTF -->
-                              <input type="hidden" name="active_tab" id="active-tab-input" value="tour-management" />
+<!-- Modal Wrapper and Content -->
+<div class="modal-wrapper hidden" id="operator-modal-wrapper">
 
-                              <div class="input-container">
-                                <label for="name">Name</label>
-                                {% if form.name.errors %}
-                                  {{ form.name(class="form-control form-control-lg is-invalid") }}
-                                  <div class="invalid-feedback">
-                                        {% for error in form.name.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.name(class="form-control" ,placeholder="Enter Operator Name") }}
-                                {% endif %}
-                              </div>
 
-                              <div class="input-container">
-                                <label for="name">Municipal</label>
-                                {% if form.municipal.errors %}
-                                  {{ form.municipal(class="form-control form-control-lg is-invalid") }}
-                                  <div class="invalid-feedback">
-                                        {% for error in form.municipal.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.municipal(class="form-control",placeholder="Enter Municipal") }}
-                                {% endif %}
-                              </div>
-                              
-                              
-                              <div class="input-container">
-                                <label for="email">Email</label>
-                                {% if form.email.errors %}
-                                  {{ form.email(class="form-control form-control-lg is-invalid"
-                                  ,placeholder="Enter Email") }}
-                                  <div class="invalid-feedback">
-                                        {% for error in form.email.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.email(class="form-control",placeholder="Enter Email") }}
-                                {% endif %}
-                              </div>
-            
-                              <div class="input-container">
-                                <label for="password">Password</label>
-                                {% if form.password.errors %}
-                                  {{ form.password(class="form-control form-control-lg is-invalid"
-                                  ,placeholder="Enter Password") }}
-                                  <div class="invalid-feedback">
-                                        {% for error in form.password.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.password(class="form-control",placeholder="Enter Password") }}
-                                {% endif %}
-                              </div>
-            
-                              <div class="input-container">
-                                <label for="confirm_password">Confirm Password</label>
-                                {% if form.confirm_password.errors %}
-                                  {{ form.confirm_password(class="form-control form-control-lg is-invalid"
-                                  ,placeholder="Confirm Password") }}
-                                  <div class="invalid-feedback">
-                                        {% for error in form.confirm_password.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.confirm_password(class="form-control",placeholder="Confirm Password") }}
-                                {% endif %}
-                              </div>
+  <div class="modal-content">
+    <button class="modal-x-btn" id="close-operator-modal">&times;</button>
+    <h1 class="modal-title">Create Tour Operator Account</h1>
+    <p class="modal-subtitle">Fill in the required details to create an account.</p>
 
-                              <div class="input-container">
-                                <label for="contact_number">Contact Number</label>
-                                {% if form.contact_number.errors %}
-                                  {{ form.contact_number(class="form-control form-control-lg is-invalid"
-                                  ,placeholder="Enter Contact Number") }}
-                                  <div class="invalid-feedback">
-                                        {% for error in form.contact_number.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.contact_number(class="form-control",placeholder="Enter Contact Number") }}
-                                {% endif %}
-                            </div>
-                            
-                                <button type="submit" class="primary-btn">{{ form.submit.label }}</button>
-                            </form>
-                            </div>
-                        </div>
-                      </div>
+    <form method="POST" id="operator-form" action="{{ url_for('admin.create_operator') }}">
+      {{ form.hidden_tag() }} <!-- CSRF Token for Flask-WTF -->
+
+      <!-- Operator Name -->
+      <div class="input-container">
+        <label for="name">Name</label>
+        {{ form.name(class="form-control", placeholder="Enter Operator Name") }}
+        <div class="tooltip"></div>
+      </div>
+
+      <!-- Municipal -->
+      <div class="input-container">
+        <label for="municipal">Municipal</label>
+        {{ form.municipal(class="form-control", placeholder="Enter Municipal") }}
+        <div class="tooltip"></div>
+      </div>
+
+      <!-- Email -->
+      <div class="input-container">
+        <label for="email">Email</label>
+        {{ form.email(class="form-control", placeholder="Enter Email") }}
+        <div class="tooltip"></div>
+      </div>
+
+      <!-- Contact Number -->
+      <div class="input-container">
+        <label for="contact_number">Contact Number</label>
+        {{ form.contact_number(class="form-control", placeholder="Enter Contact Number") }}
+        <div class="tooltip"></div>
+      </div>
+
+      <!-- Password -->
+      <div class="input-container">
+        <label for="password">Password</label>
+        {{ form.password(class="form-control", placeholder="Enter Password") }}
+        <div class="tooltip"></div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="input-container">
+        <label for="confirm_password">Confirm Password</label>
+        {{ form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+        <div class="tooltip"></div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="button-container">
+        <button type="submit" class="primary-btn">{{ form.submit.label }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
                       <div class="container">
                         <h1 class="page-title">Tour Operators</h1>
                         <div class="tour-guide-list">
@@ -346,6 +258,18 @@
           </div>
         </div>
    
+        <div id="toast-container"></div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmation-modal" class="hidden">
+          <div class="modal-content">
+            <p id="confirmation-message">Are you sure you want to perform this action?</p>
+            <div class="modal-actions">
+              <button id="confirm-no" class="no-btn">No</button>
+              <button id="confirm-yes" class="yes-btn">Yes</button>
+            </div>
+          </div>
+        </div>
       
 
       <script src="{{ url_for('static', filename='admin.js') }}"></script>
@@ -400,6 +324,7 @@
               });
             </script>
             <script>
+
               // Save the active tab state when a tab is clicked
               document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', event => {
@@ -424,6 +349,8 @@
                   }
                 });
               });
+
+
             </script>
 </body>
 </html>

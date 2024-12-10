@@ -24,14 +24,16 @@
 
         <div class="navbar-links">
     
-          <!-- Profile Icon -->
+          <!-- Profile Icon with Toggle Button -->
           <div class="profile-container-nav">
-            <a href="{{ url_for('main.account') }}">
-              <img class= "profile-icon" id="profile-pic-nav" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
+            <a href="{{ url_for('main.account') }}" id="profile-toggle">
+              <img class="profile-icon" id="profile-pic-nav" src="{{ url_for('static', filename='profile_pics/' + current_user.profile_img) }}" alt="Profile Picture">
+              <span class="arrow-icon" id="arrow-icon">▼</span>
             </a>
           </div>
-          
+                  
         </div>
+
 
       </div>
     </nav>
@@ -70,7 +72,7 @@
             
             <div class="total-tours-container">
               <p class="total-tours-label">Total Tours:</p>
-              <span class="total-tours-count" id="tour-count">{{ total_completed_tours }} 22</span>
+              <span class="total-tours-count" id="tour-count">{{ total_completed_tours }} </span>
             </div>
 
           </div>
@@ -94,164 +96,164 @@
         
         <section id="my-tours-section" class="content-section">
           <h2>My Tours</h2>
-            
+
           <!-- Toggle Buttons for Categories -->
           <div class="tour-toggle-buttons">
-            <button class="toggle-btn active" data-status="all">
-              All <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="upcoming">
-              Upcoming <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="ongoing">
-              Ongoing <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="completed">
-              Completed <span class="count">(0)</span>
-            </button>
-            <button class="toggle-btn" data-status="cancelled">
-              Cancelled <span class="count">(0)</span>
-            </button>
+            <button class="toggle-btn active" data-status="all">All <span class="count">(0)</span></button>
+            <button class="toggle-btn" data-status="upcoming">Upcoming <span class="count">(0)</span></button>
+            <button class="toggle-btn" data-status="ongoing">Ongoing <span class="count">(0)</span></button>
+            <button class="toggle-btn" data-status="completed">Completed <span class="count">(0)</span></button>
+            <button class="toggle-btn" data-status="cancelled">Cancelled <span class="count">(0)</span></button>
           </div>
-            
-          <!-- Tours Container -->
-          <div class="tours-container">
-            {% for booking in bookings %}
+        
+          <!-- Scrollable Tours Container -->
+          <div class="tours-scrollable-container">
+            <div class="tours-container">
+              {% for booking in bookings %}
               <div class="tour-card" data-status="{{ booking.status }}" data-id="{{ booking.id }}">
-                <!-- Tour Header -->
                 <div class="tour-header">
                   <span class="tour-status {{ booking.status }}">{{ booking.status }}</span>
                   <span class="view-booking" id="view-booking-{{ booking.id }}">View Booking &rarr;</span>
                 </div>
-
-                <!-- Tour Title -->
+        
                 <h3 class="tour-title">{{ booking.selected_package.name }}</h3>
-
-                <!-- Guide Info -->
-                <p class="tour-guide">
-                  With: <span class="guide-name">{{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</span>
-                </p>
-
-                <!-- Footer with Date and Buttons -->
+                <p class="tour-guide">With: <span class="guide-name">{{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</span></p>
+        
                 <div class="tour-footer">
-                  <!-- Date on the Left -->
                   <p class="tour-date">
                     {{ booking.date_start.strftime('%B %d, %Y') }}
-                    {% if booking.date_start != booking.date_end %} - 
-                    {{ booking.date_end.strftime('%B %d, %Y') }}{% endif %}
+                    {% if booking.date_start != booking.date_end %} - {{ booking.date_end.strftime('%B %d, %Y') }}{% endif %}
                   </p>
-
-                  <!-- Buttons on the Right -->
                   <div class="tour-buttons">
                     {% if booking.status == BookingStatus.STATUS_UPCOMING.value %}
-                      <button class="cancel-booking-btn" data-id="{{ booking.id }}">Cancel Booking</button>
+                    <button class="cancel-booking-btn" data-id="{{ booking.id }}">Cancel Booking</button>
                     {% endif %}
-
                     {% if booking.status == BookingStatus.STATUS_COMPLETED.value %}
-                      {% if booking.is_reviewed %}
-                        <button class="reviewed-btn" disabled>Reviewed</button>
-                      {% else %}
-                        <button class="review-btn" 
-                          data-booking-id="{{ booking.id }}" 
-                          data-guide-id="{{ booking.tour_guide_id }}" 
-                          data-tour="{{ booking.selected_package.name }}">
-                          Review
-                        </button>
-                      {% endif %}
+                    {% if booking.is_reviewed %}
+                    <button class="reviewed-btn" disabled>Reviewed</button>
+                    {% else %}
+                    <button class="review-btn" data-booking-id="{{ booking.id }}" data-guide-id="{{ booking.tour_guide_id }}" data-tour="{{ booking.selected_package.name }}">Review</button>
+                    {% endif %}
                     {% endif %}
                   </div>
                 </div>
               </div>
-
-            {% else %}
+              {% else %}
               <p>No bookings available.</p>
-            {% endfor %}
+              {% endfor %}
+            </div>
           </div>
 
-          <!-- Booking Details Modal | See Details -->
-          <div id="booking-details-modal" class="modal hidden">
-            <div class="modal-content">
+
+
+          <div id="booking-details-modal" class="booking-modal hidden">
+            <div class="booking-modal-content">
+
               <!-- Loader -->
               <div id="modal-loader" style="display: none;">Loading...</div>
-          
+
               <!-- Booking Details -->
               <div id="modal-details" class="hidden">
+               
+                <button id="close-booking-modal" class="x-btn">&times;</button>
+
                 <div class="status-box">
                   <span class="status-circle" id="modal-status">Loading...</span>
                 </div>
 
-              <!-- Traveler Information -->
-                <div class="container-section traveler-info expanded">
+                
+
+                <!-- Traveler Information -->
+                <div class="traveler-info-container">
+
                   <h4 class="container-header">Traveler Information</h4>
+
                   <div class="info-item">
                     <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
                   </div>
+
                   <div class="info-item">
                     <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
                   </div>
+
                   <div class="info-item">
                     <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
                   </div>
+
                   <div class="info-item">
                     <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
                   </div>
+
                   <div class="info-item">
                     <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
                   </div>
+
                   <div class="info-item">
                     <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
                   </div>
+
                   <!-- Special Notes -->
                   <div class="notes-box">
                     <h5>Special Notes</h5>
                     <p id="modal-special-notes">Loading...</p>
                   </div>
+
                 </div>
-          
+        
                 <!-- Tour Package Details -->
-                <div class="container-section tour-package-details expanded">
+                <div class="tour-package-details-container">
+
                   <h4 class="container-header">Tour Package Details</h4>
+                  <br>
+
                   <div class="modal-header">
-                    <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
-                    <div class="header-text-overlay">
-                      <h3 id="modal-package-title">Loading...</h3>
-                      <p id="modal-package-location">
-                        <span class="location-icon">&#x1F4CD;</span> Loading location...
-                      </p>
+                    <div class="header-image-wrapper">
+                      <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+                      <div class="header-text-overlay">
+                        <h3 class="package-title" id="modal-package-title">Loading...</h3>
+                        <p class="location" id="modal-package-location">
+                          <span class="location-icon">&#x1F4CD;</span> Loading location...
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <p id="modal-package-description" class="description">Loading...</p>
-          
+
+                  <!-- Description Section -->
+                  <div class="description-box">
+                    <p id="modal-package-description" class="description">Loading...</p>
+                  </div>
+
                   <!-- Estimated Prices -->
                   <div class="modal-section">
                     <h4>Estimated Prices</h4>
                     <ul id="modal-price-list" class="price-list"></ul>
                   </div>
-          
+            
                   <!-- Inclusions -->
                   <div class="modal-section">
                     <h4>Inclusions</h4>
                     <ul id="modal-inclusions-list" class="checklist inclusions-list"></ul>
                   </div>
-          
+            
                   <!-- Exclusions -->
                   <div class="modal-section">
                     <h4>Exclusions</h4>
                     <ul id="modal-exclusions-list" class="checklist exclusions-list"></ul>
                   </div>
-          
+            
                   <!-- Itinerary -->
                   <div class="modal-section itinerary-section">
                     <h4>Itinerary</h4>
-                    <ul id="modal-itinerary-list" class="timeline"></ul>
+                    <ul id="modal-itinerary-list" class="itinerary-list"></ul>
                   </div>
+
                 </div>
-              </div>
-          
-              <!-- Action Buttons -->
-              <div class="modal-footer">
-                <button id="modal-cancel-booking-btn" class="cancel-booking-btn hidden" data-id="">Cancel Booking</button>
-                <button id="close-booking-modal" class="primary-btn">Close</button>
+
+                <!-- Action Buttons -->
+                <div class="modal-footer">
+                  <button id="close-booking-modal" class="primary-btn">Close</button>
+                </div>
+
               </div>
 
             </div>
@@ -271,7 +273,10 @@
                 {% for booking in to_review %}
 
                   <div class="to-review-card">
-                    <img src="{{ booking.selected_package.package_img or url_for('static', filename='default_tour_image.jpg') }}" alt="Tour Image" class="guide-photo"/>
+                    <img src="{{ url_for('static', filename='profile_pics/' + (booking.assigned_guide.user.profile_img or 'default_tour_image.jpg')) }}" 
+                    alt="Tour Guide Photo" 
+                    class="guide-photo"/>
+                      
                     <div class="review-info">
                       <h3>{{ booking.selected_package.name }}</h3>
                       <p>Guide: {{ booking.assigned_guide.user.first_name }} {{ booking.assigned_guide.user.last_name }}</p>
@@ -464,7 +469,22 @@
           </div>
         </section>
 
-        
+              
+      <!-- Toast Message -->
+      <div id="toast-container"></div>
+
+      <!-- Confirmation Modal -->
+      <div id="confirmation-modal" class="hidden">
+        <div class="modal-content">
+          <p id="confirmation-message">Are you sure you want to perform this action?</p>
+          <div class="modal-actions">
+            <button id="confirm-no" class="no-btn">No</button>
+            <button id="confirm-yes" class="yes-btn">Yes</button>
+          </div>
+        </div>
+      </div>
+
+
         <!-- Modal Overlay -->
         <div id="modal-overlay" class="modal-overlay hidden"></div>
 

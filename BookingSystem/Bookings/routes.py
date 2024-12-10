@@ -206,6 +206,7 @@ def create_booking():
         traveler_quantity = data.get('traveler_quantity')
         special_notes = data.get('special_notes', '')
         price = data.get('price')
+        
 
         # Validate input
         if not all([tour_guide_id, package_id, date_start, traveler_quantity, price]):
@@ -276,7 +277,8 @@ def create_booking():
 
         # Add Notifications
         # Traveler Notification
-        traveler_message = f"Your tour with {tour_guide.user.first_name} {tour_guide.user.last_name} has been successfully booked for {date_start}."
+        formatted_start_date = date_start.strftime('%B %d, %Y')  # Format date to "December 20, 2024"
+        traveler_message = f"Your tour with {tour_guide.user.first_name} {tour_guide.user.last_name} has been successfully booked for {formatted_start_date}."
         traveler_notification = Notification(
             user_id=current_user.id,
             booking_id=booking.id,
@@ -287,7 +289,7 @@ def create_booking():
         db.session.add(traveler_notification)
 
         # Tour Guide Notification
-        guide_message = f"You have a new booking from {current_user.first_name} {current_user.last_name} for {date_start}."
+        guide_message = f"You have a new booking from {current_user.first_name} {current_user.last_name} for {formatted_start_date}."
         guide_notification = Notification(
             user_id=tour_guide.user_id,
             booking_id=booking.id,
@@ -299,7 +301,7 @@ def create_booking():
 
         # Add Tour Operator Notification (if applicable)
         if tour_guide.tour_operator:
-            operator_message = f"Your guide {tour_guide.user.first_name} {tour_guide.user.last_name} has been booked by {current_user.first_name} {current_user.last_name} for {date_start}."
+            operator_message = f"Your guide {tour_guide.user.first_name} {tour_guide.user.last_name} has been booked by {current_user.first_name} {current_user.last_name} for {formatted_start_date}."
             operator_notification = Notification(
                 user_id=tour_guide.tour_operator.user_id,  # Operator's user ID
                 booking_id=booking.id,
@@ -309,15 +311,14 @@ def create_booking():
             )
             db.session.add(operator_notification)
 
+        # Commit everything
         db.session.commit()
 
-        print(f"Booking successfully created with ID {booking.id}")
-        return jsonify({"message": "Booking confirmed", "booking_id": booking.id}), 201
+        return jsonify({"message": "Booking created successfully"}), 200
 
     except Exception as e:
-        print(f"Error in create_booking route: {e}")
-        db.session.rollback()
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        print("Unexpected error:", e)
+        return jsonify({"error": "An unexpected error occurred."}), 500
     
 
     
@@ -405,52 +406,81 @@ def cancel_booking(booking_id):
         if booking.status != BookingStatus.STATUS_UPCOMING.value:
             return jsonify({"error": "Only upcoming bookings can be canceled."}), 400
 
+        # Update booking status to "canceled"
         booking.status = BookingStatus.STATUS_CANCELLED.value
-        db.session.commit()
 
-        # Add notification for the traveler
-        cancellation_message = f"Your tour scheduled for {booking.date_start} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} has been canceled. Please rebook or contact support."
-        traveler_notification = Notification(
-            user_id=booking.user_id,
-            booking_id=booking.id,
-            role='traveler',
-            message=cancellation_message,
-            is_read=False
-        )
-        db.session.add(traveler_notification)
-
-        # Add notification for the tour guide
-
-        # Add notification for the tour guide
-        guide_message = f"The tour scheduled with {booking.traveler.first_name} {booking.traveler.last_name} on {booking.date_start} has been canceled."
-        guide_notification = Notification(
-            user_id=booking.assigned_guide.user_id,  # Use the guide's user ID
-            booking_id=booking.id,
-            role='guide',  # Set role as guide
-            message=guide_message,
-            is_read=False
-        )
-        db.session.add(guide_notification)
-
-        # Add Notification for Operator on Cancellation
-        if booking.assigned_guide.tour_operator:
-            operator_message_cancel = f"Booking by {booking.traveler.first_name} {booking.traveler.last_name} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} on {booking.date_start} has been canceled."
-            operator_notification_cancel = Notification(
-                user_id=booking.assigned_guide.tour_operator.user_id,  # Operator's user ID
-                booking_id=booking.id,
-                role='operator',
-                message=operator_message_cancel,
-                is_read=False
+        # Reflect availability changes in the tour guide's calendar
+        availability = Availability.query.filter_by(
+            tguide_id=booking.assigned_guide.id,
+            availability_date=booking.date_start
+        ).first()
+        if availability:
+            availability.status = 'available'
+        else:
+            # Add a new availability record if it doesn't exist
+            new_availability = Availability(
+                tguide_id=booking.assigned_guide.id,
+                availability_date=booking.date_start,
+                status='available'
             )
-            db.session.add(operator_notification_cancel)
+            db.session.add(new_availability)
 
+        # Format date as "December 20, 2024"
+        formatted_date_start = booking.date_start.strftime('%B %d, %Y')
+
+        # Create notifications
+        create_notification(
+            user_id=booking.user_id,
+            role='traveler',
+            message=(
+                f"Your tour scheduled for {formatted_date_start} with "
+                f"{booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} "
+                "has been canceled. Please rebook or contact support."
+            ),
+            booking_id=booking.id
+        )
+
+        create_notification(
+            user_id=booking.assigned_guide.user_id,
+            role='guide',
+            message=(
+                f"The tour scheduled with {booking.traveler.first_name} {booking.traveler.last_name} "
+                f"on {formatted_date_start} has been canceled."
+            ),
+            booking_id=booking.id
+        )
+
+        if booking.assigned_guide.tour_operator:
+            create_notification(
+                user_id=booking.assigned_guide.tour_operator.user_id,
+                role='operator',
+                message=(
+                    f"Booking by {booking.traveler.first_name} {booking.traveler.last_name} with "
+                    f"{booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} "
+                    f"on {formatted_date_start} has been canceled."
+                ),
+                booking_id=booking.id
+            )
 
         db.session.commit()
-
         return jsonify({"message": "Booking has been successfully canceled."}), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+def create_notification(user_id, role, message, booking_id=None):
+    """
+    Helper function to create a notification.
+    """
+    notification = Notification(
+        user_id=user_id,
+        role=role,
+        message=message,
+        booking_id=booking_id,
+        is_read=False
+    )
+    db.session.add(notification)
     
     
 
@@ -473,8 +503,14 @@ def complete_booking(booking_id):
         booking.status = BookingStatus.STATUS_COMPLETED.value
         db.session.commit()
 
+        # Format date as "December 20, 2024"
+        formatted_date_start = booking.date_start.strftime('%B %d, %Y')
+
         # Add notification for the traveler
-        completion_message = f"Your tour with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} has been completed. Leave a review to help others!"
+        completion_message = (
+            f"Your tour with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} "
+            "has been completed. Leave a review to help others!"
+        )
         traveler_notification = Notification(
             user_id=booking.user_id,
             booking_id=booking.id,
@@ -485,7 +521,10 @@ def complete_booking(booking_id):
         db.session.add(traveler_notification)
 
         # Add notification for the tour guide
-        guide_message = f"The tour with {booking.traveler.first_name} {booking.traveler.last_name} on {booking.date_start} has been successfully completed."
+        guide_message = (
+            f"The tour with {booking.traveler.first_name} {booking.traveler.last_name} "
+            f"on {formatted_date_start} has been successfully completed."
+        )
         guide_notification = Notification(
             user_id=booking.assigned_guide.user_id,  # Use the guide's user ID
             booking_id=booking.id,
@@ -495,9 +534,13 @@ def complete_booking(booking_id):
         )
         db.session.add(guide_notification)
 
-        # Add Notification for Operator on Completion
+        # Add notification for the tour operator
         if booking.assigned_guide.tour_operator:
-            operator_message_complete = f"The tour by {booking.traveler.first_name} {booking.traveler.last_name} with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} on {booking.date_start} has been completed."
+            operator_message_complete = (
+                f"The tour by {booking.traveler.first_name} {booking.traveler.last_name} "
+                f"with {booking.assigned_guide.user.first_name} {booking.assigned_guide.user.last_name} "
+                f"on {formatted_date_start} has been completed."
+            )
             operator_notification_complete = Notification(
                 user_id=booking.assigned_guide.tour_operator.user_id,  # Operator's user ID
                 booking_id=booking.id,
@@ -506,7 +549,6 @@ def complete_booking(booking_id):
                 is_read=False
             )
             db.session.add(operator_notification_complete)
-
 
         db.session.commit()
 

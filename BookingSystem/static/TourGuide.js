@@ -428,7 +428,6 @@
             notificationList.innerHTML += `
               <li class="notification-item" data-id="${notification.id}">
                 ${notification.message}
-                <button class="notification-btn" onclick="viewNotificationDetails('Booking #${notification.id}')">View</button>
               </li>
             `;
           });
@@ -551,32 +550,53 @@
     const modal = document.getElementById('booking-details-modal');
     const modalLoader = document.getElementById('modal-loader');
     const modalDetails = document.getElementById('modal-details');
-    const modalStatus = document.getElementById('modal-status'); // Add this
-    const closeModalButton = document.getElementById('close-booking-modal');
-  
+    const modalStatus = document.getElementById('modal-status');
+    const closeModalButton = document.querySelector('.primary-btn'); 
+    const xCloseButton = document.querySelector('.x-btn'); 
+
     // Function to fetch and display booking details
     async function fetchAndDisplayBookingDetails(bookingId) {
-      console.log('Fetching details for booking ID:', bookingId); // Debugging log
-  
+      console.log('Fetching details for booking ID:', bookingId);
+
       // Reset modal state
       modalLoader.style.display = 'block';
       modalDetails.classList.add('hidden');
-      modal.classList.add('show'); // Show modal
-      modal.classList.remove('hidden'); // Ensure it's visible
+      modal.classList.add('show'); 
+      modal.classList.remove('hidden'); 
       document.body.style.overflow = 'hidden';
-  
+
       try {
-        // Fetch booking details
         const response = await fetch(`/booking/details/${bookingId}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch booking details: ${response.statusText}`);
         }
-  
+
         const data = await response.json();
-        console.log('Booking details fetched:', data); // Debugging log
-  
-        // Populate modal with booking details
-        modalStatus.textContent = data.status; // Display status
+        console.log('Booking details fetched:', data);
+
+        // Populate and style status
+        modalStatus.textContent = data.status;
+        modalStatus.className = 'status-circle'; 
+        
+        switch (data.status.toLowerCase()) {
+          case 'upcoming':
+            modalStatus.classList.add('status-label', 'upcoming');
+            break;
+          case 'ongoing':
+            modalStatus.classList.add('status-label', 'ongoing');
+            break;
+          case 'completed':
+            modalStatus.classList.add('status-label', 'completed');
+            break;
+          case 'cancelled':
+            modalStatus.classList.add('status-label', 'cancelled');
+            break;
+          default:
+            modalStatus.classList.add('status-label');
+            break;
+        }
+
+        // Populate modal content
         document.getElementById('modal-traveler-name').textContent = data.traveler.name;
         document.getElementById('modal-tour-guide-name').textContent = data.tour_guide.name;
         document.getElementById('modal-tour-guide-number').textContent = data.tour_guide.contact;
@@ -584,16 +604,13 @@
         document.getElementById('modal-traveler-quantity').textContent = data.traveler_quantity;
         document.getElementById('modal-tour-guide-price').textContent = `₱${data.price}`;
         document.getElementById('modal-special-notes').textContent = data.special_notes;
-  
-        // Populate package details
+
         const packageData = data.package;
         document.getElementById('modal-tour-image').src = `/static/${packageData.package_img || "default.jpg"}`;
         document.getElementById('modal-package-title').textContent = packageData.name;
-        document.getElementById('modal-package-location').textContent = packageData.location || "Location not provided";
+        document.getElementById('modal-package-location').innerHTML = `<span class="location-icon">&#x1F4CD;</span> ${packageData.location || "Location not provided"}`;
         document.getElementById('modal-package-description').textContent = packageData.description;
-  
-  
-        // Populate estimated prices
+
         const priceList = document.getElementById('modal-price-list');
         priceList.innerHTML = '';
         packageData.estimated_prices.forEach(price => {
@@ -601,8 +618,7 @@
           li.innerHTML = `<span class="price-icon">💰</span> ${price.description}: ₱${price.estimated_price}`;
           priceList.appendChild(li);
         });
-  
-        // Populate inclusions
+
         const inclusionsList = document.getElementById('modal-inclusions-list');
         inclusionsList.innerHTML = '';
         packageData.inclusions.forEach(inclusion => {
@@ -610,8 +626,7 @@
           li.innerHTML = `<span class="checkmark">&#10003;</span> ${inclusion.inclusion}`;
           inclusionsList.appendChild(li);
         });
-  
-        // Populate exclusions
+
         const exclusionsList = document.getElementById('modal-exclusions-list');
         exclusionsList.innerHTML = '';
         packageData.exclusions.forEach(exclusion => {
@@ -619,8 +634,7 @@
           li.innerHTML = `<span class="crossmark">&#10007;</span> ${exclusion.exclusion}`;
           exclusionsList.appendChild(li);
         });
-        
-        // Populate itineraries
+
         const itineraryList = document.getElementById('modal-itinerary-list');
         itineraryList.innerHTML = '';
         packageData.itineraries.forEach(itinerary => {
@@ -633,34 +647,42 @@
             </div>`;
           itineraryList.appendChild(li);
         });
-  
-  
-        // Show modal content
+
         modalLoader.style.display = 'none';
         modalDetails.classList.remove('hidden');
-        console.log('Modal content populated successfully.'); // Debugging log
+        console.log('Modal content populated successfully.');
       } catch (error) {
         console.error('Error loading booking details:', error);
         modalLoader.style.display = 'none';
         alert('Failed to load booking details. Please try again.');
       }
     }
-  
-    // Add event listeners to booking cards
+
+    // Event listeners for booking cards
     document.querySelectorAll('.view-booking').forEach(button => {
       button.addEventListener('click', function () {
-        const bookingId = this.id.split('-').pop(); // Extract the booking ID from the button ID
+        const bookingId = this.id.split('-').pop(); 
         fetchAndDisplayBookingDetails(bookingId);
       });
     });
-  
-    // Close modal
-    closeModalButton.addEventListener('click', function () {
+
+    // Function to close the modal
+    function closeModal() {
       modal.classList.remove('show');
       modal.classList.add('hidden');
       document.body.style.overflow = 'auto';
-    });
+    }
+
+    if (closeModalButton) {
+      closeModalButton.addEventListener('click', closeModal);
+    }
+    if (xCloseButton) {
+      xCloseButton.addEventListener('click', closeModal);
+    }
+
+    console.log('Event listeners attached to Close and X buttons.');
   });
+
 
 
   // Complete Booking
@@ -1443,7 +1465,7 @@
     // Hide the modal
     document.getElementById('tgDeactivationModal').style.display = 'none';
     // Redirect to the main page
-    window.location.href = "/"; // Replace "/" with the correct URL if needed
+    window.location.href = "logout"; // Replace "/" with the correct URL if needed
   }
   // Wait for the DOM to load before running the script
   document.addEventListener("DOMContentLoaded", () => {
@@ -1541,190 +1563,94 @@
 
 
 
-// 
 
 
 
-// // Confirm password and open the appropriate modal for editing
-// document.addEventListener('DOMContentLoaded', function () {
-//   // Select the elements
-//   const guidePasswordConfirmBtn = document.getElementById('guide-password-confirm-btn');
-//   const guideConfirmPasswordInput = document.getElementById('guide-confirm-password-input');
-
-//   if (!guidePasswordConfirmBtn || !guideConfirmPasswordInput) {
-//       console.error('One or more elements not found.');
-//       return;
-//   }
-
-//   let guideActiveAction = ''; // Define this variable somewhere in scope to track action
-
-//   // Add event listener
-//   guidePasswordConfirmBtn.addEventListener('click', () => {
-//       // if (guideConfirmPasswordInput.value === 'password123') { // Replace 'password123' with actual logic to validate the password
-//       //     closeGuideModal();
-//       //     if (guideActiveAction === 'email') {
-//       //         openGuideChangeEmailModal();
-//       //     } else if (guideActiveAction === 'password') {
-//       //         openGuideChangePasswordModal();
-//       //     } else if (guideActiveAction === 'contact') {
-//       //         openGuideChangeContactModal();
-//       //     }
-//       // } else {
-//       //     alert('Incorrect password. Please try again.');
-//       // }
-//   });
-
-//   function closeGuideModal() {
-//       // Your function to close the password confirmation modal
-//       console.log('Closing password modal');
-//       // Actual code to close the modal goes here
-//   }
-
-//   function openGuideChangeEmailModal() {
-//       // Function to open the email change modal
-//       console.log('Opening email change modal');
-//       // Code to open the email modal goes here
-//   }
-
-//   function openGuideChangePasswordModal() {
-//       // Function to open the password change modal
-//       console.log('Opening password change modal');
-//       // Code to open the password modal goes here
-//   }
-
-//   function openGuideChangeContactModal() {
-//       // Function to open the contact change modal
-//       console.log('Opening contact change modal');
-//       // Code to open the contact modal goes here
-//   }
-// });
-
-
-
-// // Save new email
-// document.addEventListener('DOMContentLoaded', function () {
-//   // Select the guideSaveEmailBtn element
-//   const guideSaveEmailBtn = document.getElementById('guide-save-email-btn');
-//   const guideNewEmailInput = document.getElementById('guide-new-email-input');
   
-//   if (!guideSaveEmailBtn || !guideNewEmailInput) {
-//       console.error('Element not found in the DOM.');
-//       return;
-//   }
 
-//   // Add event listener for the save button
-//   guideSaveEmailBtn.addEventListener('click', () => {
-//       const newEmail = guideNewEmailInput.value;
-//       alert(`New email saved: ${newEmail}`);
-//       closeGuideModal(); // Ensure this function is defined
-//   });
-// });
-
-// // Example function to close the modal (make sure this function is defined in your script)
-// function closeGuideModal() {
-//   const modal = document.getElementById('guide-change-email-modal');
-//   if (modal) {
-//       modal.classList.add('hidden');
-//   }
-// }
-
-
-
-// // Save new password
-// document.addEventListener('DOMContentLoaded', function () {
-//   // Select the elements
-//   const guideSavePasswordBtn = document.getElementById('guide-save-password-btn');
-//   const newPasswordInput = document.getElementById('guide-new-password');
-//   const confirmNewPasswordInput = document.getElementById('guide-confirm-new-password');
-
-//   // Check if elements exist before adding event listeners
-//   if (!guideSavePasswordBtn || !newPasswordInput || !confirmNewPasswordInput) {
-//       console.error('One or more elements not found in the DOM.');
-//       return;
-//   }
-
-//   // Add event listener for the save password button
-//   guideSavePasswordBtn.addEventListener('click', () => {
-//       const newPassword = newPasswordInput.value;
-//       const confirmPassword = confirmNewPasswordInput.value;
-
-//       if (newPassword === confirmPassword) {
-//           alert('Password changed successfully!');
-//           closeGuideModal(); // Ensure this function is defined
-//       } else {
-//           alert('Passwords do not match.');
-//       }
-//   });
-// });
-
-// // Example function to close the modal (make sure this function is defined in your script)
-// function closeGuideModal() {
-//   const modal = document.getElementById('guide-change-password-modal');
-//   if (modal) {
-//       modal.classList.add('hidden');
-//   }
-// }
-
-
-// // Save new contact number
-
-
-//CURRENT PASSWORD 
-
-
-// }
-
-
-// // Function to handle "Mark as Completed"
-// function handleCompleteBooking() {
-//   const completeButtons = document.querySelectorAll('.complete-booking-btn');
-
-//   completeButtons.forEach((button) => {
-//     button.addEventListener('click', async () => {
-//       const bookingId = button.dataset.id;
-
-//       try {
-//         const response = await fetch(`/booking/complete/${bookingId}`, {
-//           method: 'POST',
-//         });
-
-//         if (response.ok) {
-//           const data = await response.json();
-//           alert(data.message);
-
-//           // Update booking status to completed
-//           const card = document.querySelector(`.tour-card[data-id="${bookingId}"]`);
-//           if (card) {
-//             card.dataset.status = 'completed';
-//             card.querySelector('.status-label').textContent = 'Completed';
-//             card.querySelector('.tour-status').textContent = 'Completed';
-
-//             // Hide the "Mark as Completed" button
-//             const completeButton = card.querySelector('.complete-booking-btn');
-//             if (completeButton) {
-//               completeButton.style.display = 'none';
-//             }
-
-//             // Update counts
-//             updateCounts();
-//           } else {
-//             console.error(`Card for booking ID ${bookingId} not found.`);
-//           }
-//         } else {
-//           const errorData = await response.json();
-//           alert(errorData.error || 'Failed to complete the booking.');
-//         }
-//       } catch (err) {
-//         console.error('Error completing booking:', err);
-//         alert('An error occurred. Please try again.');
-//       }
-//     });
-//   });
-// }
-
-// // Initialize functionality
-// document.addEventListener('DOMContentLoaded', () => {
-//   toggleCategory();
-//   updateCounts();
-//   handleCompleteBooking();
-// });
+  // <!-- Booking Details Modal -->
+  // <div id="booking-details-modal" class="booking-modal hidden">
+  //   <div class="booking-modal-content">
+  //     <!-- Loader -->
+  //     <div id="modal-loader" style="display: none;">Loading...</div>
+  
+  //     <!-- Booking Details -->
+  //     <div id="modal-details" class="hidden">
+  //       <!-- Traveler Information -->
+  //       <div class="container-section traveler-info expanded">
+  //         <h4 class="container-header">Traveler Information</h4>
+  //         <div class="status-box">
+  //           <span class="status-circle" id="modal-status">Loading...</span>
+  //         </div>
+  //         <div class="info-item">
+  //           <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
+  //         </div>
+  //         <div class="info-item">
+  //           <strong>Tour Guide:</strong> <span id="modal-tour-guide-name">Loading...</span>
+  //         </div>
+  //         <div class="info-item">
+  //           <strong>Tour Guide Number:</strong> <span id="modal-tour-guide-number">Loading...</span>
+  //         </div>
+  //         <div class="info-item">
+  //           <strong>Date & Duration:</strong> <span id="modal-tour-date">Loading...</span>
+  //         </div>
+  //         <div class="info-item">
+  //           <strong>Traveler Quantity:</strong> <span id="modal-traveler-quantity">Loading...</span>
+  //         </div>
+  //         <div class="info-item">
+  //           <strong>Tour Guide Price:</strong> <span id="modal-tour-guide-price">Loading...</span>
+  //         </div>
+  //         <!-- Special Notes -->
+  //         <div class="notes-box">
+  //           <h5>Special Notes</h5>
+  //           <p id="modal-special-notes">Loading...</p>
+  //         </div>
+  //       </div>
+  
+  //       <!-- Tour Package Details -->
+  //       <div class="container-section tour-package-details expanded">
+  //         <h4 class="container-header">Tour Package Details</h4>
+  //         <div class="modal-header">
+  //           <img id="modal-tour-image" src="" alt="Tour Image" class="modal-header-image">
+  //           <div class="header-text-overlay">
+  //             <h3 id="modal-package-title">Loading...</h3>
+  //             <p id="modal-package-location">
+  //               <span class="location-icon">&#x1F4CD;</span> Loading location...
+  //             </p>
+  //           </div>
+  //         </div>
+  //         <p id="modal-package-description" class="description">Loading...</p>
+  
+  //         <!-- Estimated Prices -->
+  //         <div class="modal-section">
+  //           <h4>Estimated Prices</h4>
+  //           <ul id="modal-price-list" class="price-list"></ul>
+  //         </div>
+  
+  //         <!-- Inclusions -->
+  //         <div class="modal-section">
+  //           <h4>Inclusions</h4>
+  //           <ul id="modal-inclusions-list" class="checklist inclusions-list"></ul>
+  //         </div>
+  
+  //         <!-- Exclusions -->
+  //         <div class="modal-section">
+  //           <h4>Exclusions</h4>
+  //           <ul id="modal-exclusions-list" class="checklist exclusions-list"></ul>
+  //         </div>
+  
+  //         <!-- Itinerary -->
+  //         <div class="modal-section itinerary-section">
+  //           <h4>Itinerary</h4>
+  //           <ul id="modal-itinerary-list" class="timeline"></ul>
+  //         </div>
+  //       </div>
+  //     </div>
+  
+  //     <!-- Action Buttons -->
+  //     <div class="modal-footer">
+  //       <button id="modal-cancel-booking-btn" class="cancel-booking-btn hidden" data-id="">Cancel Booking</button>
+  //       <button id="close-booking-modal" class="primary-btn">Close</button>
+  //     </div>
+  //   </div>
+  // </div>

@@ -1,3 +1,6 @@
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
 
   const tourGuideList = document.getElementById('tour-guide-list');
@@ -21,12 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check if the user is authenticated
     const isAuthenticated = await checkAuthentication();
-
     guides.forEach(guide => {
       const guideCard = document.createElement('div');
       guideCard.className = 'tour-guide-card';
-
-      // Update the rating and total tours display
+    
+      // Rating and Tour Details
       const ratingDisplay = `
         <span class="star-icon">★</span>
         <span class="rating-value">${guide.average_rating || 0}</span>
@@ -34,15 +36,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         <span class="separator">|</span>
         <span class="total-tours">${guide.total_tours || 0} <span class="tours">Tours</span></span>
       `;
-
-      // Render the tour guide card
+    
+      // Tour Guide Card Template
       guideCard.innerHTML = `
         <div class="profile-picture">
           <img src="${guide.profile_picture}" alt="Tour Guide Profile Picture">
         </div>
-
+    
         <div class="guide-info">
-          <h2 class="guide-name">Mabuhay! I Am <span>${guide.name}</span>, Your Friendly Tour Guide</h2>
+          <h2 class="guide-name">Mabuhay! I am <span>${guide.name}</span>, Your Friendly Tour Guide</h2>
               
           <div class="ratings">
             ${ratingDisplay}
@@ -54,12 +56,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             <button class="book-btn">Book Now</button>
           </a>
         </div>
-
       `;
-
+    
       tourGuideList.appendChild(guideCard);
     });
-
+    
     // Attach click event to "Book Now" buttons
     document.querySelectorAll('.book-btn').forEach(button => {
       button.addEventListener('click', async (event) => {
@@ -80,7 +81,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 });
-
 
 
 

@@ -37,21 +37,21 @@ h3 {
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  flex-wrap: wrap; /* Ensure wrapping on smaller screens */
-  overflow: hidden; /* Prevent layout overflow */
+  flex-wrap: wrap; 
+  overflow: hidden; 
   background-color: #f7fff7;
 }
 
 /* Tab Content */
 .tab-content {
   flex-grow: 1;
-  margin-left: 220px; /* For larger screens */
-  padding: 40px; /* Add padding inside the content area */
+  margin-left: 220px; 
+  padding: 40px;
   background-color: #f7fff7;
   transition: margin-left 0.3s ease-in-out;
   box-sizing: border-box;
-  width: calc(100% - 250px); /* Ensure proper alignment with sidebar */
-  max-width: 100%; /* Prevent overflow beyond the viewport */
+  width: calc(100% - 250px); 
+  max-width: 100%;
   margin-right: 40px;
 }
 
@@ -181,6 +181,10 @@ button {
       margin-left: 0;
     }
   }
+
+  
+
+
 /*  */
 
   /* Modal General Style */
@@ -316,14 +320,14 @@ button {
 /* Profile Section */
 .profile-overview {
   display: flex;
-  flex-direction: column; /* Stack image and text vertically */
-  align-items: center; /* Center-align contents horizontally */
-  gap: 5px; /* Add space between image and text */
+  flex-direction: column;
+  align-items: center; 
+  gap: 5px;
   margin-bottom: 15px;
-  width: 100%; /* Take full width */
-  max-width: 600px; /* Limit width */
-  margin: 0 auto; /* Center content horizontally */
-  position: relative; /* Ensure elements align properly */
+  width: 100%;
+  max-width: 600px; 
+  margin: 0 auto; 
+  position: relative; 
 }
 
 /* Profile Details */
@@ -365,6 +369,7 @@ button {
   color: #333;
   margin-top: 10px;
   font-size: 20px;
+  flex-wrap: wrap;
 }
 
 .rating {
@@ -402,6 +407,72 @@ button {
   font-style: italic;
   color: #666;
   font-size: 0.9rem;
+}
+
+
+
+/* Mobile Devices */
+@media (max-width: 768px) {
+
+  .dashboard-container{
+    margin: 5px;
+    padding: 20px;
+  }
+
+  .profile-overview {
+    gap: 10px;
+  }
+
+  .tab-content {
+    margin: 5px;
+    padding: 20px;
+  }
+
+  .primary-btn {
+    width: 100%;
+    max-width: none;
+    padding: 8px 12px;
+  }
+}
+
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  .profile-overview {
+    gap: 10px;
+    padding: 20px;
+  }
+
+  .tab-content {
+    padding: 10px;
+    margin: 3px;
+  }
+
+
+  .profile-pic {
+    width: 150px;
+    height: 150px;
+  }
+
+  .profile-stats {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .separator {
+    display: none; /* Hide separator on smaller screens */
+  }
+
+  .rating,
+  .total-tours {
+    text-align: center;
+  }
+
+  .h2-guide-name {
+    font-size: 24px;
+  }
+
 }
 
 
@@ -932,6 +1003,7 @@ textarea:disabled {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
+    flex-wrap: wrap;
   }
 
   .toggle-btn {
@@ -954,6 +1026,7 @@ textarea:disabled {
     border-radius: 8px;
     padding: 15px;
     background-color: #ffffff;
+    border: 1px solid #999;
   }
 
   /* Tours List */
@@ -987,7 +1060,7 @@ textarea:disabled {
     text-transform: uppercase;
     padding: 5px 5px;
     border-radius: 0px 15px 15px 0px;
-    max-width: 100px;
+    max-width: 120px;
     min-width: 70px;
   }
 
@@ -1084,6 +1157,402 @@ textarea:disabled {
   .view-booking:hover {
     background-color: #1a535c;
   }
+
+
+  /* Tablet Devices (Max Width: 992px) */
+  @media (max-width: 992px) {
+    .tour-card {
+      grid-template-columns: 1fr; /* Make cards stack vertically */
+      gap: 10px;
+    }
+
+    .tour-actions {
+      position: static; /* No absolute positioning */
+      flex-direction: row; /* Buttons in a single row */
+      justify-content: space-between;
+      margin-top: 10px; /* Add spacing between info and buttons */
+    }
+  }
+
+  /* Mobile Devices (Max Width: 768px) */
+  @media (max-width: 768px) {
+    .tour-toggle-buttons {
+      flex-wrap: wrap;
+      justify-content: center; /* Center-align toggle buttons */
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      flex: 1 1 calc(50% - 10px); /* Two buttons per row */
+      text-align: center;
+      padding: 8px;
+    }
+
+    .tour-card {
+      grid-template-columns: 1fr; /* Single column layout */
+      gap: 8px;
+    }
+
+    .tour-actions {
+      flex-direction: column; /* Stack buttons vertically */
+      gap: 8px; /* Add space between buttons */
+      text-align: center;
+    }
+
+    .complete-booking-btn,
+    .view-booking {
+      width: 100%; /* Full width buttons */
+    }
+  }
+
+  /* Small Mobile Devices (Max Width: 480px) */
+  @media (max-width: 480px) {
+    .toggle-btn {
+      flex: 1 1 100%; /* One button per row */
+      padding: 6px;
+    }
+
+    .tour-card {
+      gap: 6px;
+    }
+
+    .tour-title {
+      font-size: 14px; /* Smaller font size */
+    }
+
+    .tour-date,
+    .tour-traveler {
+      font-size: 12px; /* Smaller font size */
+    }
+
+    .tour-actions {
+      flex-direction: column; /* Stack buttons vertically */
+      gap: 6px;
+    }
+
+    .complete-booking-btn,
+    .view-booking {
+      font-size: 12px; /* Adjust button text size */
+      padding: 5px; /* Reduce padding */
+    }
+  }
+
+
+
+
+
+  /* Status Box Styling */
+  .status-box {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+  }
+
+  .status-circle {
+    display: inline-block;
+    padding: 8px 15px;
+    background-color: #4ecdc4;
+    border-radius: 50px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  
+  /* Close Button */
+  .x-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: #444;
+    cursor: pointer;
+    z-index: 10; 
+    transition: color 0.3s ease;
+  }
+
+  .x-btn:hover {
+    color: #ff4b4b; /* Red color on hover */
+  }
+
+
+  .booking-modal {
+    display: none; /* Initially hidden */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Black with transparency */
+    backdrop-filter: blur(1px); /* Blur the background */
+    z-index: 1000; /* Above everything */
+    justify-content: center;
+    align-items: center;
+  }
+
+
+  .booking-modal.show {
+    display: flex;
+  }
+
+
+  /* Modal Content Alignment */
+  .booking-modal-content {
+    background-color: white;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 10px;
+    overflow-y: auto;
+    max-height: 90vh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative; /* Ensures the button is positioned relative to this container */
+  }
+
+  #modal-details{
+    width: 90%;
+  }
+
+  
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 15px; /* Space between buttons */
+    margin-top: 15px; /* Space above buttons */
+  }
+
+  /* Center Alignment for Containers */
+  .traveler-info-container, .tour-package-details-container {
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Consistent width across sections */
+    max-width: 900px;
+  }
+
+
+  /* Centered Header Styling */
+  .container-header {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #2b2d42;
+    border-bottom: 2px solid #4ecdc4;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+
+
+  /* Info Items Spacing */
+  .info-item {
+    font-size: 16px;
+    color: #2b2d42;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between; /* Align labels and values horizontally */
+  }
+
+
+  /* Notes Box Styling */
+  .notes-box {
+    background-color: #eaf7f7;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border-left: 5px solid #4ecdc4;
+    font-size: 14px;
+  }
+
+  /* Modal Header Improvements */
+  .modal-header {
+    text-align: center;
+    margin-bottom: 25px;
+    position: relative;
+    border-radius: 8px;
+  }
+
+  .header-image-wrapper {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .modal-header-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    filter: brightness(70%); /* Darken the image for better text contrast */
+  }
+
+  .header-text-overlay {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    color: white;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+  }
+
+  .package-title {
+    font-size: 26px;
+    font-weight: bold;
+    margin: 0;
+    color: white;
+  }
+
+  .location {
+    font-size: 16px;
+    margin-top: 5px;
+    text-align: left;
+  }
+
+  .location-icon {
+    margin-right: 5px;
+  }
+
+  /* Description Box Styling */
+  .description-box {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #eaf7f7;
+    border-left: 5px solid #4ecdc4;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #2b2d42;
+    line-height: 1.5;
+  }
+
+  /* Modal Sections with Gaps */
+  .modal-section {
+    margin-top: 20px;
+  }
+
+  /* Price List Styling */
+  .price-list, .inclusions-list, .exclusions-list, .itinerary-list {
+    margin: 15px 0;
+    padding-left: 20px;
+    list-style: none;
+  }
+
+  .price-list li, .inclusions-list li, .exclusions-list li {
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkmark {
+    color: #4ecdc4;
+    margin-right: 8px;
+  }
+
+  .crossmark {
+    color: #ff4b4b;
+    margin-right: 8px;
+  }
+
+  /* Itinerary Timeline */
+  .itinerary-list {
+    position: relative;
+  }
+
+  .itinerary-list::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #4ecdc4;
+  }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #4ecdc4;
+    border-radius: 50%;
+    position: absolute;
+    left: 10px;
+  }
+
+  .timeline-content {
+    margin-left: 35px;
+    padding-bottom: 10px;
+  }
+
+  .timeline-content strong {
+    color: #333;
+    font-size: 16px;
+  }
+
+  .timeline-content p {
+    color: #666;
+    margin: 5px 0;
+  }
+
+
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .booking-modal-content {
+      width: 90%; /* Almost full width */
+      max-width: 600px;
+    }
+
+    .modal-header-image {
+      height: 150px; /* Reduce height for medium screens */
+    }
+
+    .info-item {
+      flex-direction: column; /* Stack label and value */
+      text-align: left;
+      margin-bottom: 15px;
+    }
+
+    .container-header {
+      font-size: 16px; /* Adjust font size */
+    }
+
+    .modal-footer {
+      flex-direction: column; /* Stack buttons */
+      gap: 5px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .booking-modal-content {
+      width: 80%; /* Full width for small screens */
+      max-height: 85vh; /* Slightly less height for better fit */
+    }
+
+    .modal-header-image {
+      height: 120px; /* Reduce height further */
+    }
+
+    .info-item {
+      font-size: 14px; /* Adjust font size */
+    }
+
+    .modal-footer {
+      flex-direction: column; /* Stack buttons */
+      gap: 5px;
+    }
+  }
+
+
+
+
+
+
 /*  */
 
 
@@ -1094,9 +1563,10 @@ textarea:disabled {
   /* Availability Container */
   .availability-container {
     background-color: #f7fff7;
-    padding: 20px;
+    padding: 10px 15px; /* Reduce padding on left and right */
+    width: 100%; /* Occupy full width */
+    max-width: 900px; /* Limit overall width */
     border-radius: 12px;
-    max-width: 800px;
     margin: 0 auto;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
     text-align: center;
@@ -1107,8 +1577,9 @@ textarea:disabled {
     margin-bottom: 20px;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 10px;
     margin-top: 10px;
+    flex-wrap: wrap; /* Wrap items for smaller screens */
   }
 
   .calendar-legend ul {
@@ -1116,6 +1587,7 @@ textarea:disabled {
     padding: 0;
     display: flex;
     gap: 15px;
+    flex-wrap: wrap; /* Allow wrapping for smaller screens */
   }
 
   .calendar-legend li {
@@ -1150,7 +1622,56 @@ textarea:disabled {
     display: flex;
     justify-content: center;
     gap: 10px;
+    flex-wrap: wrap;
   }
+
+  .calendar-controls button {
+    flex: 1 1 45%; /* Buttons take up 45% of width */
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+
+  /* Toolbar adjustments for "Today" button centering */
+  /* Toolbar adjustments for larger screens */
+  .fc-toolbar {
+    display: flex;
+    flex-direction: row; /* Arrange items in a row */
+    justify-content: space-between; /* Space out elements */
+    align-items: center; /* Align items vertically in the center */
+    flex-wrap: nowrap; /* Prevent wrapping on larger screens */
+    gap: 10px; /* Add space between elements */
+  }
+
+  .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Add space between buttons in a group */
+  }
+
+  .fc-button-group {
+    display: flex;
+    gap: 5px; /* Space between buttons */
+  }
+
+  .fc-toolbar-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+  }
+    .fc-toolbar-chunk .fc-button {
+      padding: 8px 12px;
+    }
+
+  .fc-toolbar .fc-button.fc-today-button {
+    order: 1; /* Move "Today" button into the middle */
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
 
   .edit-mode-btn {
     background-color: #e68a00;
@@ -1183,6 +1704,77 @@ textarea:disabled {
     display: none;
   }
 
+  #availability-calendar {
+    font-size: 12px; /* Smaller font size for compact view */
+    margin: 0 auto; /* Center the calendar */
+    width: 90%;
+  }
+    
+  /* Responsive Design for Manage Availability Section */
+
+
+  /* Small Screen Adjustments */
+  @media (max-width: 768px) {
+    .availability-container {
+      max-width: 100%; /* Remove width constraints */
+      padding: 8px; /* Reduce padding further */
+    }
+
+    .calendar-controls button {
+      flex: 1 1 100%; /* Full width for buttons */
+      max-width: none; /* No width constraint */
+    }
+
+    .fc-toolbar {
+    flex-direction: column; /* Stack items vertically */
+    gap: 15px; /* Add vertical spacing */
+    }
+
+    .fc-toolbar-chunk {
+      justify-content: center; /* Center elements in each chunk */
+    }
+
+    .fc-toolbar .fc-button-group {
+      flex-wrap: wrap; /* Allow wrapping of buttons */
+      gap: 5px;
+    }
+
+    .calendar-legend {
+      gap: 10px;
+    }
+  }
+
+  /* Small Mobile Devices (Max Width: 480px) */
+  @media (max-width: 480px) {
+    .availability-container {
+      padding: 10px; /* Further reduce padding */
+      font-size: 14px; /* Adjust font size for smaller screens */
+    }
+
+    .calendar-controls button {
+      width: 100%; /* Full width for buttons */
+      padding: 6px 10px; /* Reduce padding for smaller screens */
+      font-size: 12px; /* Smaller font size */
+    }
+
+    .calendar-legend {
+      text-align: center; /* Center-align legend items */
+      gap: 8px;
+    }
+
+    .calendar-legend li {
+      font-size: 12px; /* Smaller font size for better spacing */
+    }
+
+    .legend-available,
+    .legend-unavailable,
+    .legend-booked {
+      width: 10px; /* Smallest size for indicators */
+      height: 10px;
+    }
+  }
+
+  
 /*  */
 
 
@@ -1206,33 +1798,73 @@ textarea:disabled {
   }
 
 
-  /* Profile Picture Container */
+/* Profile Picture Container */
+.profile-pic-container {
+  position: relative;
+  display: inline-block;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+/* Profile Picture */
+.profile-pic-account {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #4ecdc4;
+}
+
+/* Edit Picture Button */
+.edit-pic-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: #ff9f1c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s, transform 0.2s;
+  z-index: 10;
+}
+
+.edit-pic-btn:hover {
+  background-color: #e68a00;
+  transform: scale(1.1); /* Slight zoom effect */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
   .profile-pic-container {
-    position: relative;
-    display: inline-block;
-    width: 200px;
-    height: 200px;
+    width: 150px; /* Smaller profile picture */
+    height: 150px;
   }
 
-  
   .edit-pic-btn {
-    position: absolute;
-    bottom: 8px;
-    right: 20px;
-    background-color: #ff9f1c;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    padding: 8px;
-    cursor: pointer;
-    font-size: 18px;
-    transition: background-color 0.3s;
+    bottom: 5px; /* Adjust for smaller container */
+    right: 5px;
+    padding: 8px; /* Smaller button */
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-pic-container {
+    width: 120px;
+    height: 120px;
   }
 
-  .edit-pic-btn:hover {
-    background-color: #e68a00;
+  .edit-pic-btn {
+    bottom: 3px;
+    right: 3px;
+    padding: 6px;
+    font-size: 12px;
   }
-
+}
 
   
   #cropper-container {
@@ -1303,7 +1935,6 @@ textarea:disabled {
 
 
 
- 
   #guide-password-confirm-modal, #guide-change-email-modal, #guide-change-password-modal, #guide-change-contact-modal {
     height: max-content;
     max-width: 450px;
@@ -1641,3 +2272,4 @@ textarea:disabled {
 .no-btn:hover {
   background-color: #d32f2f;
 }
+

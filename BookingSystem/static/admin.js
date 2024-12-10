@@ -67,96 +67,197 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // --- Toast Notification Logic ---
-    const showToast = (message, type = 'success') => {
-        const toastWrapper = document.getElementById('toast-wrapper');
-        if (!toastWrapper) return;
 
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `custom-toast ${type}`;
-        toast.innerText = message;
 
-        // Append toast to the wrapper
-        toastWrapper.appendChild(toast);
 
-        // Auto-remove toast after 5 seconds
-        setTimeout(() => {
-            toast.remove();
-        }, 5000);
+// Wait for DOM Content to load
+window.addEventListener("DOMContentLoaded", () => {
+    // --- Modal Logic ---
+    const addOperatorBtn = document.getElementById("add-operator-btn");
+    const operatorModalWrapper = document.getElementById("operator-modal-wrapper");
+    const closeOperatorModal = document.getElementById("close-operator-modal");
+    const modalOverlay = document.getElementById("modal-overlay");
+  
+    // Open Modal
+    if (addOperatorBtn && operatorModalWrapper) {
+      addOperatorBtn.addEventListener("click", () => {
+        operatorModalWrapper.classList.add("show");
+      });
+    }
+  
+    // Close Modal
+    [closeOperatorModal, modalOverlay].forEach((element) => {
+      if (element && operatorModalWrapper) {
+        element.addEventListener("click", () => {
+          operatorModalWrapper.classList.remove("show");
+        });
+      }
+    });
+  
+    // --- Form Validation and Submission ---
+    const operatorForm = document.getElementById("operator-form");
+  
+    if (operatorForm) {
+      operatorForm.addEventListener("submit", (e) => {
+        e.preventDefault(); // Prevent default form submission
+  
+        // Fetch form fields
+        const nameInput = operatorForm.querySelector('input[name="name"]');
+        const municipalInput = operatorForm.querySelector('input[name="municipal"]');
+        const emailInput = operatorForm.querySelector('input[name="email"]');
+        const contactNumberInput = operatorForm.querySelector(
+          'input[name="contact_number"]'
+        );
+        const passwordInput = operatorForm.querySelector('input[name="password"]');
+        const confirmPasswordInput = operatorForm.querySelector(
+          'input[name="confirm_password"]'
+        );
+  
+        let isValid = true;
+  
+        // --- Validation Logic ---
+        if (!isValidName(nameInput.value)) {
+          isValid = false;
+          showToast("Name must only contain letters.", "error");
+          nameInput.focus();
+          return;
+        }
+  
+        if (!isValidName(municipalInput.value)) {
+          isValid = false;
+          showToast("Municipal must only contain letters.", "error");
+          municipalInput.focus();
+          return;
+        }
+  
+        if (!isValidEmail(emailInput.value)) {
+          isValid = false;
+          showToast("Enter a valid email address.", "error");
+          emailInput.focus();
+          return;
+        }
+  
+        if (!isValidContactNumber(contactNumberInput.value)) {
+          isValid = false;
+          showToast("Contact number must be 11 digits.", "error");
+          contactNumberInput.focus();
+          return;
+        }
+  
+        const passwordValidation = isValidPassword(passwordInput.value);
+        if (passwordValidation) {
+          isValid = false;
+          showToast(passwordValidation, "error");
+          passwordInput.focus();
+          return;
+        }
+  
+        if (passwordInput.value !== confirmPasswordInput.value) {
+          isValid = false;
+          showToast("Passwords do not match.", "error");
+          confirmPasswordInput.focus();
+          return;
+        }
+  
+        // --- Form Submission ---
+        if (isValid) {
+          showToast(
+            `Tour Operator Account Created Successfully! Check email for verification!`,
+            "success"
+          );
+  
+          // Close the modal
+          operatorModalWrapper.classList.remove("show");
+  
+          // Submit the form programmatically
+          setTimeout(() => {
+            operatorForm.submit();
+          }, 300); // Allow time for the toast to show
+        }
+      });
+    }
+  
+    // --- Validation Functions ---
+    function isValidName(name) {
+      return /^[A-Za-z\s]+$/.test(name);
+    }
+  
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+  
+    function isValidContactNumber(contactNumber) {
+      return /^\d{11}$/.test(contactNumber);
+    }
+  
+    function isValidPassword(password) {
+      if (password.length < 8)
+        return "Password must be at least 8 characters long.";
+      if (!/[A-Z]/.test(password))
+        return "Password must contain at least one uppercase letter.";
+      if (!/[a-z]/.test(password))
+        return "Password must contain at least one lowercase letter.";
+      if (!/[0-9]/.test(password))
+        return "Password must contain at least one number.";
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password))
+        return "Password must contain at least one special character.";
+      return "";
+    }
+  });
+}  )
+
+
+
+
+
+
+function showToast(message, type = 'success') {
+    const toastContainer = document.getElementById('toast-container');
+    
+    // Create a new toast element
+    const toast = document.createElement('div');
+    toast.classList.add('toast', type);
+    toast.textContent = message;
+
+    // Append the toast to the container
+    toastContainer.appendChild(toast);
+
+    // Remove the toast after a few seconds
+    setTimeout(() => {
+      toast.remove();
+    }, 4000); 
+  }
+
+
+  function showConfirmationModal(message, onConfirm) {
+    const modal = document.getElementById('confirmation-modal');
+    const confirmMessage = document.getElementById('confirmation-message');
+    const confirmYes = document.getElementById('confirm-yes');
+    const confirmNo = document.getElementById('confirm-no');
+    const modalOverlay = document.querySelector('.modal-overlay');
+
+    // Set the confirmation message
+    confirmMessage.textContent = message;
+
+    // Adjust z-index for overlay
+    modalOverlay.classList.add('hidden'); // Temporarily hide overlay blur
+    modal.classList.remove('hidden'); // Show the confirmation modal
+
+    // Event listeners
+    const handleConfirm = () => {
+      onConfirm();
+      closeModal();
     };
 
-    // --- Form Submission Logic ---
-    const operatorForm = document.getElementById('operator-form');
+    const closeModal = () => {
+      modalOverlay.classList.remove('hidden'); // Restore overlay blur
+      modal.classList.add('hidden');
+      confirmYes.removeEventListener('click', handleConfirm);
+      confirmNo.removeEventListener('click', closeModal);
+    };
 
-    if (operatorForm) {
-        operatorForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Prevent default form submission for custom handling
+    confirmYes.addEventListener('click', handleConfirm);
+    confirmNo.addEventListener('click', closeModal);
+  }
 
-            // Fetch the operator's name from the form input
-            const operatorNameInput = operatorForm.querySelector('input[name="name"]');
-            const operatorName = operatorNameInput ? operatorNameInput.value : "Tour Operator";
 
-            // Show success toast message with the operator's name
-            showToast(`Tour Operator Account Created Successfully! Welcome, ${operatorName}!`, 'success');
-
-            // Close the modal
-            operatorModalWrapper.classList.remove('show');
-
-            // Submit the form programmatically
-            setTimeout(() => {
-                operatorForm.submit(); // Delay the submission to mimic alert effect
-            }, 300); // Half-second delay to ensure toast is displayed
-        });
-    }
-    })
-
-    if (operatorForm) {
-        operatorForm.addEventListener("submit", (e) => {
-            e.preventDefault(); // Prevent default form submission
-
-            // Fetch password and confirm password inputs
-            const passwordInput = operatorForm.querySelector('input[name="password"]');
-            const confirmPasswordInput = operatorForm.querySelector('input[name="confirm_password"]');
-            const operatorNameInput = operatorForm.querySelector('input[name="name"]');
-
-            const password = passwordInput ? passwordInput.value.trim() : "";
-            const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : "";
-            const operatorName = operatorNameInput ? operatorNameInput.value.trim() : "Tour Operator";
-
-            // Validate the form
-            let errorMessage = "";
-
-            // Password validation rules
-            if (!password || !confirmPassword) {
-                errorMessage = "Password and Confirm Password fields cannot be empty.";
-            } else if (password !== confirmPassword) {
-                errorMessage = "Passwords do not match. Please try again.";
-            } else if (password.length < 8) {
-                errorMessage = "Password must be at least 8 characters long.";
-            } else if (!/[A-Z]/.test(password)) {
-                errorMessage = "Password must contain at least one uppercase letter.";
-            } else if (!/[a-z]/.test(password)) {
-                errorMessage = "Password must contain at least one lowercase letter.";
-            } else if (!/[0-9]/.test(password)) {
-                errorMessage = "Password must contain at least one number.";
-            }
-
-            if (errorMessage) {
-                alert(errorMessage);
-                if (passwordInput) passwordInput.focus();
-                return; // Stop further execution if validation fails
-            }
-
-            // If validation passes, show success alert
-            alert(`Tour Operator Account Created Successfully! Welcome, ${operatorName}!`);
-
-            // Close the modal
-            operatorModalWrapper.classList.remove("show");
-
-            // Programmatically submit the form after a short delay
-            setTimeout(() => {
-                operatorForm.submit();
-            }, 500); // Half-second delay to mimic alert effect
-        });
-    }
