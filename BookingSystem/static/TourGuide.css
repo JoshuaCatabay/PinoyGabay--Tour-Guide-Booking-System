@@ -8,7 +8,7 @@
 /* General Styles */
 body {
   margin: 0;
-  background-color: #f7fff7;
+  background-color: white;
   overflow-x: hidden; /* Prevent horizontal scrolling */
   font-size: 16px;
   line-height: 1.5;
@@ -39,7 +39,7 @@ h3 {
   min-height: 100vh;
   flex-wrap: wrap; 
   overflow: hidden; 
-  background-color: #f7fff7;
+  background-color: white;
 }
 
 /* Tab Content */
@@ -47,7 +47,7 @@ h3 {
   flex-grow: 1;
   margin-left: 220px; 
   padding: 40px;
-  background-color: #f7fff7;
+  background-color: white;
   transition: margin-left 0.3s ease-in-out;
   box-sizing: border-box;
   width: calc(100% - 250px); 
@@ -116,7 +116,7 @@ button {
     position: fixed;
     left: 0;
     top: 0;
-    height: 100%;
+    height: 1000%;
     transition: transform 0.3s ease-in-out;
     z-index: 1000;
   }
@@ -496,7 +496,7 @@ textarea {
   padding: 12px; /* Internal padding */
   border: 1px solid #ddd;
   border-radius: 6px;
-  background-color: #f7fff7; /* Off-white background */
+  background-color: white; /* Off-white background */
   resize: none; /* Disable resizing */
   box-sizing: border-box; /* Include padding and border in width */
   font-size: 16px;
@@ -1562,7 +1562,7 @@ textarea:disabled {
 
   /* Availability Container */
   .availability-container {
-    background-color: #f7fff7;
+    background-color: white;
     padding: 10px 15px; /* Reduce padding on left and right */
     width: 100%; /* Occupy full width */
     max-width: 900px; /* Limit overall width */

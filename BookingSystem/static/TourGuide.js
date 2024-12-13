@@ -685,51 +685,59 @@
 
 
 
-  // Complete Booking
+  // Complete Booking with Confirmation Modal
   async function handleCompleteBooking() {
     const completeButtons = document.querySelectorAll('.complete-booking-btn');
-  
+
     completeButtons.forEach((button) => {
-      button.addEventListener('click', async () => {
+      button.addEventListener('click', () => {
         const bookingId = button.dataset.id;
-  
-        try {
-          const response = await fetch(`/booking/complete/${bookingId}`, {
-            method: 'POST',
-          });
-  
-          if (response.ok) {
-            const data = await response.json();
-            alert(data.message);
-  
-            // Update the card's status
-            const card = document.querySelector(`.tour-card[data-id="${bookingId}"]`);
-            if (card) {
-              card.dataset.status = 'completed';
-              card.querySelector('.status-label').textContent = 'Completed';
-              card.querySelector('.status-label').classList.remove('ongoing');
-              card.querySelector('.status-label').classList.add('completed');
-  
-              // Remove the "Mark as Completed" button
-              const completeButton = card.querySelector('.complete-booking-btn');
-              if (completeButton) completeButton.remove();
-  
-              updateCounts(); // Refresh counts
-            } else {
-              console.error(`Card for booking ID ${bookingId} not found.`);
+
+        // Show the confirmation modal
+        showConfirmationModal(
+          "Are you sure you want to mark this booking as completed?",
+          async () => {
+            try {
+              const response = await fetch(`/booking/complete/${bookingId}`, {
+                method: 'POST',
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                showToast(data.message, 'success');
+
+                // Update the card's status
+                const card = document.querySelector(`.tour-card[data-id="${bookingId}"]`);
+                if (card) {
+                  card.dataset.status = 'completed';
+                  const statusLabel = card.querySelector('.status-label');
+                  statusLabel.textContent = 'Completed';
+                  statusLabel.classList.remove('ongoing');
+                  statusLabel.classList.add('completed');
+
+                  // Remove the "Mark as Completed" button
+                  const completeButton = card.querySelector('.complete-booking-btn');
+                  if (completeButton) completeButton.remove();
+
+                  // Update counts
+                  updateCounts();
+                } else {
+                  console.error(`Card for booking ID ${bookingId} not found.`);
+                }
+              } else {
+                const errorData = await response.json();
+                showToast(errorData.error || 'Failed to complete the booking.', 'error');
+              }
+            } catch (err) {
+              console.error('Error completing booking:', err);
+              showToast('An error occurred. Please try again.', 'error');
             }
-          } else {
-            const errorData = await response.json();
-            alert(errorData.error || 'Failed to complete the booking.');
           }
-        } catch (err) {
-          console.error('Error completing booking:', err);
-          alert('An error occurred. Please try again.');
-        }
+        );
       });
     });
   }
-  
+
   // Initialize complete booking functionality
   document.addEventListener('DOMContentLoaded', () => {
     handleCompleteBooking();

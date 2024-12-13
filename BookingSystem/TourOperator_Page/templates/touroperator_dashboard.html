@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='TourOperator.js') }}" defer ></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="static\logo\pinoygabay logo.png">
 
 
   </head>
@@ -67,9 +68,16 @@
               <span>Overview</span>
             </h2>
             <div class="overview-grid">
+
+              <div class="overview-card">
+                <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+                <h3>Available Guides Today</h3>
+                <p>{{ total_available_guides }}</p>
+              </div>
+              
               <div class="overview-card">
                 <div class="card-icon"><i class="fas fa-user-tie"></i></div>
-                <h3>Active Guides</h3>
+                <h3>My Tour Guides</h3>
                 <p>{{ tour_guides|length }}</p>
               </div>
 
@@ -102,12 +110,7 @@
                 <h3>Total Reviews</h3>
                 <p>{{ total_reviews }}</p>
               </div>
-
-              <div class="overview-card">
-                <div class="card-icon"><i class="fas fa-check-circle"></i></div>
-                <h3>Available Guides Today</h3>
-                <p>{{ total_available_guides }}</p>
-              </div>
+              
             </div>
           </div>
 
@@ -204,7 +207,7 @@
                 <!-- Traveler Information -->
                 <div class="traveler-info-container">
 
-                  <h4 class="container-header">Traveler Information</h4>
+                  <h4 class="container-header">Tour Information</h4>
 
                   <div class="info-item">
                     <strong>Traveler:</strong> <span id="modal-traveler-name">Loading...</span>
@@ -263,7 +266,7 @@
 
                   <!-- Estimated Prices -->
                   <div class="modal-section">
-                    <h4>Estimated Prices</h4>
+                    <h4>Expenses
                     <ul id="modal-price-list" class="price-list"></ul>
                   </div>
             
@@ -559,7 +562,7 @@
                   <div class="header-image-wrapper">
                     <img src="" alt="Tour Package Image" class="modal-header-image">
                     <div class="header-text-overlay">
-                      <h2 class="modal-title"></h2>
+                      <h2 class="modal-title" style="color: azure;"></h2>
                       <p class="location" id="modal-package-location">
                         <span class="location-icon">&#x1F4CD;</span> Loading location...
                       </p>
@@ -574,7 +577,7 @@
                   </div>
 
                   <div class="modal-section">
-                    <h4>Estimated Prices</h4>
+                    <h4>Expenses</h4>
                     <ul class="price-list"></ul>
                   </div>
 
@@ -626,7 +629,29 @@
             </div>
             <p>Add Tour Guide</p>
           </div>
-          
+         
+          <br>
+         
+          <!-- Search Input -->
+          <div class="search-container">
+            <input type="text" id="search-guide" placeholder="Search Tour Guide by Name">
+          </div>
+
+          <!-- Filter Container with Icon -->
+          <div class="filter-container">
+            <i class="fas fa-filter filter-icon"></i>
+            <select id="filter-select">
+              <option value="all">All</option>
+              <option value="available">Available Today</option>
+              <option value="unavailable">Unavailable Today</option>
+              <option value="profile-active">Guide Profile Active</option>
+              <option value="profile-inactive">Guide Profile Inactive</option>
+              <option value="account-active">Account Active</option>
+              <option value="account-inactive">Account Inactive</option>
+            </select>
+          </div>
+
+
           <div class="tour-guide-list">
 
 

@@ -24,7 +24,7 @@ main = Blueprint('main', __name__)  # Ensure the 'main' blueprint is set
 @main.route('/')
 @main.route('/home')
 def home():
-    return "Hello"
+    
     return render_template('traveler_dashboard.html')
 
 @main.route('/pg_home', endpoint='pg_home')
@@ -362,7 +362,7 @@ def redirect_booking():
 
 
 
-@main.route('/traveler_dashboard')
+@main.route('/BATOG')
 def traveler_dashboard():
     packages = TourPackage.query.limit(4).all()
     return render_template('traveler_dashboard.html',packages=packages)

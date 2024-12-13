@@ -346,35 +346,49 @@ body {
 
 /* PACKAGES */
 #tour-packages {
-    padding: 4rem 2rem;
-    text-align: center;
-    background: #1A535C;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: #1A535C;
+  position: relative;
 }
 
 #tour-packages h2 {
-    font-size: 2.5rem;
-    color: white;
-    margin-bottom: 2rem;
+  font-size: 2.5rem;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+/* See All Link */
+.see-all-link {
+  font-size: 1rem;
+  color: #ff9f1c;
+  text-decoration: none;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  display: inline-block;
+}
+
+.see-all-link:hover {
+  text-decoration: underline;
 }
 
 /* Package cards container */
 .package-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
 }
 
-/* =======================
-   Card Details Styles
-======================= */
+/* Card Details Styles */
 .card-details {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    color: white;
-    z-index: 1; /* Ensure text is above the gradient */
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  z-index: 1; /* Ensure text is above the gradient */
 }
+
 
 .title-rating {
     display: flex;

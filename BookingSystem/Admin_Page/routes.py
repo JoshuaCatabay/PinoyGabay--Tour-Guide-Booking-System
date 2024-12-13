@@ -91,7 +91,7 @@ def change_tour_operator_status(id):
 @admin.route('/dashboard')
 @login_required
 def admin_dashboard():
-    if current_user.role == 'admin':
+    if current_user.role != 'admin':
         flash('You do not have permission to access this page.', 'danger')
         return redirect(url_for('main.home'))
 

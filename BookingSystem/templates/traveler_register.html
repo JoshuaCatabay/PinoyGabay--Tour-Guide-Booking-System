@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up - PinoyGabay</title>
+  <title>PinoyGabay</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='Signup_design.css') }}">
+  <link rel="icon" type="image/png" href="static\logo\pinoygabay logo.png">
 </head>
 <body>
 
@@ -133,10 +134,12 @@
           </div>
 
           <div class="checkbox">
+            <input type="checkbox" id="terms" name="terms" required>
             <label for="terms">
               I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>
             </label>
           </div>
+          
 
 
           <!-- Modal structure -->

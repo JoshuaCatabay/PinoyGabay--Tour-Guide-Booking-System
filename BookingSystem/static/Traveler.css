@@ -235,6 +235,7 @@
     gap: 15px;
     justify-content: center;
     padding: 20px 0;
+    
   }
 
   /* Tour Guide Card - Flexbox for Consistent Layout */
@@ -249,6 +250,7 @@
     overflow: hidden;
     width: 95%; 
     height: 100%;
+    
   }
 
   .tour-guide-card:hover {
@@ -395,8 +397,8 @@
 /* Large Desktop, TV */
 @media (min-width: 1200px) {
   .tour-guide-list {
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 50px;
   }
 }
 

@@ -4,9 +4,10 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Home</title>
+        <title>PinoyGabay</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="icon" type="image/png" href="static\logo\pinoygabay logo.png">
     </head>
 
     <body>
@@ -17,7 +18,7 @@
     <nav class="navbar">
         <div class="navbar-container">
                 
-            <a href="{{ url_for('main.traveler_dashboard') }}" class="logo">
+            <a href="{{ url_for('main.pg_home') }}" class="logo">
                 <span style="color: #ff9f1c; font-weight: 800;">Pinoy</span><span style="font-weight: 800;">Gabay</span>
             </a>
                 
@@ -77,7 +78,7 @@
                 <li><i class="fas fa-phone"></i> 0915 281 9287</li>
             </ul>
             <div class="btn-box">
-                <a href="{{ url_for('main.booking') }}">Book Your Guide Now</a>
+                <a href="{{ url_for('main.booking') }}">Choose Your Guide Now</a>
                 <a href="https://seepangasinan.com/directory/bolinao-association-of-tour-guides-batog/" target="blank">Click to Learn More</a>
             </div>
         </div>
@@ -90,46 +91,42 @@
     <section class="tour-guide-section">
         <div class="container-tg">
             <h2 class="title-bol">
-                Explore Personalized and Experiential Travel in Bolinao with Local Experts from BATOG
+                Explore Bolinao with Local Experts from BATOG
             </h2>
             <div class="bol-image">
                 <img src="{{ url_for('static', filename='qttg.avif') }}" alt="Inviting Bolinao Landscape">
             </div>
-            <button class="tg-button">See Tour Guides</button>
+            <a class="tg-button" href="{{ url_for('main.booking') }}">Choose Your Guide Now</a>
         </div>
     </section>
 
     <section id="tour-packages">
-        <h2>Available Tour <span style="color: #ff9f1c">Packages</span></h2>
-        <a href="{{ url_for('main.tour_package') }}"> See all </a>
-        <div class="package-container">
-            {% for package in packages %}
-            <div class="card">
-                <div class="card-content">
-                    <img src="{{ url_for('static', filename=package.package_img) if package.package_img else url_for('static', filename='default.jpg') }}" alt="Tour Image" class="card-image">
-                    <div class="gradient-overlay"></div>
-                    <div class="card-details">
-                        <div class="title-rating">
-                            <h3>{{ package.name }}</h3>
-                        </div>
-                        <p>{{ package.description }}</p>
-                    </div>
-                </div>
-                <div class="card-overlay">
-                    <button class="view-package" data-package-id="{{ package.id }}">View Package</button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-
-
-
-
-        <!-- Modal Overlay -->
-        <div id="modal-overlay" class="modal-overlay hidden"></div>
-
-    </section>
+      <h2>Available Tour <span style="color: #ff9f1c">Packages</span></h2>
+      <a href="{{ url_for('main.tour_package') }}" class="see-all-link">See all</a>
+      <div class="package-container">
+          {% for package in packages %}
+          <div class="card">
+              <div class="card-content">
+                  <img src="{{ url_for('static', filename=package.package_img) if package.package_img else url_for('static', filename='default.jpg') }}" alt="Tour Image" class="card-image">
+                  <div class="gradient-overlay"></div>
+                  <div class="card-details">
+                      <div class="title-rating">
+                          <h3>{{ package.name }}</h3>
+                      </div>
+                      <p>{{ package.description }}</p>
+                  </div>
+              </div>
+              <div class="card-overlay">
+                  <button class="view-package" data-package-id="{{ package.id }}">View Package</button>
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+  
+      <!-- Modal Overlay -->
+      <div id="modal-overlay" class="modal-overlay hidden"></div>
+  </section>
+  
 
     <!-- Popular Places Section -->
     <section id="popular-places">
@@ -285,7 +282,7 @@
                   </div>
 
                   <div class="modal-section">
-                    <h4>Estimated Prices</h4>
+                    <h4>Expected Expenses</h4>
                     <ul class="price-list"></ul>
                   </div>
 

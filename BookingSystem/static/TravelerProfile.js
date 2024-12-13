@@ -844,3 +844,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // 
+
+
+
+
+// Sorting Functionality
+const sortSelect = document.getElementById("sort-select");
+
+function sortTours(order) {
+  const toursContainer = document.querySelector(".tours-container");
+  const tourCardsArray = Array.from(toursContainer.querySelectorAll(".tour-card"));
+
+  // Sort the tour cards based on the data attribute
+  tourCardsArray.sort((a, b) => {
+    const dateA = new Date(a.querySelector(".tour-date").textContent.trim());
+    const dateB = new Date(b.querySelector(".tour-date").textContent.trim());
+
+    return order === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
+  // Clear and re-append sorted cards
+  toursContainer.innerHTML = "";
+  tourCardsArray.forEach((card) => toursContainer.appendChild(card));
+}
+
+// Event Listener for Sorting
+sortSelect.addEventListener("change", () => {
+  const selectedOrder = sortSelect.value;
+  sortTours(selectedOrder);
+});
+
+// Trigger default sorting on page load
+window.addEventListener("DOMContentLoaded", () => {
+  sortSelect.dispatchEvent(new Event("change"));
+});

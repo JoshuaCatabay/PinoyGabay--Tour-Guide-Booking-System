@@ -110,10 +110,22 @@ input:focus {
   flex-wrap: wrap; /* Wrap on small screens */
 }
 
+.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4ecdc4; /* Modern browsers support this */
+  cursor: pointer;
+}
+
 .checkbox a {
   color: #4ecdc4;
   text-decoration: none;
 }
+
+.checkbox a:hover {
+  text-decoration: underline;
+}
+
 
 /* Button Container */
 .button-container {

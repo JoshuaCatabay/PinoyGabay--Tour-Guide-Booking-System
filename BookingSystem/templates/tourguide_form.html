@@ -9,7 +9,7 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tour Guide Profile - PinoyGabay</title>
+    <title>PinoyGabay</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='Traveler.css') }}"defer>
 
     <!-- Flatpickr CSS -->
@@ -19,6 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script src="{{ url_for('static', filename='TravelerBooking.js') }}"defer></script>
+    <link rel="icon" type="image/png" href="static\logo\pinoygabay logo.png">
     
   </head>
 
@@ -319,7 +320,7 @@
           <button id="close-booking-modal" class="x-btn">&times;</button>
 
           <div class="traveler-info-container">
-            <h4 class="container-header">Traveler Information</h4>
+            <h4 class="container-header">Tour Information</h4>
             <br>
               
             <div class="info-item">
@@ -372,7 +373,7 @@
 
             <!-- Estimated Price Section -->
             <div class="modal-section">
-              <h4>Estimated Price</h4>
+              <h4>Expenses</h4>
               <ul id="modal-price-list" class="price-list">Loading...</ul>
             </div>
 

@@ -1161,6 +1161,63 @@ console.log('TourOperator.js loaded successfully!');
   });
   
 
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("search-guide");
+    const filterSelect = document.getElementById("filter-select");
+    const tourGuideCards = document.querySelectorAll(".tour-guide-card");
+  
+    // Apply Filters on Search or Filter Change
+    searchInput.addEventListener("input", applyFilters);
+    filterSelect.addEventListener("change", applyFilters);
+  
+    function applyFilters() {
+      const searchValue = searchInput.value.toLowerCase();
+      const filterValue = filterSelect.value;
+  
+      tourGuideCards.forEach((card) => {
+        const guideName = card.querySelector(".guide-name").textContent.toLowerCase();
+        const isAvailable = card.querySelector(".availability-status").classList.contains("available");
+        const isActiveProfile = card.querySelector(".status-row:nth-child(1) .status-active") !== null;
+        const isActiveAccount = card.querySelector(".status-row:nth-child(2) .status-active") !== null;
+  
+        // Filter Logic
+        let matchesFilter = false;
+  
+        switch (filterValue) {
+          case "available":
+            matchesFilter = isAvailable;
+            break;
+          case "unavailable":
+            matchesFilter = !isAvailable;
+            break;
+          case "profile-active":
+            matchesFilter = isActiveProfile;
+            break;
+          case "profile-inactive":
+            matchesFilter = !isActiveProfile;
+            break;
+          case "account-active":
+            matchesFilter = isActiveAccount;
+            break;
+          case "account-inactive":
+            matchesFilter = !isActiveAccount;
+            break;
+          default:
+            matchesFilter = true; // Show all if filter is "all"
+        }
+  
+        const matchesSearch = guideName.includes(searchValue);
+  
+        // Show/Hide Cards
+        if (matchesSearch && matchesFilter) {
+          card.style.display = "block"; // Show if matches search and filter
+        } else {
+          card.style.display = "none"; // Hide otherwise
+        }
+      });
+    }
+  });
+  
 
 
   // View Guide Profile

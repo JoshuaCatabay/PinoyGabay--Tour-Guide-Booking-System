@@ -11,13 +11,12 @@ from datetime import datetime
 from enum import Enum
 
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin):
-    __tablename__ = 'User'
+    __tablename__ = 'Users'
     __table_args__ = (  
         db.Index('idx_users_email', 'email'),
         db.Index('idx_users_role', 'role'),

@@ -8,7 +8,7 @@
 
   /* Body and Background */
   body {
-    background-color: #f7fff7; /* Off White */
+    background-color: white; /* Off White */
     color: #2b2d42; /* Dark Charcoal */
     padding: 0%;
     font-size: 16px;
@@ -710,11 +710,20 @@
     padding: 20px;
   }
 
+
+  /* Container for Toggles and Sorting */
+  .toggle-sort-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    
+  }
+
   /* Toggle Buttons */
   .tour-toggle-buttons {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
     flex-wrap: wrap;
   }
 
@@ -736,8 +745,42 @@
     background-color: #38bfb0; /* Hover effect */
   }
 
+  /* Sorting Field Styling */
+  .sorting-container {
+    display: flex;
+    gap: 8px;
+  }
+
+  #sort-select {
+    padding: 8px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+    appearance: none;
+    background: white;
+    cursor: pointer;
+  }
+
+  #sort-select:focus {
+    border-color: #4ecdc4; /* Focus effect */
+    box-shadow: 0 0 5px rgba(78, 205, 196, 0.5);
+  }
+
+  .sort-icon {
+    font-size: 18px;
+    color: #4ecdc4;
+    cursor: pointer;
+  }
+
+  .sort-icon:hover {
+    color: #1A535C;
+  }
+
+
   /* Scrollable Tours Container */
   .tours-scrollable-container {
+    margin-top: 30px;
     max-height: 500px;
     overflow-y: auto;
     border-radius: 8px;
@@ -1373,7 +1416,7 @@
 
   #my-reviews-section {
     padding: 20px;
-    background-color: #f7fff7;
+    background-color: white;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
@@ -1936,3 +1979,5 @@
 .no-btn:hover {
   background-color: #d32f2f;
 }
+
+
